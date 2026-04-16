@@ -2,7 +2,7 @@
 
 Mục lục
 
-I. Giới thiệu
+I. Giới thiệu Tú
 
     1.1 Mục đích tài liệu
     1.2 Phạm vi tài liệu
@@ -10,7 +10,7 @@ I. Giới thiệu
     1.4 Tài liệu tham khảo
     1.5 Mô tả tài liệu
 
-II. Khảo sát hiện trạng phần mềm
+II. Khảo sát hiện trạng phần mềm Vinh
 
     2.1 Khảo sát hiện trạng
     2.2 Mục tiêu tổng quát
@@ -24,13 +24,17 @@ II. Khảo sát hiện trạng phần mềm
 
 III. Thiết kế hệ thống phần mềm
 
-    3.1 Biểu đồ usecase
+VInh
+
+3.1 Biểu đồ usecase
     3.2 Biểu đồ activity
     3.3 Biểu đồ class
+
+Tú
     3.4 Biểu đồ sequence
     3.5 Biểu đồ component
 
-IV. Thiết kế dữ liệu
+IV. Thiết kế dữ liệu Tú
 
     4.1 Mô tả dữ liệu
     4.2 Biểu đồ ER
