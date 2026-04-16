@@ -164,7 +164,7 @@ Hệ thống Website Nghe Nhạc Trực Tuyến được thiết kế dựa trê
 ```mermaid
 graph TD
     subgraph Presentation_Tier_Client
-        UI["Trình duyệt Web (SPA - ReactJS)"]
+        UI["Trình duyệt Web (ReactJS + TailwindCSS)"]
         Player["Trình phát nhạc - Audio Player"]
     end
 
@@ -201,12 +201,12 @@ graph TD
 #### 2.5.2 Mô tả chi tiết các tầng kiến trúc
 
 **a. Tầng Giao diện (Presentation Tier / Client):**
-Tầng này chịu trách nhiệm hiển thị và tương tác trực tiếp với người dùng cuối, được xây dựng bằng thư viện **ReactJS**.
+Tầng này chịu trách nhiệm hiển thị và tương tác trực tiếp với người dùng cuối, được xây dựng bằng thư viện **ReactJS** kết hợp framework styling **TailwindCSS**.
 
 - **Đặc điểm kiến trúc:** Xây dựng dưới dạng Single Page Application (SPA).
 - **Chức năng chính:**
   - Đóng vai trò là điểm tiếp xúc trực tiếp với người dùng và quản trị viên trên trình duyệt web (Desktop/Mobile).
-  - Sử dụng **React Components** để xây dựng giao diện người dùng đồng nhất, linh hoạt (Responsive) cho cả Web Player và Admin Dashboard.
+  - Sử dụng **React Components** kết hợp tiện ích của **TailwindCSS** để xây dựng giao diện đồ họa đẹp mắt, chuẩn UI/UX và hoàn toàn linh hoạt (Responsive) cho cả Web Player và Admin Dashboard.
   - Quản lý trạng thái ứng dụng (State Management): Đảm bảo trình phát nhạc (Audio Player) hoạt động liên tục (Persistent Player), không bị ngắt quãng khi người dùng chuyển đổi giữa các trang chức năng.
   - Giao tiếp với Server thông qua các yêu cầu HTTP (API Requests) bằng Axios hoặc Fetch API, tiếp nhận luồng stream dữ liệu tốc độ cao.
 
