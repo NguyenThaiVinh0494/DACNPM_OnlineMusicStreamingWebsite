@@ -28,6 +28,7 @@ III. Thiết kế hệ thống phần mềm
     3.2 Biểu đồ activity
     3.3 Biểu đồ class
     3.4 Biểu đồ sequence
+    3.5 Biểu đồ component
 
 IV. Thiết kế dữ liệu
 
