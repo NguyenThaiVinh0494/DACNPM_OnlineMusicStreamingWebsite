@@ -144,24 +144,26 @@ Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nh
 **Frontend:**
 
 * Ngôn ngữ/Thư viện: ReactJS
-* Build tool: Vite
 * CSS Framework: Tailwind CSS
+* HTTP Client: Axios
+* Realtime: WebSocket
 
 **Backend:**
 
 * Ngôn ngữ: Python
-* Framework: Django REST Framework
-* API: RESTful API
+* Framework: Django
+* API: Django REST Framework (RESTful API)
+* Xác thực: JWT (JSON Web Token)
 * Realtime: WebSocket (Django Channels)
 
 **Cơ sở dữ liệu:**
 
-* Hệ quản trị CSDL: PostgreSQL
+* Hệ quản trị CSDL: MySQL
 * ORM: Django ORM
 
 **Lưu trữ:**
 
-* Media Storage: Cloudinary (audio, image)
+* Media Storage: Cloudinary(audio, image)
 
 ### 1.3 Quy ước về tài liệu
 
@@ -254,15 +256,15 @@ Hệ thống phục vụ hai nhóm chính:
 
 **Bảng đặc trưng người dùng**
 
-| Vai trò   | Mô tả                   | Mục tiêu   | Yêu cầu | Tần suất        |
-| ---------- | ------------------------- | ------------ | --------- | ----------------- |
+| Vai trò        | Mô tả                   | Mục tiêu   | Yêu cầu | Tần suất        |
+| --------------- | ------------------------- | ------------ | --------- | ----------------- |
 | **User**  | Nghe nhạc, tạo playlist | Giải trí   | Dễ dùng | Cao               |
 | **Admin** | Quản lý hệ thống      | Kiểm duyệt | Bảo mật | Trung bình - cao |
 
 **Ma trận đặc trưng kỹ thuật**
 
-| Tiêu chí                  | User              | Admin             |
-| --------------------------- | ----------------- | ----------------- |
+| Tiêu chí                       | User              | Admin             |
+| -------------------------------- | ----------------- | ----------------- |
 | **Trình độ kỹ thuất** | Thấp             | Trung bình - cao |
 | **Thiết bị**             | Mobile / Desktop  | Desktop           |
 | **Băng thông**           | Không ổn định | Ổn định        |
