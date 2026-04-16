@@ -270,6 +270,10 @@ Hệ thống phục vụ hai nhóm chính:
 | **Băng thông**           | Không ổn định | Ổn định        |
 | **Đào tạo**             | Không cần       | Cơ bản          |
 
+### 2.4 Yêu cầu của người dùng
+
+Trong phần này, các yêu cầu của người dùng đối với hệ thống được chia thành hai nhóm chính: Yêu cầu chức năng (Functional Requirements) và Yêu cầu phi chức năng (Non-Functional Requirements).
+
 #### 2.4.1 Yêu cầu chức năng
 
 Dựa trên đặc trưng tương tác, hệ thống cần đáp ứng các tính năng sau:
