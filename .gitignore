@@ -1,0 +1,36 @@
+# --- OS X ---
+.DS_Store
+
+# --- Windows ---
+Thumbs.db
+desktop.ini
+
+# --- IDEs & Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Back-end (Django) ---
+back-end/venv/
+back-end/__pycache__/
+back-end/*.pyc
+back-end/*.pyo
+back-end/*.pyd
+back-end/.env
+back-end/db.sqlite3
+back-end/media/
+back-end/static/
+back-end/staticfiles/
+
+# --- Front-end (React/Vite) ---
+front-end/node_modules/
+front-end/dist/
+front-end/.env
+front-end/.env.local
+front-end/.env.development.local
+front-end/.env.test.local
+front-end/.env.production.local
+front-end/npm-debug.log*
+front-end/yarn-debug.log*
+front-end/yarn-error.log*
