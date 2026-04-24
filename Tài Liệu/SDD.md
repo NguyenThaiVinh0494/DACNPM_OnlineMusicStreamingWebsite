@@ -1,13 +1,4 @@
-### BẢNG GHI NHẬN SỰ THAY ĐỔI TÀI LIỆU (Tú)
-
-| Phiên bản | Ngày cập nhật | Người thực hiện | Nội dung thay đổi | Ghi chú |
-| :--- | :--- | :--- | :--- | :--- |
-| **v1.0** | 20/04/2026 | Tú | Khởi tạo cấu trúc tài liệu và thiết kế ERD cơ bản. | Bản nháp đầu tiên |
-| **v1.1** | 22/04/2026 | Tú | Hoàn thiện Biểu đồ Component và Sequence ban đầu. | Đồng bộ với thiết kế Backend |
-| **v1.2** | 24/04/2026 | Tú | Nâng cấp văn phong học thuật, bổ sung đặc tả chi tiết Sequence và đồng bộ hóa toàn diện dữ liệu. | **Bản hoàn thiện (Final)** |
-
----
-
+#SDD
 Mục lục
 
 I. Giới thiệu Tú
