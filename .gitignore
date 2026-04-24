@@ -13,10 +13,10 @@ desktop.ini
 
 # --- Back-end (Django) ---
 back-end/venv/
-back-end/__pycache__/
-back-end/*.pyc
-back-end/*.pyo
-back-end/*.pyd
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
 back-end/.env
 back-end/db.sqlite3
 back-end/media/
