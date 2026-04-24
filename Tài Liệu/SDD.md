@@ -1,4 +1,12 @@
-### File SDD
+### BẢNG GHI NHẬN SỰ THAY ĐỔI TÀI LIỆU (Tú)
+
+| Phiên bản | Ngày cập nhật | Người thực hiện | Nội dung thay đổi | Ghi chú |
+| :--- | :--- | :--- | :--- | :--- |
+| **v1.0** | 20/04/2026 | Tú | Khởi tạo cấu trúc tài liệu và thiết kế ERD cơ bản. | Bản nháp đầu tiên |
+| **v1.1** | 22/04/2026 | Tú | Hoàn thiện Biểu đồ Component và Sequence ban đầu. | Đồng bộ với thiết kế Backend |
+| **v1.2** | 24/04/2026 | Tú | Nâng cấp văn phong học thuật, bổ sung đặc tả chi tiết Sequence và đồng bộ hóa toàn diện dữ liệu. | **Bản hoàn thiện (Final)** |
+
+---
 
 Mục lục
 
@@ -43,13 +51,66 @@ IV. Thiết kế dữ liệu Tú
     	4.2 Biểu đồ ER
     	4.3 Thiết kế dữ liệu
 
-V. Thiết kế giao diện
+---
 
-    (Giao diện các trang)
+## I. GIỚI THIỆU (Tú)
+
+### 1.1 Mục đích tài liệu
+Tài liệu Mô tả Thiết kế Phần mềm (Software Design Description - SDD) này được xây dựng mang tính chiến lược, nhằm cung cấp một cái nhìn toàn diện, sâu sắc và có tổ chức chặt chẽ về toàn bộ quá trình hiện thực hóa giải pháp kỹ thuật cho dự án **MusicHub - Hệ thống Giải trí Âm nhạc Trực tuyến**. Trong kỷ nguyên số, nơi mà trải nghiệm âm nhạc trực tuyến đòi hỏi sự mượt mà tuyệt đối và tính cá nhân hóa cao, tài liệu này đóng vai trò là "hiến pháp kỹ thuật", là kim chỉ nam dẫn đường cho đội ngũ phát triển xuyên suốt từ giai đoạn sơ khởi cho đến khi vận hành thực tế. Bản thiết kế này đảm bảo rằng mọi thành viên trong dự án, dù ở vị trí nào, cũng đều sở hữu một bức tranh chung và đồng nhất về mục tiêu, kiến trúc và các tiêu chuẩn kỹ thuật cần đạt được.
+
+Nội dung của tài liệu không đơn thuần chỉ là một tập hợp các sơ đồ UML khô khan hay những bảng biểu dữ liệu tĩnh, mà là một "hành trình" kể lại câu chuyện về cách một sản phẩm công nghệ âm nhạc được thai nghén và hình thành. Từng dòng mô tả, từng luồng chức năng đều được viết với tâm thế giữ chân người đọc, truyền cảm hứng và xây dựng niềm tin vững chắc vào chất lượng của hệ thống. Tài liệu này là cầu nối sống động giữa các yêu cầu nghiệp vụ trừu tượng (SRS) và mã nguồn thực thi, giúp lập trình viên hiểu rõ "linh hồn" của từng module chức năng, giúp kiểm thử viên xác lập được các kịch bản chuẩn xác, và giúp nhà quản lý kiểm soát được tiến độ cũng như rủi ro kỹ thuật. Việc thiết kế đúng và chi tiết ngay từ đầu không chỉ là một yêu cầu kỹ thuật mà còn là yếu tố sống còn để giảm thiểu lãng phí và đảm bảo khả năng bảo trì bền vững cho hệ thống.
+
+Đặc biệt đối với một nền tảng giải trí cộng đồng như MusicHub – nơi người dùng tìm kiếm sự thư giãn và kết nối cảm xúc thông qua âm nhạc – thì việc thiết kế hệ thống phải đạt đến độ tinh tế và chuẩn xác cao. Tài liệu này chính là cam kết của nhóm phát triển về một hệ thống được lập quy chuẩn bài bản, sẵn sàng đối mặt với các thách thức về băng thông, lưu trữ và bảo mật thông tin trong môi trường trực tuyến phức tạp.
+
+### 1.2 Phạm vi tài liệu
+Tài liệu thiết kế này được coi là xương sống cho toàn bộ quá trình phát triển ứng dụng MusicHub, đóng vai trò bản vẽ đặc tả kỹ thuật tối thượng phục vụ cho việc thi công và lắp ráp các thành phần phần mềm. Vượt xa khỏi những mô tả tính năng bề nổi, phạm vi của tài liệu này đi sâu vào việc phẫu thuật các kiến trúc nền tảng, tạo ra sự gắn kết hữu cơ giữa ý tưởng sáng tạo UI/UX và các thuật toán xử lý dữ liệu phức tạp ở phía sau. Phạm vi bao quát của tài liệu tập trung vào các trụ cột trọng tâm do Tú phụ trách thiết kế:
+
+1.  **Thiết kế Hành vi và Tương tác (Behavioral Design)**: Tài liệu sẽ chi tiết hóa các luồng tương tác tuần tự giữa người dùng và các thực thể hệ thống. Thông qua các sơ đồ Sequence, chúng ta sẽ mô hình hóa các quy trình nghiệp vụ nhạy cảm như Xác thực người dùng thông qua mã băm, quy trình đóng gói và truyền tải luồng âm thanh kỹ thuật số (Streaming Flow), và đặc biệt là quy trình kiểm soát nội dung do cộng đồng đóng góp (UGC) – đảm bảo mọi tệp tin được upload đều đi đúng quy trình kiểm duyệt an toàn.
+2.  **Thiết kế Kiến trúc Thành phần (Architectural Composition)**: Phân tách hệ thống thành các module logic độc lập nhưng có mối liên kết chặt chẽ. Tài liệu làm rõ cơ chế Orchestration giữa tầng giao diện ứng dụng trang đơn (SPA) chuẩn ReactJS, tầng logic nghiệp vụ chuẩn RESTful API của Django, và hạ tầng lưu trữ đám mây đặc thù cho tệp Media (Cloudinary). Điều này đảm bảo tính modular hóa, giúp hệ thống dễ dàng thay thế hoặc nâng cấp từng phần mà không ảnh hưởng đến cấu trúc tổng thể.
+3.  **Thiết kế Cơ sở Dữ liệu và Lưu trữ (Data & Storage Design)**: Tập trung vào việc xây dựng mô hình dữ liệu quan hệ (ERD) đạt chuẩn 3NF, tối ưu hóa quá trình truy vấn metadata âm nhạc. Phạm vi này bao gồm việc định nghĩa chi tiết các kiểu dữ liệu, ràng buộc khóa ngoại và chiến lược index, đảm bảo hệ thống có thể xử lý đồng thời hàng ngàn yêu cầu truy cập và quản lý kho nhạc khổng lồ một cách hiệu quả và tin cậy.
+
+Ngoài ra, tài liệu còn là công cụ giúp duy trì sự đồng bộ tuyệt đối trong nhóm phát triển. Đây là điểm tựa để phân công công việc chính xác đến từng module, là thước đo để kiểm tra sự tuân thủ các cam kết kỹ thuật ban đầu và là tài sản tri thức vô giá khi hệ thống cần mở rộng sang các giai đoạn tiếp theo (như tích hợp AI gợi ý nhạc hoặc thanh toán trực tuyến).
+
+### 1.3 Thuật ngữ và các từ viết tắt
+Để đảm bảo sự thống nhất tuyệt đối trong cách hiểu và truyền đạt thông tin giữa các thành viên trong nhóm cũng như với các đối tác liên quan, phần này liệt kê và giải nghĩa chi tiết các thuật ngữ, từ viết tắt và các khái niệm kỹ thuật cốt lõi xuất hiện xuyên suốt trong tài liệu. Bảng thuật ngữ này đóng vai trò như một "từ điển kỹ thuật" nội bộ, giúp xóa bỏ mọi rào cản về ngôn ngữ giữa các bộ phận khác nhau trong dự án:
+
+| Thuật ngữ | Định nghĩa | Ý nghĩa và Giải thích trong hệ thống |
+| :--- | :--- | :--- |
+| **SDD** | Software Design Description | Bản thiết kế kỹ thuật chi tiết, là cơ sở để triển khai mã nguồn. |
+| **SRS** | Software Requirements Specification | Tài liệu đặc tả yêu cầu, là đầu vào định hình nên bản thiết kế SDD. |
+| **API** | Application Programming Interface | "Cổng giao tiếp" để các thành phần phần mềm trao đổi dữ liệu an toàn. |
+| **JWT** | JSON Web Token | Một phương thức xác thực bằng Token mã hóa, giúp bảo mật phiên làm việc. |
+| **SPA** | Single Page Application | Ứng dụng web chỉ tải trang một lần, mang lại trải nghiệm mượt mà không tải lại. |
+| **ORM** | Object-Relational Mapping | Công cụ giúp lập trình viên thao tác với Database thông qua đối tượng lập trình. |
+| **UGC** | User-Generated Content | Nội dung do người dùng đóng góp, là xương sống của cộng đồng MusicHub. |
+| **DRF** | Django REST Framework | Bộ công cụ mạnh mẽ dùng để xây dựng các Web API chuẩn RESTful phía Backend. |
+| **Cloudinary** | Media Management SaaS | Dịch vụ đám mây chuyên dụng để tối ưu hóa, lưu trữ và truyền tải tệp âm nhạc. |
+| **Middleware** | Phần mềm trung gian | Các lớp xử lý logic xen giữa luồng Request/Response để kiểm tra bảo mật. |
+| **Scalability** | Khả năng mở rộng | Khả năng hệ thống thích ứng và phát triển khi số lượng người dùng tăng đột biến. |
+| **Latency** | Độ trễ | Chỉ số đo lường thời gian phản hồi, mục tiêu hệ thống là tối thiểu hóa độ trễ. |
+| **Stateless** | Không trạng thái | Cơ chế không lưu giữ trạng thái phiên ở Server để tăng hiệu suất xử lý API. |
+
+### 1.4 Tài liệu tham khảo
+Trong hành trình xây dựng bản thiết kế cho dự án MusicHub, chúng tôi đã tham khảo và áp dụng các tiêu chuẩn công nghiệp và các tài liệu chuyên ngành đáng tin cậy. Việc này không chỉ giúp thiết kế tuân theo các quy chuẩn quốc tế mà còn đảm bảo hệ thống có khả năng tương thích cao và bền vững theo thời gian. Các tài liệu này là nền móng tri thức để nhóm xác định cấu trúc tài liệu, định hướng kiến trúc Micro-services (hướng dịch vụ) và các tiêu chuẩn bảo mật cho dòng dữ liệu âm thanh:
+
+- **IEEE Std 1016-1998 & 2009**: Tiêu chuẩn vàng quốc tế về tổ chức nội dung và cấu trúc cho tài liệu thiết kế phần mềm chuyên nghiệp.
+- **Django REST Framework Architecture Guide**: Tài liệu hướng dẫn thiết kế kiến trúc API linh hoạt, an toàn và dễ mở rộng.
+- **ReactJS Component Design Patterns**: Các mô hình thiết kế giao diện React giúp tối ưu hóa việc tái sử dụng code và quản lý trạng thái.
+- **OWASP Application Security Verification Standard**: Quy chuẩn xác thực bảo mật ứng dụng nhằm bảo vệ dữ liệu người dùng và sở hữu trí tuệ âm nhạc.
+- **Standard Research on Music Streaming UX**: Các nghiên cứu về trải nghiệm người dùng trên các nền tảng âm nhạc lớn như Spotify, Tinder (cho luồng tương tác vuốt chọn) để rút ra các bộ khung UX tiêu chuẩn.
+
+### 1.5 Mô tả tài liệu
+Tài liệu được cấu trúc hóa một cách khoa học thành các chương mục liên kết chặt chẽ, dẫn dắt độc giả đi từ những khái niệm tổng quát nhất đến những chi tiết kỹ thuật sâu sắc nhất. Cách bố trí này giúp người đọc dễ dàng định vị thông tin và nắm bắt được luồng logic của toàn bộ hệ thống:
+
+- **Chương I**: Nhập môn, xác định mục tiêu và quy chuẩn của bản thiết kế.
+- **Chương II**: (Vinh phụ trách) Khảo sát hiện trạng và mục tiêu dự án.
+- **Chương III**: Thiết kế hệ thống phần mềm (Vinh làm 3.1-3.3, Tú làm 3.4-3.5).
+- **Chương IV**: (Tú phụ trách) Thiết kế hạ tầng dữ liệu và lưu trữ.
+- **Các phụ lục**: Ghi chú thay đổi và tài liệu bổ trợ.
 
 ---
 
-## II. Khảo sát hiện trạng phần mềm
+## II. Khảo sát hiện trạng phần mềm Vinh
 
 ### 2.1 Khảo sát hiện trạng
 
@@ -158,6 +219,7 @@ Dự án Website Nghe Nhạc Trực Tuyến tập trung giải quyết các bài
 ---
 
 ## III. Thiết kế hệ thống phần mềm
+
 
 ### 3.1 Biểu đồ Usecase (Use Case Diagram)
 
@@ -573,3 +635,427 @@ Sơ đồ thể hiện rõ nét cấu trúc của 8 Lớp (Classes) cốt lõi c
     *   Đối tượng `QuanTriVien` (Admin) không sở hữu bài hát nhưng các hành động nghiệp vụ của Admin (`DuyetBaiHat()`, `TuChoiBaiHat()`) sẽ trực tiếp làm thay đổi thuộc tính `TrangThai_Duyet` của thực thể `BaiHat`.
 *   **Lớp tương tác trung gian (Association Logic):** 
     *   Lớp `LichSuTuongTac` sinh ra nhằm lưu vết hành vi của User (nghe bài nào, thả tim khi nào, bỏ qua khi nào). Lớp này cung cấp Metadata Data khổng lồ cực kỳ quan trọng cho tính năng phân tích **Thuật toán Gợi ý Nhạc (For You Recommendation)**.
+
+---
+
+### Tú
+
+#### 3.4 Biểu đồ Sequence (Biểu đồ Trình tự)
+
+Biểu đồ trình tự mô tả cách thức các đối tượng trong hệ thống tương tác với nhau theo thời gian để thực hiện các nghiệp vụ then chốt.
+
+**3.4.1 Luồng Xác thực và Truy cập (Auth Flow)**
+
+*   **Mô tả:** Quy trình thiết lập phiên làm việc bảo mật, đảm bảo chỉ những người dùng hợp lệ mới có quyền truy cập vào các tài nguyên cá nhân hóa của MusicHub.
+*   **Tác nhân:** Người dùng (Client), API Django (Backend), JWT Service.
+*   **Điều kiện tiên quyết:** Người dùng đã có tài khoản và mật khẩu đã được mã hóa Bcrypt trong hệ thống.
+*   **Luồng sự kiện chính:**
+    1. Người dùng gửi thông tin đăng nhập từ giao diện React.
+    2. Backend tiếp nhận yêu cầu và thực hiện truy vấn đối soát thông tin trong MySQL.
+    3. Sau khi xác minh mã băm mật khẩu khớp, dịch vụ JWT sẽ khởi tạo bộ đôi Token (Access & Refresh).
+    4. Client nhận Token thành công và lưu trữ vào LocalStorage để duy trì trạng thái đăng nhập.
+*   **Luồng thay thế:** Nếu thông tin không chính xác, hệ thống trả về mã lỗi 401 Unauthorized kèm thông điệp cảnh báo.
+
+```mermaid
+sequenceDiagram
+    participant ND as Người dùng (Client)
+    participant GD as Giao diện React (Frontend)
+    participant API as API Django (Backend)
+    participant JWT as Dịch vụ JWT
+    participant DB as Cơ sở dữ liệu MySQL
+
+    ND->>GD: Gửi thông tin Đăng nhập (Email, Pass)
+    GD->>API: Yêu cầu POST /api/v1/auth/login
+    API->>DB: Kiểm tra Email và khớp mã băm mật khẩu
+    DB-->>API: Trả về thông tin Người dùng hợp lệ
+    API->>JWT: Sinh cặp mã Access Token & Refresh Token
+    JWT-->>API: Trả về các mã JWT Tokens
+    API-->>GD: HTTP 200 OK (Đính kèm Tokens)
+    GD->>GD: Lưu Token vào LocalStorage/Trạng thái
+    GD-->>ND: Hiển thị giao diện "Đã đăng nhập thành công"
+```
+
+**3.4.2 Luồng Phát nhạc và Ghi nhận (Streaming Flow)**
+
+*   **Mô tả:** Mô hình hóa cách thức hệ thống truyền tải dữ liệu âm thanh số từ kho lưu trữ đám mây tới người nghe.
+*   **Tác nhân:** Người dùng, Trình phát nhạc, Cloudinary.
+*   **Luồng sự kiện chính:**
+    1. Người dùng chọn bài hát và nhấn "Phát".
+    2. Frontend gửi yêu cầu lấy thông tin URL bảo mật tới Backend API.
+    3. Backend kiểm tra tính khả dụng của tệp tin.
+    4. Hệ thống trả về URL trỏ tới tệp .mp3 trên Cloudinary.
+    5. Trình phát nạp dữ liệu và phát nhạc ra thiết bị.
+    6. Sau 30 giây phát nhạc, hệ thống tự động gửi tín hiệu ghi nhận lượt nghe vào CSDL.
+
+```mermaid
+sequenceDiagram
+    participant ND as Người dùng
+    participant P as Trình phát nhạc (Audio Player)
+    participant API as Backend API
+    participant CLD as Kho lưu trữ Cloudinary
+    participant LOG as Bộ ghi nhận tương tác
+
+    ND->>P: Bấm nút "Phát" (Play)
+    P->>API: Yêu cầu GET /api/v1/songs/{id}/stream
+    API->>API: Kiểm tra tính hợp lệ của bài hát
+    API-->>P: Trả về URL phát nhạc (Cloudinary)
+    P->>CLD: Yêu cầu tải luồng dữ liệu âm thanh
+    CLD-->>P: Trả về dữ liệu Audio binary
+    P->>ND: Phát nhạc ra thiết bị đầu ra
+    P->>LOG: Sau 30 giây, gửi tín hiệu tăng lượt nghe
+    LOG->>API: Cập nhật lượt nghe vào Cơ sở dữ liệu
+```
+
+**3.4.3 Luồng Đóng góp và Kiểm duyệt (UGC Upload Flow)**
+
+*   **Mô tả:** Quy trình cho phép người dùng (Creator) tải lên bài hát mới và quy trình kiểm duyệt nội dung của Admin.
+*   **Tác nhân:** Người dùng (Creator), Admin, Cloudinary.
+*   **Luồng sự kiện chính:**
+    1. Người dùng gửi Metadata và tệp .mp3 từ giao diện tải lên.
+    2. Backend đẩy tệp vật lý trực tiếp lên Cloudinary.
+    3. Hệ thống lưu thông tin bài hát vào CSDL với trạng thái ban đầu là 'CHO_DUYET'.
+    4. Admin truy cập bảng điều khiển, nghe thử và đánh giá nội dung.
+    5. Admin thực hiện hành động 'Duyệt', hệ thống cập nhật trạng thái bài hát thành 'PUBLIC' và gửi thông báo tới người dùng.
+
+```mermaid
+sequenceDiagram
+    participant ND as Người dùng (Creator)
+    participant API as Cổng API (Gateway)
+    participant CLD as Lưu trữ Cloudinary
+    participant ADM as Bảng điều khiển Admin
+    participant TB as Dịch vụ Thông báo
+
+    ND->>API: Gửi Metadata + Tệp âm thanh (.mp3)
+    API->>CLD: Đẩy tệp vật lý lên đám mây
+    CLD-->>API: Trả về URL bảo mật & ID công khai
+    API->>API: Lưu vào CSDL trạng thái 'CHO_DUYET'
+    API-->>ND: Thông báo "Tải lên thành công, chờ duyệt"
+    ADM->>API: Lấy danh sách bài hát đang chờ duyệt
+    API-->>ADM: Trả về danh sách bài hát
+    ADM->>ADM: Nghe thử nội tuyến để kiểm duyệt
+    ADM->>API: Duyệt bài hát (Approve)
+    API-->>TB: Kích hoạt gửi thông báo
+    TB-->>ND: Thông báo "Bài hát của bạn đã được công khai!"
+```
+
+**3.4.4 Luồng Tìm kiếm và Lọc nhạc (Search & Filter Flow)**
+
+*   **Mô tả:** Cơ chế truy vấn nhanh dựa trên từ khóa để người dùng tìm thấy nội dung mong muốn.
+*   **Tác nhân:** Người dùng, Backend API, MySQL.
+*   **Luồng sự kiện chính:**
+    1. Người dùng nhập từ khóa tìm kiếm trên thanh Search.
+    2. Frontend gửi yêu cầu truy vấn kèm từ khóa tới API.
+    3. Backend thực hiện truy vấn tối ưu (Full-text search) trên các bảng Bài hát, Nghệ sĩ, Album.
+    4. Hệ thống trả về danh sách kết quả dưới dạng JSON.
+    5. Giao diện hiển thị kết quả phân loại rõ ràng cho người dùng.
+
+```mermaid
+sequenceDiagram
+    participant ND as Người dùng
+    participant GD as Giao diện Web
+    participant API as Backend API
+    participant DB as MySQL Database
+
+    ND->>GD: Nhập từ khóa (Tên bài, Ca sĩ, Album)
+    GD->>API: GET /api/v1/search?q={keyword}
+    API->>DB: Truy vấn LIKE/Full-text search trên các bảng
+    DB-->>API: Trả về danh sách kết quả (Songs, Artists, Albums)
+    API-->>GD: Trả về JSON kết quả đã định dạng
+    GD->>ND: Hiển thị danh sách gợi ý và kết quả tìm kiếm
+```
+
+**3.4.5 Luồng Quản lý Playlist (Playlist Management Flow)**
+
+*   **Mô tả:** Thao tác cá nhân hóa kho nhạc bằng cách tạo và quản lý các danh sách phát riêng.
+*   **Tác nhân:** Người dùng, Backend API.
+*   **Luồng sự kiện chính:**
+    1. Người dùng nhấn 'Thêm vào Playlist' tại một bài hát cụ thể.
+    2. Hệ thống tải danh sách Playlist hiện có của người dùng.
+    3. Người dùng chọn Playlist mục tiêu.
+    4. Backend ghi nhận mối quan hệ giữa ID bài hát và ID Playlist vào bảng chi tiết.
+    5. Thông báo kết quả thành công tới người dùng.
+
+```mermaid
+sequenceDiagram
+    participant ND as Người dùng
+    participant GD as Giao diện Playlist
+    participant API as Backend API
+    participant DB as MySQL Database
+
+    ND->>GD: Chọn "Thêm vào Playlist" tại bài hát
+    GD->>API: GET /api/v1/playlists/ (Lấy danh sách playlist của tôi)
+    API-->>GD: Trả về danh sách Playlist hiện có
+    ND->>GD: Chọn Playlist mục tiêu hoặc tạo mới
+    GD->>API: POST /api/v1/playlists/{id}/add-song/
+    API->>DB: Chèn bản ghi vào bảng tbl_chi_tiet_playlist
+    DB-->>API: Thành công
+    API-->>GD: Thông báo "Đã thêm vào danh sách phát"
+```
+
+**3.4.6 Luồng Báo cáo và Xử lý Vi phạm (Reporting & Admin Flow)**
+
+*   **Mô tả:** Cơ chế cho phép cộng đồng giám sát nội dung, đảm bảo môi trường âm nhạc lành mạnh và tuân thủ bản quyền.
+*   **Tác nhân:** Người dùng, Backend API, Admin.
+*   **Luồng sự kiện chính:**
+    1. Người dùng gửi báo cáo kèm lý do vi phạm từ trang chi tiết bài hát.
+    2. Backend ghi nhận báo cáo vào CSDL với trạng thái 'WAITING'.
+    3. Admin nhận danh sách báo cáo tập trung tại Dashboard.
+    4. Admin kiểm tra và thực hiện lệnh xử lý (Khóa bài hát/Gỡ nội dung).
+    5. Hệ thống đồng bộ trạng thái mới và hoàn tất báo cáo.
+
+```mermaid
+sequenceDiagram
+    participant ND as Người dùng
+    participant API as Backend API
+    participant DB as MySQL Database
+    participant ADM as Admin Dashboard
+
+    ND->>API: POST /api/v1/reports/ (Gửi lý do báo cáo bài hát)
+    API->>DB: Lưu bản ghi vào bảng tbl_bao_cao (Trạng thái: WAITING)
+    API-->>ND: Thông báo "Đã gửi báo cáo, cảm ơn bạn"
+    ADM->>API: GET /api/v1/admin/reports/ (Xem danh sách vi phạm)
+    API-->>ADM: Trả về danh sách các bài hát bị báo cáo
+    ADM->>API: PATCH /api/v1/reports/{id}/handle (Khóa/Gỡ bài hát)
+    API->>DB: Cập nhật trạng thái bài hát & báo cáo
+    API-->>ADM: Hoàn tất xử lý
+```
+
+**3.4.7 Luồng Giao tiếp Live-chat (Support Chat Flow)**
+
+*   **Mô tả:** Luồng dữ liệu thời gian thực (Real-time) cho phép người dùng nhận hỗ trợ trực tiếp từ đội ngũ Admin.
+*   **Tác nhân:** Người dùng, Admin, Socket.io Server.
+*   **Luồng sự kiện chính:**
+    1. Người dùng gửi tin nhắn qua kết nối Socket.
+    2. Server Socket xác thực quyền hạn thông qua JWT đính kèm.
+    3. Server đẩy tin nhắn tức thời tới giao diện của Admin.
+    4. Server ghi nội dung vào CSDL để lưu vết lịch sử.
+    5. Admin phản hồi, tin nhắn được đẩy ngược lại thiết bị người dùng ngay lập tức.
+
+```mermaid
+sequenceDiagram
+    participant ND as Người dùng
+    participant SK as Socket.io Server
+    participant ADM as Admin Support
+    participant DB as MySQL Database
+
+    ND->>SK: Gửi tin nhắn qua Socket (Message Event)
+    SK->>SK: Xác thực phiên Socket (JWT)
+    SK->>ADM: Đẩy tin nhắn Real-time tới Dashboard Admin
+    SK->>DB: Lưu nội dung vào tbl_tin_nhan
+    ADM->>SK: Gửi tin nhắn phản hồi
+    SK->>ND: Đẩy tin nhắn tới cửa sổ chat của người dùng
+```
+
+#### 3.5 Biểu đồ Thành phần (Component Diagram)
+
+Biểu đồ Thành phần đóng vai trò là "bản đồ phân vùng" của hệ thống, mô tả cấu trúc vật lý của mã nguồn và cách các module được module hóa để đảm bảo tính độc lập. Trong một hệ thống streaming phức tạp như MusicHub, việc phân chia thành phần không chỉ giúp quản lý mã nguồn hiệu quả mà còn tối ưu hóa quá trình triển khai (Deployment) và bảo trì lâu dài. Mỗi thành phần được thiết kế như một hộp đen có giao tiếp xác định, cho phép các nhóm phát triển có thể làm việc song song mà không gây xung đột kiến trúc.
+
+**3.5.1 Sơ đồ cấu trúc**
+
+```mermaid
+componentDiagram
+    package "Tầng Giao Diện (Presentation Layer)" {
+        [Ứng dụng Chính] <<Component>>
+        [Bộ máy Phát nhạc] <<Component>>
+        [Trung tâm Tìm kiếm] <<Component>>
+        [Module Quản trị CMS] <<Component>>
+    }
+
+    package "Tầng Dịch Vụ & Trạng thái (Core Client)" {
+        [Kho lưu trữ Redux] <<Service>>
+        [Trình gọi API Axios] <<Service>>
+    }
+
+    package "Tầng Logic & API (Business Layer)" {
+        [Bộ điều khiển Bài hát] <<Module>>
+        [Xử lý Xác thực] <<Module>>
+        [Bộ điều khiển Hồ sơ Người dùng] <<Module>>
+    }
+
+    package "Tầng Hạ Tầng (Infrastructure Layer)" {
+        [Django ORM] <<ORM>>
+        [Bảo mật JWT] <<Security>>
+        [Cloudinary SDK] <<Storage>>
+    }
+
+    database "Phân vùng MySQL" {
+        [Dữ liệu Người dùng]
+        [Metadata Âm nhạc]
+    }
+
+    [Ứng dụng Chính] --> [Kho lưu trữ Redux]
+    [Ứng dụng Chính] --> [Trình gọi API Axios]
+    [Trình gọi API Axios] --> [Xử lý Xác thực]
+    [Xử lý Xác thực] --> [Bảo mật JWT]
+    [Bộ điều khiển Bài hát] --> [Django ORM]
+    [Django ORM] --> [Dữ liệu Người dùng]
+    [Django ORM] --> [Metadata Âm nhạc]
+    [Bộ điều khiển Bài hát] --> [Cloudinary SDK]
+```
+
+**3.5.2 Mô tả chi tiết các thành phần**
+
+Hệ thống được thiết kế theo mô hình kiến trúc phân lớp (Layered Architecture), đảm bảo tính tách biệt (Decoupling) và dễ bảo trì:
+
+*   **Tầng Giao Diện (Presentation Layer):**
+    *   **Ứng dụng Chính:** Thành phần gốc điều phối Routing và Layout tổng thể của website ReactJS.
+    *   **Bộ máy Phát nhạc (Music Player Engine):** Module lõi xử lý các trạng thái phát nhạc toàn cục, đảm bảo âm nhạc không bị ngắt quãng.
+    *   **Trung tâm Tìm kiếm:** Xử lý logic hiển thị kết quả tìm kiếm nhanh và các bộ lọc thông minh.
+    *   **Module Quản trị CMS:** Giao diện quản lý nội dung chuyên sâu dành cho đội ngũ Admin.
+
+*   **Tầng Dịch Vụ & Trạng thái (Core Client):**
+    *   **Kho lưu trữ Redux:** Quản lý trạng thái tập trung cho toàn bộ ứng dụng (Auth, Player, Playlist).
+    *   **Trình gọi API Axios:** Cấu hình các interceptor để quản lý Token JWT và xử lý lỗi hệ thống đồng nhất.
+
+*   **Tầng Logic & API (Business Layer):**
+    *   **Bộ điều khiển Bài hát (Music Controllers):** Chứa các logic nghiệp vụ về xử lý metadata, quản lý quyền tệp nhạc và tính toán lượt nghe.
+    *   **Xử lý Xác thực (Auth Handlers):** Module chuyên trách kiểm soát luồng định danh và phân quyền (RBAC) cho hệ thống.
+    *   **Bộ điều khiển Hồ sơ (Profile Controllers):** Xử lý các yêu cầu cập nhật thông tin cá nhân và quản lý dữ liệu lịch sử nghe nhạc.
+
+*   **Tầng Hạ Tầng (Infrastructure Layer):**
+    *   **Django ORM:** Lớp trừu tượng hóa giúp truy vấn cơ sở dữ liệu MySQL một cách an toàn và hiệu quả.
+    *   **Bảo mật JWT:** Hệ thống kiểm soát quyền truy cập dựa trên Token không trạng thái (Stateless).
+    *   **Cloudinary SDK:** Module kết nối trực tiếp với dịch vụ đám mây để truyền tải và lưu trữ tệp âm thanh/hình ảnh tối ưu.
+
+---
+
+## IV. THIẾT KẾ DỮ LIỆU (Tú)
+
+### 4.1 Mô tả dữ liệu
+Trong kiến trúc của hệ thống MusicHub, dữ liệu không chỉ đơn thuần là những bản ghi lưu trữ, mà là "linh hồn" định hình nên toàn bộ trải nghiệm người dùng. Quá trình thiết kế dữ liệu tại đây được thực hiện dựa trên việc phân tích sâu sắc các thực thể nghiệp vụ, từ đó chuyển hóa chúng thành một mô hình quan hệ bền vững, linh hoạt và có khả năng mở rộng cao. Mỗi thực thể (entity) được xác định đều mang trong mình một vai trò chiến lược, đảm bảo sự luân chuyển thông tin luôn chính xác và an toàn.
+
+Hệ thống sử dụng cơ sở dữ liệu quan hệ MySQL, được thiết kế tối ưu theo chuẩn 3NF (Third Normal Form) nhằm loại bỏ sự dư thừa và duy trì tính nhất quán tuyệt đối của dữ liệu. Các nhóm thực thể trọng tâm bao gồm:
+
+*   **Hệ sinh thái Tài khoản & Định danh**: Quản lý toàn bộ thông tin định danh, hồ sơ cá nhân và phân quyền hành động của người dùng, đảm bảo tính bảo mật và cá nhân hóa tối đa.
+*   **Thư viện Metadata Âm nhạc**: Lưu trữ cấu trúc phân cấp phức tạp giữa Bài hát, Nghệ sĩ, Album và Thể loại, tạo nên một mạng lưới nội dung phong phú và dễ dàng truy xuất.
+*   **Hệ thống Tương tác & Hành vi**: Ghi nhận các điểm chạm cảm xúc của người dùng như lượt yêu thích, danh sách phát tự tạo và lịch sử nghe nhạc thời gian thực.
+*   **Kiểm soát & Quản trị**: Lưu vết các báo cáo vi phạm, nội dung đóng góp từ cộng đồng và các kênh giao tiếp hỗ trợ, giúp duy trì sự lành mạnh của nền tảng.
+
+### 4.2 Biểu đồ ER (Entity-Relationship Diagram) [Cập nhật]
+
+```mermaid
+erDiagram
+    TBL_NGUOIDUNG ||--o{ TBL_BAIHAT : "tai_len"
+    TBL_NGUOIDUNG ||--o{ TBL_DANH_SACH_PHAT : "so_huu"
+    TBL_NGUOIDUNG ||--o{ TBL_ALBUM : "tai_len"
+    TBL_NGHE_SI ||--o{ TBL_BAIHAT : "bieu_dien"
+    TBL_NGHE_SI ||--o{ TBL_ALBUM : "phat_hanh"
+    TBL_ALBUM ||--o{ TBL_BAIHAT : "chua"
+    TBL_THE_LOAI ||--o{ TBL_BAIHAT : "phan_loai"
+    TBL_DANH_SACH_PHAT ||--o{ TBL_CHI_TIET_PLAYLIST : "bao_gom"
+    TBL_BAIHAT ||--o{ TBL_CHI_TIET_PLAYLIST : "nam_trong"
+    TBL_NGUOIDUNG ||--o{ TBL_YEU_THICH : "thich"
+    TBL_NGUOIDUNG ||--o{ TBL_LICHSU_NGHE : "da_nghe"
+    TBL_NGUOIDUNG ||--o{ TBL_BAO_CAO : "gui"
+    TBL_NGUOIDUNG ||--o{ TBL_TIN_NHAN : "trao_doi"
+    TBL_BAIHAT ||--o{ TBL_YEU_THICH : "duoc_thich"
+    TBL_BAIHAT ||--o{ TBL_BAO_CAO : "bi_bao_cao"
+```
+
+### 4.3 Thiết kế dữ liệu chi tiết
+
+**1. Bảng: tbl_nguoi_dung (Quản lý tài khoản và người dùng)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_nguoi_dung | INT | PK, AI | Mã định danh duy nhất |
+| ten_dang_nhap | VARCHAR(50) | UNIQUE, NN | Tên đăng nhập |
+| email | VARCHAR(100)| UNIQUE, NN | Email người dùng |
+| mat_khau | VARCHAR(255)| NN | Mật khẩu (đã băm Bcrypt) |
+| ho_ten | VARCHAR(100)| NULL | Họ và tên đầy đủ |
+| anh_dai_dien | TEXT | Default: 'def.jpg' | Link ảnh đại diện |
+| vai_tro | ENUM | 'USER', 'ADMIN' | Phân cấp quyền hạn |
+| ngay_tham_gia | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP| Ngày tham gia |
+
+**2. Bảng: tbl_bai_hat (Quản lý thông tin bài hát)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_bai_hat | INT | PK, AI | Mã bài hát |
+| tieu_de | VARCHAR(255)| NN | Tiêu đề bài hát |
+| duong_dan_am_thanh | TEXT | NN | Link stream |
+| duong_dan_hinh_anh | TEXT | NN | Ảnh bìa |
+| luot_nghe | INT | Default: 0 | Tổng lượt nghe |
+| quoc_gia | VARCHAR(50) | NULL | Quốc gia phát hành |
+| nam_phat_hanh | INT | NULL | Năm phát hành |
+| trang_thai | ENUM | 'PENDING', 'PUBLIC'| Trạng thái kiểm duyệt |
+| id_nghe_si | INT | FK to tbl_nghe_si | Nghệ sĩ trình bày |
+| id_album | INT | FK to tbl_album | Thuộc Album (nếu có) |
+| id_the_loai | INT | FK to tbl_the_loai | Thể loại |
+| id_nguoi_dang | INT | FK to tbl_nguoi_dung | Người upload |
+
+**3. Bảng: tbl_album (Quản lý Album nhạc)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_album | INT | PK, AI | Mã album |
+| tieu_de | VARCHAR(255)| NN | Tên album |
+| anh_bia | TEXT | NN | Hình ảnh đại diện album |
+| id_nghe_si | INT | FK to tbl_nghe_si | Nghệ sĩ sở hữu |
+| trang_thai | ENUM | 'PENDING', 'PUBLIC'| Trạng thái duyệt |
+| ngay_phat_hanh | DATE | NULL | Ngày phát hành album |
+
+**4. Bảng: tbl_nghe_si (Thông tin nghệ sĩ)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_nghe_si | INT | PK, AI | Mã nghệ sĩ |
+| ten_nghe_si | VARCHAR(150)| NN | Tên ca sĩ/nhóm nhạc |
+| tieu_su | TEXT | NULL | Thông tin tiểu sử |
+| anh_nghe_si | TEXT | NULL | Ảnh đại diện nghệ sĩ |
+
+**5. Bảng: tbl_danh_sach_phat (Quản lý Playlist)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_danh_sach_phat | INT | PK, AI | Mã playlist |
+| tieu_de | VARCHAR(255)| NN | Tên Playlist |
+| id_chu_so_huu | INT | FK to tbl_nguoi_dung | Người tạo |
+| ngay_tao | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP| Thời gian tạo |
+
+**6. Bảng: tbl_the_loai (Danh mục thể loại nhạc)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_the_loai | INT | PK, AI | Mã thể loại |
+| ten_the_loai | VARCHAR(100)| NN | Tên thể loại |
+| mo_ta_the_loai| TEXT | NULL | Mô tả |
+
+**7. Bảng: tbl_bao_cao (Quản lý báo cáo vi phạm)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_bao_cao | INT | PK, AI | Mã báo cáo |
+| id_nguoi_dung | INT | FK to tbl_nguoi_dung | Người báo cáo |
+| id_bai_hat | INT | FK to tbl_bai_hat | Bài hát bị báo cáo |
+| ly_do | TEXT | NN | Lý do vi phạm |
+| trang_thai_xu_ly| ENUM | 'WAITING', 'DONE' | Tình trạng xử lý |
+| ngay_bao_cao | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP| Thời điểm báo cáo |
+
+**8. Bảng: tbl_lich_su_nghe (Lịch sử nghe nhạc)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_lich_su | INT | PK, AI | Mã bản ghi |
+| id_nguoi_dung | INT | FK to tbl_nguoi_dung | Người nghe |
+| id_bai_hat | INT | FK to tbl_bai_hat | Bài hát đã nghe |
+| thoi_gian_nghe | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP| Lúc nghe |
+
+**9. Bảng: tbl_tin_nhan (Chat hỗ trợ)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_tin_nhan | INT | PK, AI | Mã tin nhắn |
+| id_nguoi_gui | INT | FK to tbl_nguoi_dung | Người gửi (User/Admin) |
+| id_nguoi_nhan | INT | FK to tbl_nguoi_dung | Người nhận |
+| noi_dung | TEXT | NN | Nội dung chat |
+| thoi_gian_gui | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP| Thời điểm gửi |
+
+**10. Bảng: tbl_chi_tiet_playlist (Bảng trung gian)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_chi_tiet | INT | PK, AI | Mã bản ghi |
+| id_danh_sach_phat | INT | FK to tbl_danh_sach_phat | Tham chiếu Playlist |
+| id_bai_hat | INT | FK to tbl_bai_hat | Tham chiếu Bài hát |
+
+**11. Bảng: tbl_yeu_thich (Lưu trữ bài hát yêu thích)**
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id_yeu_thich | INT | PK, AI | Mã bản ghi |
+| id_nguoi_dung | INT | FK to tbl_nguoi_dung | Người thích |
+| id_bai_hat | INT | FK to tbl_bai_hat | Bài hát được thích |
+| ngay_thich | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP| Lúc nhấn thích |
+
+---
+© 2026 MusicHub Project - Documentation by Vinh & Tú.
