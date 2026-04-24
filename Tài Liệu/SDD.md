@@ -848,44 +848,45 @@ Biểu đồ Thành phần đóng vai trò là "bản đồ phân vùng" của h
 **3.5.1 Sơ đồ cấu trúc**
 
 ```mermaid
-componentDiagram
-    package "Tầng Giao Diện (Presentation Layer)" {
-        [Ứng dụng Chính] <<Component>>
-        [Bộ máy Phát nhạc] <<Component>>
-        [Trung tâm Tìm kiếm] <<Component>>
-        [Module Quản trị CMS] <<Component>>
-    }
+graph TD
+    subgraph Presentation ["Tầng Giao Diện (Presentation Layer)"]
+        UC["Ứng dụng Chính <<Component>>"]
+        MP["Bộ máy Phát nhạc <<Component>>"]
+        TS["Trung tâm Tìm kiếm <<Component>>"]
+        CMS["Module Quản trị CMS <<Component>>"]
+    end
 
-    package "Tầng Dịch Vụ & Trạng thái (Core Client)" {
-        [Kho lưu trữ Redux] <<Service>>
-        [Trình gọi API Axios] <<Service>>
-    }
+    subgraph Core ["Tầng Dịch Vụ & Trạng thái (Core Client)"]
+        Redux["Kho lưu trữ Redux <<Service>>"]
+        Axios["Trình gọi API Axios <<Service>>"]
+    end
 
-    package "Tầng Logic & API (Business Layer)" {
-        [Bộ điều khiển Bài hát] <<Module>>
-        [Xử lý Xác thực] <<Module>>
-        [Bộ điều khiển Hồ sơ Người dùng] <<Module>>
-    }
+    subgraph Business ["Tầng Logic & API (Business Layer)"]
+        SongCtrl["Bộ điều khiển Bài hát <<Module>>"]
+        AuthHnd["Xử lý Xác thực <<Module>>"]
+        ProfileCtrl["Bộ điều khiển Hồ sơ Người dùng <<Module>>"]
+    end
 
-    package "Tầng Hạ Tầng (Infrastructure Layer)" {
-        [Django ORM] <<ORM>>
-        [Bảo mật JWT] <<Security>>
-        [Cloudinary SDK] <<Storage>>
-    }
+    subgraph Infra ["Tầng Hạ Tầng (Infrastructure Layer)"]
+        ORM["Django ORM <<ORM>>"]
+        JWT["Bảo mật JWT <<Security>>"]
+        CLD["Cloudinary SDK <<Storage>>"]
+    end
 
-    database "Phân vùng MySQL" {
-        [Dữ liệu Người dùng]
-        [Metadata Âm nhạc]
-    }
+    subgraph DB ["Phân vùng MySQL"]
+        UserData[("Dữ liệu Người dùng")]
+        MusicMeta[("Metadata Âm nhạc")]
+    end
 
-    [Ứng dụng Chính] --> [Kho lưu trữ Redux]
-    [Ứng dụng Chính] --> [Trình gọi API Axios]
-    [Trình gọi API Axios] --> [Xử lý Xác thực]
-    [Xử lý Xác thực] --> [Bảo mật JWT]
-    [Bộ điều khiển Bài hát] --> [Django ORM]
-    [Django ORM] --> [Dữ liệu Người dùng]
-    [Django ORM] --> [Metadata Âm nhạc]
-    [Bộ điều khiển Bài hát] --> [Cloudinary SDK]
+    %% Các mối liên kết
+    UC --> Redux
+    UC --> Axios
+    Axios --> AuthHnd
+    AuthHnd --> JWT
+    SongCtrl --> ORM
+    ORM --> UserData
+    ORM --> MusicMeta
+    SongCtrl --> CLD
 ```
 
 **3.5.2 Mô tả chi tiết các thành phần**
