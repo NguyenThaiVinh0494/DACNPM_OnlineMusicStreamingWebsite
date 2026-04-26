@@ -4,29 +4,29 @@
 
 ###### I. Giới thiệu
 
-    1.1 Tóm tắt dự án.
+1.1 Tóm tắt dự án.
 
-    1.2 Phạm vi của dự án.
+1.2 Phạm vi của dự án.
 
-    1.3 Quy ước về tài liệu.
+1.3 Quy ước về tài liệu.
 
 ###### II. Mô tả tổng quan.
 
-    2.1. Quan điểm về sản phẩm.
+2.1. Quan điểm về sản phẩm.
 
-    2.2 Đặc trưng của sản phẩm.
+2.2 Đặc trưng của sản phẩm.
 
-    2.3 Người dùng và đặc trưng.
+2.3 Người dùng và đặc trưng.
 
-    2.4 Yêu cầu của người dùng.
+2.4 Yêu cầu của người dùng.
 
-    2.5 Kiến trúc tổng quan của phần mềm.
+2.5 Kiến trúc tổng quan của phần mềm.
 
-    2.6 Sơ đồ Usecase.
+2.6 Sơ đồ Usecase.
 
-    2.7 Luồng màn hình (Screen flow)
+2.7 Luồng màn hình (Screen flow)
 
-    2.8 Các yêu cầu khác của hệ thống
+2.8 Các yêu cầu khác của hệ thống
 
 ---
 
