@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+@theme {
+  --color-nct-bg: #121715;
+  --color-nct-surface: #1e2522;
+  --color-nct-player: #0f1311;
+  --color-nct-primary: #00b894;
+  --color-nct-text: #ffffff;
+  --color-nct-text-dim: #9daea8;
+}
+
+body {
+  background-color: var(--color-nct-bg);
+  color: var(--color-nct-text);
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
