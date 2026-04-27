@@ -1,4 +1,7 @@
 import Footer from "../components/layout/Footer";
+import ListGrid from "../components/home/ListGrid";
+import MusicChart from "../components/home/MusicChart";
+import DanhSachPhatNgang from "../components/home/HorizontalPlaylist";
 
 export default function Home() {
   const topics = [
@@ -14,9 +17,22 @@ export default function Home() {
     { name: "Nhạc Hoa", color: "from-amber-600 to-orange-800", image: "https://images.unsplash.com/photo-1543840950-5917415d18d0?w=200&h=200&fit=crop" },
   ];
 
+  // 1. Tạo hàm lấy lời chào dựa vào giờ hệ thống
+  const layLoiChao = () => {
+    const gioHienTai = new Date().getHours();
+    
+    if (gioHienTai >= 5 && gioHienTai < 12) {
+      return "Chào buổi sáng";
+    } else if (gioHienTai >= 12 && gioHienTai < 18) {
+      return "Chào buổi chiều";
+    } else {
+      return "Chào buổi tối";
+    }
+  };
+
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-bold">Chào buổi chiều</h2>
+      <h2 className="text-3xl font-bold">{layLoiChao()}</h2>
       
       {/* Banners */}
       <div className="grid grid-cols-2 gap-6">
@@ -63,6 +79,20 @@ export default function Home() {
           ))}
         </div>
       </div>
+      {/* Ráp các component mới vào đây */}
+      <MusicChart />
+      
+      {/* Tái sử dụng component lưới cho tất cả các phần còn lại! */}
+      <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" />
+      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" />
+      <ListGrid tieuDeKhuVuc="Top 100" />
+
+      {/* Thêm 2 cụm danh sách mới theo yêu cầu */}
+      <DanhSachPhatNgang tieuDeKhuVuc="Single Mới Phát Hành" />
+      <DanhSachPhatNgang tieuDeKhuVuc="TikTok Top Mix" />
+
+      <ListGrid tieuDeKhuVuc="Đang được yêu thích" />
+      <ListGrid tieuDeKhuVuc="Mới phát hành" />
       <Footer />
     </div>
   );
