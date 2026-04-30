@@ -5,7 +5,7 @@ import PlayerBar from "./PlayerBar";
 
 export default function MainLayout() {
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-nct-bg text-nct-text">
+    <div className="flex flex-col h-screen overflow-hidden bg-white text-gray-900 dark:!bg-nct-bg dark:!text-nct-text transition-colors duration-300">
       {/* Top section: Sidebar + Main Content */}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />

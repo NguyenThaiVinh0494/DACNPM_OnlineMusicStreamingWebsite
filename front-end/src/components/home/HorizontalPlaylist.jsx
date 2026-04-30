@@ -1,6 +1,8 @@
 import { FaRandom } from 'react-icons/fa'; // Icon trộn bài
+import { useTranslation } from 'react-i18next';
 
 export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
+  const { t } = useTranslation();
   // Mock dữ liệu 12 bài hát (4 cột x 3 hàng)
   const danhSachBaiHat = Array(12).fill(0).map((_, i) => ({
     ten: i % 2 === 0 ? "Ngừng Trôi" : "Nhẹ nhàng va vào nhau...",
@@ -18,10 +20,10 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
     <div className="mb-10">
       {/* Phần Tiêu đề & Nút Nghe ngẫu nhiên */}
       <div className="flex justify-between items-center mb-5 mt-8">
-        <h3 className="text-2xl font-bold text-white">{tieuDeKhuVuc}</h3>
-        <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors">
-          Nghe ngẫu nhiên
-          <FaRandom size={12} className="text-teal-400" />
+        <h3 className="text-2xl font-bold text-black dark:text-white">{tieuDeKhuVuc}</h3>
+        <button className="flex items-center gap-2 bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-gray-800 dark:text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors">
+          {t('shuffle', 'Nghe ngẫu nhiên')}
+          <FaRandom size={12} className="text-green-600 dark:text-teal-400" />
         </button>
       </div>
 
@@ -30,7 +32,7 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
         {danhSachBaiHat.map((item, index) => (
           <div 
             key={index} 
-            className="flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-white/10 group transition-colors"
+            className="flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 group transition-colors"
           >
             {/* Ảnh bìa */}
             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -47,17 +49,17 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
 
             {/* Thông tin bài hát */}
             <div className="flex-1 min-w-0">
-              <h4 className="text-white text-sm font-bold truncate mb-0.5 group-hover:text-teal-400 transition-colors">
+              <h4 className="text-black dark:text-white text-sm font-bold truncate mb-0.5 group-hover:text-green-600 dark:group-hover:text-teal-400 transition-colors">
                 {item.ten}
               </h4>
-              <p className="text-gray-400 text-xs truncate">
+              <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
                 {item.caSi}
               </p>
               
               {/* Mô phỏng icon Hãng đĩa (Label) như trong ảnh */}
               <div className="flex items-center gap-1 mt-1">
-                <div className="w-3 h-3 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[7px] text-white">🎵</span>
+                <div className="w-3 h-3 rounded-full bg-black/10 dark:bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[7px] text-gray-800 dark:text-white">🎵</span>
                 </div>
                 <span className="text-gray-500 text-[11px] truncate uppercase tracking-wider font-semibold">
                   {item.label || "UNIVERSAL MUSIC"}

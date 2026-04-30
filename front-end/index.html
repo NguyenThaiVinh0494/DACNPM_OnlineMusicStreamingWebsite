@@ -7,6 +7,18 @@
     <title>front-end</title>
   </head>
   <body>
+    <script>
+      (function() {
+        try {
+          var savedTheme = localStorage.getItem('themeMode');
+          if (savedTheme === 'dark' || savedTheme === null) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
