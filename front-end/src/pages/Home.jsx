@@ -60,8 +60,8 @@ export default function Home() {
       {/* Categories / Topics */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold">Chủ Đề</h3>
-          <button className="text-sm text-nct-text-dim hover:text-white uppercase font-medium tracking-wider">Thêm</button>
+          <h3 className="text-xl font-bold text-black dark:text-white">Chủ Đề</h3>
+          <button className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">Thêm</button>
         </div>
         <div className="grid grid-cols-5 gap-4">
           {topics.map((topic, index) => (

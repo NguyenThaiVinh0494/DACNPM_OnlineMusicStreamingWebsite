@@ -1,28 +1,30 @@
 import { TbVinyl } from "react-icons/tb";
 import { FaFacebook, FaTiktok, FaInstagram } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
-    <footer className="mt-20 pt-10 border-t border-white/10 pb-10">
+    <footer className="mt-20 pt-10 border-t border-gray-200 dark:border-white/10 pb-10">
       <div className="flex justify-between items-start mb-12">
         {/* Left: Company Info */}
         <div className="space-y-4 max-w-2xl">
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 bg-nct-primary rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-green-500 dark:bg-nct-primary rounded-full flex items-center justify-center">
               <TbVinyl className="w-6 h-6 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold leading-tight tracking-widest">
+              <span className="text-xl font-bold leading-tight tracking-widest text-black dark:text-white">
                 NCT
               </span>
-              <span className="text-[10px] text-nct-text-dim uppercase tracking-wider">
+              <span className="text-[10px] text-gray-500 dark:text-nct-text-dim uppercase tracking-wider">
                 nhaccuatui®
               </span>
             </div>
           </div>
 
-          <h4 className="font-bold text-lg">CÔNG TY CỔ PHẦN NCT</h4>
-          <ul className="text-sm text-nct-text-dim space-y-1.5 leading-relaxed">
+          <h4 className="font-bold text-lg text-black dark:text-white">CÔNG TY CỔ PHẦN NCT</h4>
+          <ul className="text-sm text-gray-600 dark:text-nct-text-dim space-y-1.5 leading-relaxed">
             <li>
               • Giấy phép cung cấp dịch vụ mạng xã hội số 140/GP-BTTTT do Bộ
               Thông tin và Truyền thông cấp ngày 14/10/2025.
@@ -43,7 +45,7 @@ export default function Footer() {
               • Email:{" "}
               <a
                 href="mailto:support@nct.vn"
-                className="hover:text-nct-primary hover:underline"
+                className="hover:text-green-600 dark:hover:text-nct-primary hover:underline text-gray-800 dark:text-gray-300"
               >
                 support@nct.vn
               </a>
@@ -89,7 +91,7 @@ export default function Footer() {
           </div>
 
           <div className="flex items-center gap-4 mt-2">
-            <span className="text-sm text-nct-text-dim">Find us on</span>
+            <span className="text-sm text-gray-500 dark:text-nct-text-dim">Find us on</span>
             <div className="flex gap-2">
               <button className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:scale-110 transition-transform">
                 <FaFacebook className="w-4 h-4 text-white" />
@@ -109,18 +111,18 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="flex items-center justify-between pt-6 border-t border-white/10 text-xs text-nct-text-dim">
+      <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10 text-xs text-gray-500 dark:text-nct-text-dim">
         <div className="flex gap-6">
-          <a href="#" className="hover:text-nct-primary transition-colors">
-            Chính Sách Bảo Mật
+          <a href="#" className="hover:text-green-600 dark:hover:text-nct-primary transition-colors">
+            {t('privacy')}
           </a>
-          <span className="text-white/20">•</span>
-          <a href="#" className="hover:text-nct-primary transition-colors">
+          <span className="text-gray-300 dark:text-white/20">•</span>
+          <a href="#" className="hover:text-green-600 dark:hover:text-nct-primary transition-colors">
             Chính Sách SHTT
           </a>
-          <span className="text-white/20">•</span>
-          <a href="#" className="hover:text-nct-primary transition-colors">
-            Thỏa Thuận Sử Dụng
+          <span className="text-gray-300 dark:text-white/20">•</span>
+          <a href="#" className="hover:text-green-600 dark:hover:text-nct-primary transition-colors">
+            {t('terms')}
           </a>
         </div>
         <div>© NCT Corp. All rights reserved</div>

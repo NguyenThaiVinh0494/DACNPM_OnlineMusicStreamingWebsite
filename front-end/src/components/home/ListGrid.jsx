@@ -1,4 +1,7 @@
+import { useTranslation } from "react-i18next";
+
 export default function LuoiDanhSachPhat({ tieuDeKhuVuc }) {
+  const { t } = useTranslation();
   // Dữ liệu mẫu
   const danhSach = [
     { ten: "Hit Việt Quốc Dân", moTa: "HIEUTHUHAI, Trọng Nhân...", anh: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&h=200&fit=crop" },
@@ -12,9 +15,9 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc }) {
     <div className="mb-8">
       {/* Tiêu đề */}
       <div className="flex justify-between items-center mb-4 mt-8">
-        <h3 className="text-2xl font-bold text-white">{tieuDeKhuVuc}</h3>
-        <button className="text-sm text-gray-400 uppercase font-medium hover:text-white transition-colors">
-          Thêm
+        <h3 className="text-2xl font-bold text-black dark:text-white">{tieuDeKhuVuc}</h3>
+        <button className="text-sm text-gray-500 dark:text-gray-400 uppercase font-medium hover:text-black dark:hover:text-white transition-colors">
+          {t('more')}
         </button>
       </div>
 
@@ -31,8 +34,8 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc }) {
               />
             </div>
             {/* Thông tin */}
-            <h4 className="text-white text-base font-bold mb-1 truncate">{item.ten}</h4>
-            <p className="text-gray-400 text-sm truncate">{item.moTa}</p>
+            <h4 className="text-black dark:text-white text-base font-bold mb-1 truncate">{item.ten}</h4>
+            <p className="text-gray-500 dark:text-gray-400 text-sm truncate">{item.moTa}</p>
           </div>
         ))}
       </div>
