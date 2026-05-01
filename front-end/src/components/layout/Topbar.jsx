@@ -40,7 +40,7 @@ export default function Topbar() {
 
         <button 
           onClick={() => setActiveModal('login')}
-          className="bg-green-500 hover:bg-green-600 dark:bg-cyan-400 dark:hover:bg-cyan-500 text-white dark:text-black px-6 py-2.5 rounded-full text-sm font-bold transition-colors cursor-pointer shadow-[0_0_15px_rgba(34,197,94,0.2)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
+          className="bg-nct-primary hover:bg-[#2591c4] dark:bg-cyan-400 dark:hover:bg-cyan-500 text-white dark:text-black px-6 py-2.5 rounded-full text-sm font-bold transition-colors cursor-pointer shadow-[0_0_15px_rgba(45,170,237,0.3)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
         >
           {t('login')}
         </button>

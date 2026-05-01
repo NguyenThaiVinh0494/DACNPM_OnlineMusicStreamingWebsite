@@ -90,11 +90,11 @@ export default function Favorites() {
           </div>
 
           <div className="flex-1 flex flex-col justify-end h-[240px] pb-2">
-            <h4 className="text-sm font-bold text-[#b3b3b3] uppercase tracking-wider mb-2">Thư viện</h4>
-            <h1 className="text-[64px] font-black text-white leading-tight mb-4 tracking-tighter uppercase">Bài hát yêu thích</h1>
+            <h4 className="text-sm font-bold text-gray-500 dark:text-[#b3b3b3] uppercase tracking-wider mb-2">Thư viện</h4>
+            <h1 className="text-[64px] font-black text-gray-900 dark:text-white leading-tight mb-4 tracking-tighter uppercase">Bài hát yêu thích</h1>
             <div className="flex items-center gap-3 text-sm font-medium">
-              <span className="text-white font-bold">Nguyễn Thái Vinh</span>
-              <span className="text-[#b3b3b3]">• {favorites.length} bài hát</span>
+              <span className="text-gray-900 dark:text-white font-bold">Nguyễn Thái Vinh</span>
+              <span className="text-gray-500 dark:text-[#b3b3b3]">• {favorites.length} bài hát</span>
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function Favorites() {
             className={`flex items-center gap-2 px-8 py-3 rounded-full text-base font-bold transition-all shadow-lg ${
               favorites.length > 0 
                 ? 'bg-nct-primary hover:bg-[#2591c4] text-white hover:scale-105 shadow-cyan-500/20' 
-                : 'bg-white/5 text-white/30 cursor-not-allowed'
+                : 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
             }`}
           >
             <FiPlay className="w-5 h-5 fill-current" /> PHÁT TẤT CẢ
@@ -115,14 +115,14 @@ export default function Favorites() {
           <button 
             disabled={favorites.length === 0}
             className={`p-2.5 rounded-full transition-colors ${
-              favorites.length > 0 ? 'bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white' : 'bg-white/5 text-white/30 cursor-not-allowed'
+              favorites.length > 0 ? 'bg-gray-200 hover:bg-gray-300 dark:bg-[#2a2a2a] dark:hover:bg-[#3a3a3a] text-gray-900 dark:text-white' : 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
             }`}
             title="Tải nhạc"
           >
             <FiDownload className="w-5 h-5" />
           </button>
           <button 
-            className="p-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white transition-colors"
+            className="p-2.5 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-[#2a2a2a] dark:hover:bg-[#3a3a3a] text-gray-900 dark:text-white transition-colors"
             title="Chia sẻ"
           >
             <FiShare2 className="w-5 h-5" />
@@ -131,7 +131,7 @@ export default function Favorites() {
             <button 
               onClick={() => setOpenDropdown(openDropdown === 'header-menu' ? null : 'header-menu')}
               className={`p-2.5 rounded-full transition-colors ${
-                openDropdown === 'header-menu' ? 'bg-nct-primary text-white' : 'bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white'
+                openDropdown === 'header-menu' ? 'bg-nct-primary text-white' : 'bg-gray-200 hover:bg-gray-300 dark:bg-[#2a2a2a] dark:hover:bg-[#3a3a3a] text-gray-900 dark:text-white'
               }`}
               title="Khác"
             >
@@ -139,16 +139,16 @@ export default function Favorites() {
             </button>
 
             {openDropdown === 'header-menu' && (
-              <div className="absolute top-12 left-0 w-56 bg-[#2d2f32] border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden py-1">
+              <div className="absolute top-12 left-0 w-56 bg-white dark:bg-[#2d2f32] border border-gray-200 dark:border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden py-1">
                 <button 
                   onClick={() => { setOpenDropdown(null); setIsAddModalOpen(true); }}
-                  className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                 >
                   <FiPlus className="w-4 h-4" /> Thêm bài hát
                 </button>
                 <button 
                   onClick={() => setOpenDropdown(null)}
-                  className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                 >
                   <FiShare2 className="w-4 h-4" /> Chia sẻ
                 </button>
