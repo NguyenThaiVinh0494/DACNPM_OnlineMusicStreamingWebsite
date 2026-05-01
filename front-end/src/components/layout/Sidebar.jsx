@@ -100,7 +100,7 @@ export default function Sidebar() {
             {myPlaylists.map(playlist => (
               <NavLink 
                 key={playlist.id}
-                to={`/my-playlist/${playlist.id}`} 
+                to={`/my-music/playlist/${playlist.id}`} 
                 className={({ isActive }) => `block px-4 py-2 rounded-lg font-medium truncate transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5"}`}
               >
                 {playlist.title}

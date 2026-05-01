@@ -14,8 +14,8 @@ export default function PlayerBar() {
           />
         </div>
         <div className="flex flex-col truncate">
-          <h4 className="text-gray-900 dark:text-white font-medium text-sm truncate hover:text-green-600 dark:hover:text-nct-primary cursor-pointer">NGÁO NGƠ</h4>
-          <p className="text-gray-500 dark:text-nct-text-dim text-xs truncate hover:text-green-600 dark:hover:text-nct-primary cursor-pointer hover:underline">
+          <h4 className="text-gray-900 dark:text-white font-medium text-sm truncate hover:text-nct-primary dark:hover:text-nct-primary cursor-pointer">NGÁO NGƠ</h4>
+          <p className="text-gray-500 dark:text-nct-text-dim text-xs truncate hover:text-nct-primary dark:hover:text-nct-primary cursor-pointer hover:underline">
             HIEUTHUHAI, ERIK, Anh Tú Atus
           </p>
         </div>
@@ -28,26 +28,26 @@ export default function PlayerBar() {
       {/* Center: Controls */}
       <div className="flex flex-col items-center justify-center gap-2 w-[40%] max-w-[500px]">
         <div className="flex items-center gap-6">
-          <button className="text-gray-500 dark:text-nct-text-dim hover:text-green-600 dark:hover:text-nct-primary transition-colors">
+          <button className="text-gray-500 dark:text-nct-text-dim hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
             <FiShuffle className="w-4 h-4" />
           </button>
-          <button className="text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-nct-primary transition-colors">
+          <button className="text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
             <FaStepBackward className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-green-500 dark:bg-white flex items-center justify-center text-white dark:text-black hover:scale-105 transition-transform">
+          <button className="w-9 h-9 rounded-full bg-nct-primary dark:bg-white flex items-center justify-center text-white dark:text-black hover:scale-105 transition-transform">
             <FaPlay className="w-4 h-4 ml-0.5" />
           </button>
-          <button className="text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-nct-primary transition-colors">
+          <button className="text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
             <FaStepForward className="w-4 h-4" />
           </button>
-          <button className="text-gray-500 dark:text-nct-text-dim hover:text-green-600 dark:hover:text-nct-primary transition-colors">
+          <button className="text-gray-500 dark:text-nct-text-dim hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
             <FiRepeat className="w-4 h-4" />
           </button>
         </div>
         <div className="w-full flex items-center gap-2 text-[10px] text-gray-500 dark:text-nct-text-dim font-medium">
           <span>00:00</span>
           <div className="h-1 flex-1 bg-gray-200 dark:bg-white/10 rounded-full cursor-pointer group">
-            <div className="h-full w-1/3 bg-green-500 dark:bg-nct-primary rounded-full group-hover:bg-green-600 dark:group-hover:bg-nct-primary/80 relative">
+            <div className="h-full w-1/3 bg-nct-primary dark:bg-nct-primary rounded-full group-hover:bg-[#2591c4] dark:group-hover:bg-nct-primary/80 relative">
               <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white dark:bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity border border-gray-200 dark:border-transparent"></div>
             </div>
           </div>
@@ -65,7 +65,7 @@ export default function PlayerBar() {
             <FiVolume2 className="w-5 h-5" />
           </button>
           <div className="w-20 h-1 bg-gray-200 dark:bg-white/10 rounded-full cursor-pointer hidden md:block">
-            <div className="h-full w-2/3 bg-gray-900 dark:bg-white rounded-full group-hover:bg-green-500 dark:group-hover:bg-nct-primary"></div>
+            <div className="h-full w-2/3 bg-gray-900 dark:bg-white rounded-full group-hover:bg-nct-primary dark:group-hover:bg-nct-primary"></div>
           </div>
         </div>
         <button className="hover:text-gray-900 dark:hover:text-white transition-colors p-2 bg-gray-100 dark:bg-white/5 rounded">

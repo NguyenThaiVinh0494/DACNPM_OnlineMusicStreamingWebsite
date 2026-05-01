@@ -37,7 +37,20 @@ const resources = {
       "terms": "Điều khoản dịch vụ",
       "privacy": "Chính sách bảo mật",
       "download_app": "Tải ứng dụng",
-      "library": "THƯ VIỆN"
+      "library": "THƯ VIỆN",
+      "my_playlists": "PLAYLIST CỦA TÔI",
+      "create_new_playlist": "Tạo playlist mới",
+      "enter_playlist_name": "Nhập tên playlist",
+      "public": "Công khai",
+      "private": "Riêng tư",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "add_to_playlists": "Thêm vào playlist",
+      "no_playlists_yet": "Bạn chưa tạo playlist nào.",
+      "create_from_sidebar": "Hãy tạo một playlist mới từ thanh bên trái nhé!",
+      "songs": "bài hát",
+      "add": "Thêm",
+      "added": "Đã thêm"
     }
   },
   en: {
@@ -74,7 +87,20 @@ const resources = {
       "terms": "Terms of Service",
       "privacy": "Privacy Policy",
       "download_app": "Download App",
-      "library": "LIBRARY"
+      "library": "LIBRARY",
+      "my_playlists": "MY PLAYLISTS",
+      "create_new_playlist": "Create new playlist",
+      "enter_playlist_name": "Enter playlist name",
+      "public": "Public",
+      "private": "Private",
+      "cancel": "Cancel",
+      "save": "Save",
+      "add_to_playlists": "Add to playlists",
+      "no_playlists_yet": "You haven't created any playlists yet.",
+      "create_from_sidebar": "Create one from the sidebar first!",
+      "songs": "songs",
+      "add": "Add",
+      "added": "Added"
     }
   }
 };
