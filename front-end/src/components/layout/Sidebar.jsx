@@ -68,14 +68,14 @@ export default function Sidebar() {
           </div>
           <div className="space-y-1">
             <NavLink 
-              to="/favorites" 
+              to="/my-music/favorites" 
               className={({ isActive }) => `flex items-center gap-4 px-4 py-2 rounded-lg font-medium transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-nct-text hover:bg-gray-200 dark:hover:bg-white/5"}`}
             >
               <FiHeart className="w-5 h-5" />
               {t('liked_songs')}
             </NavLink>
             <NavLink 
-              to="/recent" 
+              to="/my-music/recent" 
               className={({ isActive }) => `flex items-center gap-4 px-4 py-2 rounded-lg font-medium transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-nct-text hover:bg-gray-200 dark:hover:bg-white/5"}`}
             >
               <FiClock className="w-5 h-5" />
@@ -87,7 +87,7 @@ export default function Sidebar() {
 
           <div className="px-4 flex items-center justify-between mb-4">
             <span className="text-xs font-bold text-gray-500 dark:text-nct-text-dim uppercase tracking-wider">
-              My Playlists
+              {t('my_playlists')}
             </span>
             <button 
               onClick={() => setIsCreateModalOpen(true)}
@@ -125,14 +125,14 @@ export default function Sidebar() {
               <FiX className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-bold text-black dark:text-white mb-6">Create new playlist</h3>
+            <h3 className="text-xl font-bold text-black dark:text-white mb-6">{t('create_new_playlist')}</h3>
 
             <div className="mb-6 relative">
               <input 
                 type="text" 
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
-                placeholder="Enter playlist name"
+                placeholder={t('enter_playlist_name')}
                 className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:border-nct-primary transition-colors"
                 maxLength={100}
                 autoFocus
@@ -149,7 +149,7 @@ export default function Sidebar() {
                   onChange={() => setIsPrivate(false)}
                   className="w-4 h-4 text-nct-primary bg-gray-100 dark:bg-white/10 border-gray-300 dark:border-white/20 focus:ring-nct-primary"
                 />
-                <span className="text-sm font-medium">Public</span>
+                <span className="text-sm font-medium">{t('public')}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer text-black dark:text-white">
                 <input 
@@ -159,7 +159,7 @@ export default function Sidebar() {
                   onChange={() => setIsPrivate(true)}
                   className="w-4 h-4 text-nct-primary bg-gray-100 dark:bg-white/10 border-gray-300 dark:border-white/20 focus:ring-nct-primary"
                 />
-                <span className="text-sm font-medium">Private</span>
+                <span className="text-sm font-medium">{t('private')}</span>
               </label>
             </div>
 
@@ -168,7 +168,7 @@ export default function Sidebar() {
                 onClick={() => setIsCreateModalOpen(false)}
                 className="flex-1 py-3 rounded-full font-medium text-black dark:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button 
                 onClick={handleCreatePlaylist}
@@ -179,7 +179,7 @@ export default function Sidebar() {
                     : 'bg-gray-200 dark:bg-white/10 text-gray-400 dark:text-white/50 cursor-not-allowed'
                 }`}
               >
-                Save
+                {t('save')}
               </button>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { FiPlay, FiPause, FiDownload, FiShare2, FiHeart, FiMoreHorizontal } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
+import SongItem from "../components/common/SongItem";
 
 export default function PlaylistDetail() {
   const { id } = useParams();
@@ -33,7 +34,7 @@ export default function PlaylistDetail() {
   return (
     <div className="pb-20">
       <div className="flex gap-8 mb-12">
-        <div className="w-[230px] h-[230px] shrink-0 rounded-xl overflow-hidden bg-white/5 relative group flex items-center justify-center">
+        <div className="w-[230px] h-[230px] shrink-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-white/5 relative group flex items-center justify-center">
           <img 
             src={playlist.image} 
             alt={playlist.title} 
@@ -50,18 +51,18 @@ export default function PlaylistDetail() {
         </div>
 
         <div className="flex flex-col justify-center flex-1">
-          <p className="text-sm font-medium text-nct-text-dim mb-2">Playlist • {playlist.songs.length} Songs</p>
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">{playlist.title}</h2>
+          <p className="text-sm font-medium text-gray-500 dark:text-nct-text-dim mb-2">Playlist • {playlist.songs.length} Songs</p>
+          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">{playlist.title}</h2>
           
           <div className="flex items-center gap-4 mb-6">
-            <button className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
-              <FiHeart className="w-5 h-5 text-white" />
+            <button className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
+              <FiHeart className="w-5 h-5 text-gray-700 dark:text-white" />
             </button>
-            <button className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
-              <FiShare2 className="w-5 h-5 text-white" />
+            <button className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
+              <FiShare2 className="w-5 h-5 text-gray-700 dark:text-white" />
             </button>
-            <button className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
-              <FiMoreHorizontal className="w-5 h-5 text-white" />
+            <button className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
+              <FiMoreHorizontal className="w-5 h-5 text-gray-700 dark:text-white" />
             </button>
           </div>
 
@@ -73,7 +74,7 @@ export default function PlaylistDetail() {
               <FiPlay className="w-5 h-5 fill-current" /> Play all
             </button>
             <button 
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-2.5 rounded-full font-bold transition-all"
+              className="flex items-center gap-2 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-900 dark:text-white px-8 py-2.5 rounded-full font-bold transition-all"
             >
               <FiDownload className="w-5 h-5" /> Download
             </button>
@@ -83,7 +84,7 @@ export default function PlaylistDetail() {
 
       <div>
         <div className="bg-transparent">
-          <div className="flex text-nct-text-dim text-sm font-medium px-6 py-4 border-b border-white/5">
+          <div className="flex text-gray-500 dark:text-nct-text-dim text-sm font-medium px-6 py-4 border-b border-gray-200 dark:border-white/5">
             <div className="w-12">#</div>
             <div className="flex-1">Title</div>
             <div className="w-1/4 hidden md:block">Artist</div>
@@ -91,71 +92,36 @@ export default function PlaylistDetail() {
           </div>
 
           <div className="flex flex-col mt-2">
-            {playlist.songs.map((song, index) => {
-              const isThisSongPlaying = currentSong?.id === song.id && isPlaying;
-              
-              return (
-                <div key={song.id} className="flex items-center px-6 py-3 hover:bg-white/5 transition-colors group rounded-xl">
-                  <div className="w-12 flex items-center text-nct-text-dim font-medium relative">
-                    <span className="group-hover:hidden">{index + 1}</span>
+            {playlist.songs.map((song, index) => (
+              <SongItem 
+                key={song.id}
+                song={song}
+                index={index}
+                isCurrent={currentSong?.id === song.id}
+                isPlaying={isPlaying}
+                isFavorite={false} // Would normally check global state
+                onPlay={(s) => playSong(s, playlist.songs)}
+                onToggleFavorite={() => {}} // Handle favorite toggle
+                onMore={toggleDropdown}
+                openDropdown={openDropdown}
+                dropdownContent={
+                  <div className="absolute top-10 right-0 w-48 bg-white dark:bg-[#2d2f32] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl z-50 overflow-hidden text-left">
                     <button 
-                      className="hidden group-hover:block text-white"
-                      onClick={() => playSong(song, playlist.songs)}
+                      onClick={() => {
+                        setOpenDropdown(null);
+                        openAddToPlaylistModal(song);
+                      }}
+                      className="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-white text-sm text-left"
                     >
-                      {isThisSongPlaying ? <FiPause className="w-4 h-4 fill-current" /> : <FiPlay className="w-4 h-4 fill-current" />}
+                      Thêm vào playlist
+                    </button>
+                    <button className="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-white text-sm text-left">
+                      Tải xuống
                     </button>
                   </div>
-                  
-                  <div className="flex-1 flex items-center gap-4">
-                    <img src={song.image} alt={song.title} className="w-10 h-10 rounded object-cover" />
-                    <div className="flex flex-col">
-                      <span 
-                        className={`font-medium cursor-pointer transition-colors ${currentSong?.id === song.id ? 'text-nct-primary' : 'text-white'}`}
-                        onClick={() => playSong(song, playlist.songs)}
-                      >
-                        {song.title}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="w-1/4 hidden md:block text-nct-text-dim text-sm hover:underline cursor-pointer">
-                    {song.artist}
-                  </div>
-
-                  <div className="w-32 text-center text-nct-text-dim text-sm flex items-center justify-end pr-4 relative">
-                    <span className="group-hover:hidden">{song.duration}</span>
-                    <div className="hidden group-hover:flex items-center gap-3">
-                      <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
-                        <FiHeart className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => toggleDropdown(song.id)}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
-                      >
-                        <FiMoreHorizontal className="w-4 h-4" />
-                      </button>
-
-                      {openDropdown === song.id && (
-                        <div className="absolute top-10 right-0 w-48 bg-[#2d2f32] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden text-left">
-                          <button 
-                            onClick={() => {
-                              setOpenDropdown(null);
-                              openAddToPlaylistModal(song);
-                            }}
-                            className="w-full px-4 py-3 hover:bg-white/10 transition-colors text-white text-sm text-left"
-                          >
-                            Thêm vào danh sách phát
-                          </button>
-                          <button className="w-full px-4 py-3 hover:bg-white/10 transition-colors text-white text-sm text-left">
-                            Tải xuống
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                }
+              />
+            ))}
           </div>
         </div>
       </div>
