@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 export default function BangXepHang() {
   const { t } = useTranslation();
@@ -7,9 +8,9 @@ export default function BangXepHang() {
       {/* Tiêu đề vùng */}
       <div className="flex justify-between items-center mb-4 mt-8">
         <h3 className="text-2xl font-bold text-black dark:text-white">Bảng Xếp Hạng</h3>
-        <button className="text-sm text-gray-500 dark:text-gray-400 uppercase font-medium hover:text-black dark:hover:text-white transition-colors">
+        <Link to="/top-100" className="text-sm text-gray-500 dark:text-gray-400 uppercase font-medium hover:text-black dark:hover:text-white transition-colors">
           {t('more')}
-        </button>
+        </Link>
       </div>
 
       {/* Lưới 3 cột */}

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Footer from "../components/layout/Footer";
 import ListGrid from "../components/home/ListGrid";
 import MusicChart from "../components/home/MusicChart";
@@ -61,7 +62,7 @@ export default function Home() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-black dark:text-white">Chủ Đề</h3>
-          <button className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">Thêm</button>
+          <Link to="/discover/topics" className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">Thêm</Link>
         </div>
         <div className="grid grid-cols-5 gap-4">
           {topics.map((topic, index) => (
@@ -84,14 +85,14 @@ export default function Home() {
       
       {/* Tái sử dụng component lưới cho tất cả các phần còn lại! */}
       <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" />
-      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" />
-      <ListGrid tieuDeKhuVuc="Top 100" />
+      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" link="/discover/mood" />
+      <ListGrid tieuDeKhuVuc="Top 100" link="/top-100" />
 
       {/* Thêm 2 cụm danh sách mới theo yêu cầu */}
       <DanhSachPhatNgang tieuDeKhuVuc="Single Mới Phát Hành" />
       <DanhSachPhatNgang tieuDeKhuVuc="TikTok Top Mix" />
 
-      <ListGrid tieuDeKhuVuc="Đang được yêu thích" />
+      <ListGrid tieuDeKhuVuc="Đang được yêu thích" link="/discover/popular" />
       <ListGrid tieuDeKhuVuc="Mới phát hành" />
       <Footer />
     </div>

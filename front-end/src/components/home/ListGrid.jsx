@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
-export default function LuoiDanhSachPhat({ tieuDeKhuVuc }) {
+export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link }) {
   const { t } = useTranslation();
   // Dữ liệu mẫu
   const danhSach = [
@@ -16,9 +17,15 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc }) {
       {/* Tiêu đề */}
       <div className="flex justify-between items-center mb-4 mt-8">
         <h3 className="text-2xl font-bold text-black dark:text-white">{tieuDeKhuVuc}</h3>
-        <button className="text-sm text-gray-500 dark:text-gray-400 uppercase font-medium hover:text-black dark:hover:text-white transition-colors">
-          {t('more')}
-        </button>
+        {link ? (
+          <Link to={link} className="text-sm text-gray-500 dark:text-gray-400 uppercase font-medium hover:text-black dark:hover:text-white transition-colors">
+            {t('more')}
+          </Link>
+        ) : (
+          <button className="text-sm text-gray-500 dark:text-gray-400 uppercase font-medium hover:text-black dark:hover:text-white transition-colors">
+            {t('more')}
+          </button>
+        )}
       </div>
 
       {/* Lưới thẻ (5 thẻ trên 1 hàng) */}

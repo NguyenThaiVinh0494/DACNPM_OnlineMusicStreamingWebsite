@@ -68,14 +68,14 @@ export default function Sidebar() {
           </div>
           <div className="space-y-1">
             <NavLink 
-              to="/favorites" 
+              to="/my-music/favorites" 
               className={({ isActive }) => `flex items-center gap-4 px-4 py-2 rounded-lg font-medium transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-nct-text hover:bg-gray-200 dark:hover:bg-white/5"}`}
             >
               <FiHeart className="w-5 h-5" />
               {t('liked_songs')}
             </NavLink>
             <NavLink 
-              to="/recent" 
+              to="/my-music/recent" 
               className={({ isActive }) => `flex items-center gap-4 px-4 py-2 rounded-lg font-medium transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-nct-text hover:bg-gray-200 dark:hover:bg-white/5"}`}
             >
               <FiClock className="w-5 h-5" />
@@ -100,7 +100,7 @@ export default function Sidebar() {
             {myPlaylists.map(playlist => (
               <NavLink 
                 key={playlist.id}
-                to={`/my-playlist/${playlist.id}`} 
+                to={`/my-music/playlist/${playlist.id}`} 
                 className={({ isActive }) => `block px-4 py-2 rounded-lg font-medium truncate transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5"}`}
               >
                 {playlist.title}
