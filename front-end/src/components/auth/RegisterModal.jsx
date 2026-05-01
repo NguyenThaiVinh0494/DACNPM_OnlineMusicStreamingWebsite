@@ -77,7 +77,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
           </span>
         </div>
 
-        <button className="w-full bg-green-500 hover:bg-green-600 dark:bg-cyan-400 dark:hover:bg-cyan-500 text-white dark:text-black font-bold py-3.5 rounded-full transition-colors text-lg mb-8 shadow-[0_0_15px_rgba(34,197,94,0.2)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)] cursor-pointer">
+        <button className="w-full bg-nct-primary hover:bg-[#2591c4] dark:bg-cyan-400 dark:hover:bg-cyan-500 text-white dark:text-black font-bold py-3.5 rounded-full transition-colors text-lg mb-8 shadow-[0_0_15px_rgba(45,170,237,0.3)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)] cursor-pointer">
           {t('register')}
         </button>
 

@@ -92,7 +92,6 @@ export default function Home() {
       <DanhSachPhatNgang tieuDeKhuVuc="TikTok Top Mix" />
 
       <ListGrid tieuDeKhuVuc="Đang được yêu thích" />
-      <ListGrid tieuDeKhuVuc="Mới phát hành" />
       <Footer />
     </div>
   );

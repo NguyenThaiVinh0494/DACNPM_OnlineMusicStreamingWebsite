@@ -32,6 +32,17 @@ export default function MyPlaylistDetail() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSongs, setSelectedSongs] = useState([]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown && !event.target.closest('.dropdown-container')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
+
   const playlist = myPlaylists.find(pl => pl.id === parseInt(id));
 
   if (!playlist) {
@@ -84,16 +95,7 @@ export default function MyPlaylistDetail() {
     song.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (openDropdown && !event.target.closest('.dropdown-container')) {
-        setOpenDropdown(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openDropdown]);
+
 
   return (
     <div className="pb-20">
@@ -122,10 +124,10 @@ export default function MyPlaylistDetail() {
         </div>
 
         <div className="flex flex-col justify-end flex-1 pb-2">
-          <p className="text-sm font-medium text-[#b3b3b3] mb-2 uppercase tracking-wider">Playlist cá nhân · {playlist.songs.length} Bài hát</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-[#b3b3b3] mb-2 uppercase tracking-wider">Playlist cá nhân · {playlist.songs.length} Bài hát</p>
           
           <div className="flex items-center gap-4 mb-6 group/title">
-            <h2 className="text-[40px] font-bold text-white leading-tight uppercase">{playlist.title}</h2>
+            <h2 className="text-[40px] font-bold text-gray-900 dark:text-white leading-tight uppercase">{playlist.title}</h2>
           </div>
           
           <div className="flex items-center gap-3 relative">
@@ -135,7 +137,7 @@ export default function MyPlaylistDetail() {
               className={`flex items-center gap-2 px-8 py-2.5 rounded-full font-bold transition-all ${
                 playlist.songs.length > 0 
                   ? 'bg-nct-primary hover:bg-[#2591c4] text-white'
-                  : 'bg-white/5 text-white/30 cursor-not-allowed'
+                  : 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
               }`}
             >
               <FiPlay className="w-5 h-5 fill-current" /> Phát tất cả
@@ -143,14 +145,14 @@ export default function MyPlaylistDetail() {
             <button 
               disabled={playlist.songs.length === 0}
               className={`p-2.5 rounded-full transition-colors ${
-                playlist.songs.length > 0 ? 'bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white' : 'bg-white/5 text-white/30 cursor-not-allowed'
+                playlist.songs.length > 0 ? 'bg-gray-200 hover:bg-gray-300 dark:bg-[#2a2a2a] dark:hover:bg-[#3a3a3a] text-gray-900 dark:text-white' : 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
               }`}
               title="Tải xuống"
             >
               <FiDownload className="w-5 h-5" />
             </button>
             <button 
-              className="p-2.5 rounded-full transition-colors bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white"
+              className="p-2.5 rounded-full transition-colors bg-gray-200 hover:bg-gray-300 dark:bg-[#2a2a2a] dark:hover:bg-[#3a3a3a] text-gray-900 dark:text-white"
               title="Chia sẻ"
             >
               <FiShare2 className="w-5 h-5" />
@@ -159,7 +161,7 @@ export default function MyPlaylistDetail() {
               <button 
                 onClick={() => setOpenDropdown(openDropdown === 'playlist-menu' ? null : 'playlist-menu')}
                 className={`p-2.5 rounded-full transition-colors ${
-                  openDropdown === 'playlist-menu' ? 'bg-nct-primary text-white' : 'bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white'
+                  openDropdown === 'playlist-menu' ? 'bg-nct-primary text-white' : 'bg-gray-200 hover:bg-gray-300 dark:bg-[#2a2a2a] dark:hover:bg-[#3a3a3a] text-gray-900 dark:text-white'
                 }`}
                 title="Khác"
               >
@@ -167,13 +169,13 @@ export default function MyPlaylistDetail() {
               </button>
 
               {openDropdown === 'playlist-menu' && (
-                <div className="absolute top-12 left-0 w-56 bg-[#2d2f32] border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden py-1">
+                <div className="absolute top-12 left-0 w-56 bg-white dark:bg-[#2d2f32] border border-gray-200 dark:border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden py-1">
                   <button 
                     onClick={() => {
                       setOpenDropdown(null);
                       setIsAddModalOpen(true);
                     }}
-                    className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                   >
                     <FiPlus className="w-4 h-4" /> Thêm bài hát
                   </button>
@@ -184,23 +186,23 @@ export default function MyPlaylistDetail() {
                       setEditIsPrivate(playlist.isPrivate || false);
                       setIsEditModalOpen(true);
                     }}
-                    className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                   >
                     <FiMoreHorizontal className="w-4 h-4" /> Chỉnh sửa Playlist
                   </button>
                   <button 
                     onClick={() => setOpenDropdown(null)}
-                    className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                   >
                     <FiShare2 className="w-4 h-4" /> Chia sẻ
                   </button>
-                  <div className="h-px bg-white/5 my-1"></div>
+                  <div className="h-px bg-gray-200 dark:bg-white/5 my-1"></div>
                   <button 
                     onClick={() => {
                       setOpenDropdown(null);
                       handleDeletePlaylist();
                     }}
-                    className="w-full px-4 py-2 hover:bg-white/10 text-red-400 hover:text-red-300 text-sm text-left flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-2 hover:bg-red-50 dark:hover:bg-white/10 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 text-sm text-left flex items-center gap-3 transition-colors"
                   >
                     <FiTrash2 className="w-4 h-4" /> Xóa Playlist
                   </button>
@@ -217,11 +219,11 @@ export default function MyPlaylistDetail() {
             <div className="w-20 h-20 mb-6 flex items-center justify-center">
                <FiMusic className="w-16 h-16 text-[#b3b3b3]/30" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Playlist này đang trống</h3>
-            <p className="text-[#b3b3b3] mb-8">Hãy tìm và thêm những bài hát bạn yêu thích vào đây</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Playlist này đang trống</h3>
+            <p className="text-gray-500 dark:text-[#b3b3b3] mb-8">Hãy tìm và thêm những bài hát bạn yêu thích vào đây</p>
             <button 
               onClick={() => setIsAddModalOpen(true)}
-              className="px-8 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold transition-colors"
+              className="px-8 py-2.5 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 text-gray-900 dark:text-white font-bold transition-colors"
             >
               Thêm bài hát
             </button>
