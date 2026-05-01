@@ -37,12 +37,12 @@ export default function AddToPlaylistModal() {
               const isAdded = playlist.songs.some(s => s.id === songToAdd?.id);
               
               return (
-                <div key={playlist.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 dark:text-white/50">
+                <div key={playlist.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors group">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-200 dark:bg-white/10 flex items-center justify-center">
                     {playlist.image ? (
                       <img src={playlist.image} alt={playlist.title} className="w-full h-full object-cover" />
                     ) : (
-                      <FiMusic className="w-5 h-5" />
+                      <FiMusic className="w-5 h-5 text-gray-400 dark:text-white/50" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -54,8 +54,8 @@ export default function AddToPlaylistModal() {
                     onClick={() => addSongToMyPlaylist(playlist.id, songToAdd)}
                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors shrink-0 border ${
                       isAdded 
-                        ? 'bg-transparent border-gray-300 text-gray-400 dark:border-white/20 dark:text-white/50 cursor-not-allowed' 
-                        : 'bg-transparent border-gray-400 text-gray-700 hover:border-nct-primary hover:text-nct-primary dark:border-white/30 dark:text-white dark:hover:border-nct-primary dark:hover:text-nct-primary'
+                        ? 'bg-transparent border-gray-300 dark:border-white/20 text-gray-400 dark:text-white/50 cursor-not-allowed' 
+                        : 'bg-transparent border-gray-300 dark:border-white/30 text-gray-700 dark:text-white hover:border-nct-primary hover:text-nct-primary'
                     }`}
                   >
                     {isAdded ? t('added') : t('add')}

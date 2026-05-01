@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Footer from "../components/layout/Footer";
 import ListGrid from "../components/home/ListGrid";
 import MusicChart from "../components/home/MusicChart";
@@ -20,7 +21,7 @@ export default function Home() {
   // 1. Tạo hàm lấy lời chào dựa vào giờ hệ thống
   const layLoiChao = () => {
     const gioHienTai = new Date().getHours();
-    
+
     if (gioHienTai >= 5 && gioHienTai < 12) {
       return "Chào buổi sáng";
     } else if (gioHienTai >= 12 && gioHienTai < 18) {
@@ -33,13 +34,13 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-bold">{layLoiChao()}</h2>
-      
+
       {/* Banners */}
       <div className="grid grid-cols-2 gap-6">
         <div className="rounded-xl overflow-hidden h-48 relative group cursor-pointer">
-          <img 
-            src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=800&h=300&fit=crop" 
-            alt="Banner 1" 
+          <img
+            src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=800&h=300&fit=crop"
+            alt="Banner 1"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
@@ -61,18 +62,18 @@ export default function Home() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-black dark:text-white">Chủ Đề</h3>
-          <button className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">Thêm</button>
+          <Link to="/discover/topics" className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">Thêm</Link>
         </div>
         <div className="grid grid-cols-5 gap-4">
           {topics.map((topic, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className={`h-24 rounded-lg bg-gradient-to-br ${topic.color} relative overflow-hidden group cursor-pointer`}
             >
               <h4 className="absolute top-3 left-3 text-white font-bold text-lg z-10">{topic.name}</h4>
-              <img 
-                src={topic.image} 
-                alt={topic.name} 
+              <img
+                src={topic.image}
+                alt={topic.name}
                 className="absolute -right-4 -bottom-2 w-16 h-16 object-cover rounded-md rotate-[25deg] group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 shadow-lg"
               />
             </div>
@@ -81,17 +82,18 @@ export default function Home() {
       </div>
       {/* Ráp các component mới vào đây */}
       <MusicChart />
-      
+
       {/* Tái sử dụng component lưới cho tất cả các phần còn lại! */}
       <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" />
-      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" />
-      <ListGrid tieuDeKhuVuc="Top 100" />
+      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" link="/discover/mood" />
+      <ListGrid tieuDeKhuVuc="Top 100" link="/top-100" />
 
       {/* Thêm 2 cụm danh sách mới theo yêu cầu */}
       <DanhSachPhatNgang tieuDeKhuVuc="Single Mới Phát Hành" />
       <DanhSachPhatNgang tieuDeKhuVuc="TikTok Top Mix" />
 
-      <ListGrid tieuDeKhuVuc="Đang được yêu thích" />
+      <ListGrid tieuDeKhuVuc="Đang được yêu thích" link="/discover/popular" />
+      <ListGrid tieuDeKhuVuc="Mới phát hành" />
       <Footer />
     </div>
   );

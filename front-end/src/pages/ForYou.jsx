@@ -1,9 +1,9 @@
 export default function ForYou() {
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold">Dành Cho Bạn</h2>
-      <div className="flex flex-col items-center justify-center h-64 bg-white/5 rounded-xl border border-white/10 border-dashed">
-        <p className="text-nct-text-dim">Những bài hát được gợi ý riêng cho bạn sẽ hiển thị ở đây.</p>
+      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Dành Cho Bạn</h2>
+      <div className="flex flex-col items-center justify-center h-64 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 border-dashed shadow-inner">
+        <p className="text-gray-500 dark:text-nct-text-dim font-medium">Những bài hát được gợi ý riêng cho bạn sẽ hiển thị ở đây.</p>
       </div>
     </div>
   );
