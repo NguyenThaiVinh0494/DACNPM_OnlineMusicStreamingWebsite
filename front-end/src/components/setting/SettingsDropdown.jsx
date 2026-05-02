@@ -12,12 +12,18 @@ export default function SettingsDropdown() {
   });
   const settingsRef = useRef(null);
 
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   const handleThemeToggle = () => {
     setIsDarkMode(prev => {
       const newMode = !prev;
       localStorage.setItem('themeMode', newMode ? 'dark' : 'light');
-      if (newMode) document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
       return newMode;
     });
   };
