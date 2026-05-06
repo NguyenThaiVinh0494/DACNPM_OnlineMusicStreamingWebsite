@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { FiPlay, FiPause, FiDownload, FiShare2, FiHeart, FiMoreHorizontal } from "react-icons/fi";
+import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
 

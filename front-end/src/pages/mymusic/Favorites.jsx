@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiPlay, FiPause, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiClock, FiPlus, FiList, FiCheck, FiX, FiSearch, FiMusic } from "react-icons/fi";
+import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiClock, FiPlus, FiList, FiCheck, FiX, FiSearch, FiMusic } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import SongItem from "../../components/common/SongItem";
 
