@@ -8,7 +8,14 @@ export default function SettingsDropdown() {
   const [language, setLanguage] = useState(() => localStorage.getItem('appLanguage') || 'vi');
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedMode = localStorage.getItem('themeMode');
-    return savedMode !== null ? savedMode === 'dark' : true;
+    const dark = savedMode !== null ? savedMode === 'dark' : true;
+    // Apply class immediately on first render (before useEffect runs)
+    if (dark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    return dark;
   });
   const settingsRef = useRef(null);
 

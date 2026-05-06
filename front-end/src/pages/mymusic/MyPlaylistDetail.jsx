@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
-import { FiPlay, FiPause, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiTrash2, FiClock, FiPlus, FiList, FiX, FiMusic, FiSearch, FiCheck } from "react-icons/fi";
+import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiTrash2, FiClock, FiPlus, FiList, FiX, FiMusic, FiSearch, FiCheck } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import SongItem from "../../components/common/SongItem";
 
@@ -35,6 +35,18 @@ export default function MyPlaylistDetail() {
   const [selectedSongs, setSelectedSongs] = useState([]);
 
   const playlist = myPlaylists.find(pl => pl.id === parseInt(id));
+
+  // Close dropdown when clicking outside
+  // ✅ useEffect phải được gọi trước mọi early return (Rules of Hooks)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown && !event.target.closest('.dropdown-container')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
 
   if (!playlist) {
     return <Navigate to="/" replace />;
@@ -85,17 +97,6 @@ export default function MyPlaylistDetail() {
     song.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     song.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (openDropdown && !event.target.closest('.dropdown-container')) {
-        setOpenDropdown(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openDropdown]);
 
   return (
     <div className="pb-20">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FiPlay, FiPause, FiMoreHorizontal, FiHeart, FiShare2, FiDownload, FiClock, FiTrash2, FiPlus, FiList, FiCheck } from "react-icons/fi";
+import { FiPlay,  FiClock, FiTrash2, FiPlus, FiList, FiCheck } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import SongItem from "../../components/common/SongItem";
 
