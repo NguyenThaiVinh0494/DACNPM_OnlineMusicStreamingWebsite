@@ -50,7 +50,18 @@ const resources = {
       "create_from_sidebar": "Hãy tạo một playlist mới từ thanh bên trái nhé!",
       "songs": "bài hát",
       "add": "Thêm",
-      "added": "Đã thêm"
+      "added": "Đã thêm",
+      "shuffle": "Nghe ngẫu nhiên",
+      "good_morning": "Chào buổi sáng",
+      "good_evening": "Chào buổi tối",
+      "banner_title": "Nghe nhạc, hát hò",
+      "banner_subtitle": "giải trí đỉnh cao cùng NCT TV",
+      "view_details": "Xem chi tiết",
+      "topics_page_title": "Chủ Đề",
+      "tab_all": "Tất cả",
+      "tab_genre": "Thể loại",
+      "tab_context": "Khung cảnh",
+      "tab_mood": "Tâm trạng"
     }
   },
   en: {
@@ -100,7 +111,18 @@ const resources = {
       "create_from_sidebar": "Create one from the sidebar first!",
       "songs": "songs",
       "add": "Add",
-      "added": "Added"
+      "added": "Added",
+      "shuffle": "Shuffle",
+      "good_morning": "Good morning",
+      "good_evening": "Good evening",
+      "banner_title": "Listen & sing along",
+      "banner_subtitle": "ultimate entertainment with NCT TV",
+      "view_details": "View details",
+      "topics_page_title": "Topics",
+      "tab_all": "All",
+      "tab_genre": "Genres",
+      "tab_context": "Contexts",
+      "tab_mood": "Moods"
     }
   }
 };
