@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import Footer from "../components/layout/Footer";
 import ListGrid from "../components/home/ListGrid";
 import MusicChart from "../components/home/MusicChart";
 import DanhSachPhatNgang from "../components/home/HorizontalPlaylist";
 
 export default function Home() {
+  const { t } = useTranslation();
   const topics = [
     { name: "Pop", color: "from-purple-500 to-indigo-500", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=200&h=200&fit=crop" },
     { name: "Buồn", color: "from-orange-700 to-orange-900", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop" },
@@ -23,11 +25,11 @@ export default function Home() {
     const gioHienTai = new Date().getHours();
 
     if (gioHienTai >= 5 && gioHienTai < 12) {
-      return "Chào buổi sáng";
+      return t('good_morning', "Chào buổi sáng");
     } else if (gioHienTai >= 12 && gioHienTai < 18) {
-      return "Chào buổi chiều";
+      return t('good_afternoon', "Chào buổi chiều");
     } else {
-      return "Chào buổi tối";
+      return t('good_evening', "Chào buổi tối");
     }
   };
 
@@ -49,10 +51,10 @@ export default function Home() {
         </div>
         <div className="rounded-xl overflow-hidden h-48 relative group cursor-pointer bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center p-8">
           <div className="z-10">
-            <h3 className="text-2xl font-bold text-white mb-2">Nghe nhạc, hát hò</h3>
-            <p className="text-white/90 mb-4">giải trí đỉnh cao cùng NCT TV</p>
+            <h3 className="text-2xl font-bold text-white mb-2">{t('banner_title', 'Nghe nhạc, hát hò')}</h3>
+            <p className="text-white/90 mb-4">{t('banner_subtitle', 'giải trí đỉnh cao cùng NCT TV')}</p>
             <button className="bg-white text-emerald-600 px-4 py-1.5 rounded-full font-bold text-sm hover:scale-105 transition-transform">
-              Xem chi tiết
+              {t('view_details', 'Xem chi tiết')}
             </button>
           </div>
         </div>
@@ -61,8 +63,8 @@ export default function Home() {
       {/* Categories / Topics */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-black dark:text-white">Chủ Đề</h3>
-          <Link to="/discover/topics" className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">Thêm</Link>
+          <h3 className="text-xl font-bold text-black dark:text-white">{t('topics')}</h3>
+          <Link to="/discover/topics" className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">{t('more')}</Link>
         </div>
         <div className="grid grid-cols-5 gap-4">
           {topics.map((topic, index) => (
