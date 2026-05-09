@@ -14,6 +14,9 @@ import PopularPlaylists from "./pages/discover/PopularPlaylists";
 import MoodPlaylists from "./pages/discover/MoodPlaylists";
 import Top100 from "./pages/discover/Top100";
 import MoodTopics from "./pages/discover/MoodTopics";
+import SearchResults from "./pages/SearchResults";
+import AlbumDetail from "./pages/AlbumDetail";
+import ArtistDetail from "./pages/ArtistDetail";
 
 function App() {
   return (
@@ -37,6 +40,9 @@ function App() {
             <Route path="playlist/:id" element={<MyPlaylistDetail />} />
           </Route>
           <Route path="playlist/:id" element={<PlaylistDetail />} />
+          <Route path="search" element={<SearchResults />} />
+          <Route path="album/:id" element={<AlbumDetail />} />
+          <Route path="artist/:id" element={<ArtistDetail />} />
           <Route path="song/:id" element={<SongDetail />} />
         </Route>
       </Routes>
