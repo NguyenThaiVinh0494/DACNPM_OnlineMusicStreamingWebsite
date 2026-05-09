@@ -8,6 +8,7 @@ import Favorites from "./pages/mymusic/Favorites";
 import Recent from "./pages/mymusic/Recent";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import MyPlaylistDetail from "./pages/mymusic/MyPlaylistDetail";
+import SongDetail from "./pages/songs/SongDetail";
 
 import PopularPlaylists from "./pages/discover/PopularPlaylists";
 import MoodPlaylists from "./pages/discover/MoodPlaylists";
@@ -36,6 +37,7 @@ function App() {
             <Route path="playlist/:id" element={<MyPlaylistDetail />} />
           </Route>
           <Route path="playlist/:id" element={<PlaylistDetail />} />
+          <Route path="song/:id" element={<SongDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>
