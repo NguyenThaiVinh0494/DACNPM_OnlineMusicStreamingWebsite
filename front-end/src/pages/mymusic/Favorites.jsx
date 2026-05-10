@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiClock, FiPlus, FiList, FiCheck, FiX, FiSearch, FiMusic } from "react-icons/fi";
+import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiClock, FiPlus, FiCheck, FiX, FiSearch, FiMusic } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import SongItem from "../../components/common/SongItem";
 import SongActionMenu from "../../components/common/SongActionMenu";
+import EmptyState from "../../components/common/EmptyState";
 
 export default function Favorites() {
   const { 
@@ -13,8 +14,6 @@ export default function Favorites() {
     currentSong, 
     isPlaying, 
     openAddToPlaylistModal, 
-    addToQueue, 
-    playNextInQueue, 
     allSongs 
   } = useMusic();
   
@@ -219,11 +218,12 @@ export default function Favorites() {
 
           <div className="flex flex-col mt-2">
             {favorites.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-500 dark:text-[#b3b3b3] border-t border-gray-200 dark:border-white/5 mt-4">
-                <FiMusic className="w-16 h-16 mb-4 opacity-20" />
-                <p className="text-lg font-medium mb-2 text-gray-900 dark:text-white">Chưa có bài hát yêu thích nào</p>
-                <p className="text-sm opacity-60">Hãy thêm bài hát bạn yêu thích vào danh sách này.</p>
-              </div>
+              <EmptyState 
+                type="music" 
+                title="Chưa có bài hát yêu thích nào" 
+                description="Hãy thêm bài hát bạn yêu thích vào danh sách này." 
+                className="border-t border-gray-200 dark:border-white/5 mt-4 py-20" 
+              />
             ) : (
               favorites.map((song, index) => (
                 <SongItem 
@@ -294,7 +294,7 @@ export default function Favorites() {
                 </div>
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
                   {filteredSongs.length === 0 ? (
-                    <div className="text-center py-10 text-gray-500 dark:text-[#b3b3b3]">Không tìm thấy bài hát nào.</div>
+                    <EmptyState type="search" title="Không tìm thấy bài hát nào." className="py-10" />
                   ) : (
                     filteredSongs.map(song => {
                       const isAdded = favorites.some(s => s.id === song.id);

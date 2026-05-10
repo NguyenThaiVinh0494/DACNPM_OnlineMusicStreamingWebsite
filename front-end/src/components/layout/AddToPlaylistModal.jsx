@@ -1,10 +1,8 @@
-import { useTranslation } from "react-i18next";
 import { useMusic } from "../../context/MusicContext";
 import { FiX, FiMusic, FiPlus, FiSearch } from "react-icons/fi";
 import { useState } from "react";
 
 export default function AddToPlaylistModal() {
-  const { t } = useTranslation();
   const { isAddPlaylistModalOpen, closeAddToPlaylistModal, myPlaylists, addSongToMyPlaylist, songToAdd, createNewPlaylist } = useMusic();
   const [searchQuery, setSearchQuery] = useState("");
 

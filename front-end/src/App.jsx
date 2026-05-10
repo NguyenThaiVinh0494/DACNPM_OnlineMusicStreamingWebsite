@@ -18,9 +18,18 @@ import SearchResults from "./pages/SearchResults";
 import AlbumDetail from "./pages/albums/AlbumDetail";
 import ArtistDetail from "./pages/artists/ArtistDetail";
 
+import { Toaster } from "react-hot-toast";
+
 function App() {
   return (
     <BrowserRouter>
+      <Toaster 
+        position="bottom-left" 
+        toastOptions={{ 
+          style: { background: '#333', color: '#fff' },
+          className: 'dark:bg-nct-bg dark:text-white bg-white text-gray-900 border border-gray-200 dark:border-white/10'
+        }} 
+      />
       <AddToPlaylistModal />
       <Routes>
         <Route path="/" element={<MainLayout />}>

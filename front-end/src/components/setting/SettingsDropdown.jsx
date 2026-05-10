@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiSettings, FiGlobe, FiChevronRight, FiCheck, FiLifeBuoy, FiMessageSquare, FiMoon } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
-
+import { useClickOutside } from '../../hooks/useClickOutside';
 export default function SettingsDropdown() {
   const { t, i18n } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -41,15 +41,7 @@ export default function SettingsDropdown() {
     i18n.changeLanguage(lang);
   };
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
-        setIsSettingsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(settingsRef, () => setIsSettingsOpen(false));
 
   return (
     <div className="relative" ref={settingsRef}>

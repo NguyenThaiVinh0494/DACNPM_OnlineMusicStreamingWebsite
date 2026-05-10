@@ -5,6 +5,7 @@ import {
   FiUserPlus, FiCheck, FiClock, FiMusic} from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import SongActionMenu from "../../components/common/SongActionMenu";
+import LazyImage from "../../components/common/LazyImage";
 
 // ── Mock artist data keyed by id ───────────────────────────────────────────
 const ARTISTS_DATA = {
@@ -313,7 +314,7 @@ function SongRow({ song, index, songList }) {
       {/* Thumbnail + Title */}
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden shadow-md">
-          <img src={song.image} alt={song.title} className="w-full h-full object-cover" />
+          <LazyImage src={song.image} alt={song.title} className="w-full h-full object-cover" />
           {hovered && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <FiPlay className="w-4 h-4 text-white fill-current" />
@@ -375,7 +376,7 @@ function AlbumMiniCard({ album }) {
         onMouseLeave={() => setHovered(false)}
       >
         <div className="relative rounded-lg overflow-hidden aspect-square mb-2 bg-white/5 shadow-md group-hover:shadow-xl transition-shadow">
-          <img src={album.image} alt={album.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+          <LazyImage src={album.image} alt={album.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
           {hovered && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               <div className="w-11 h-11 rounded-full bg-nct-primary hover:bg-[#2591c4] flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
@@ -411,9 +412,9 @@ export default function ArtistDetail() {
   return (
     <div className="pb-24 -mx-8 -mt-6">
       {/* ── Hero Banner ── */}
-      <div className="relative h-[320px] overflow-hidden">
+      <div className="relative h-[320px] overflow-hidden bg-gray-200 dark:bg-white/5">
         {/* Background image */}
-        <img
+        <LazyImage
           src={artist.banner}
           alt={artist.name}
           className="w-full h-full object-cover object-top"

@@ -3,6 +3,8 @@ import { useSearchParams, Link } from "react-router-dom";
 import { FiPlay, FiChevronRight } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
+import LazyImage from "../components/common/LazyImage";
+import EmptyState from "../components/common/EmptyState";
 
 // ── Mock Data ──────────────────────────────────────────────────────────────
 const MOCK_SONGS = [
@@ -44,7 +46,7 @@ function ArtistCard({ artist }) {
       <Link to={`/artist/${artist.id}`} className="flex flex-col items-center gap-2 cursor-pointer">
         <div className="w-[160px] h-[160px] rounded-full overflow-hidden bg-white/5 relative shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
           {artist.image ? (
-            <img src={artist.image} alt={artist.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <LazyImage src={artist.image} alt={artist.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
               <span className="text-4xl font-bold text-white/20">{artist.name.charAt(0)}</span>
@@ -71,7 +73,7 @@ function AlbumCard({ album }) {
   return (
     <div className="group" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <div className="relative rounded-lg overflow-hidden aspect-square mb-3 bg-white/5 shadow-md group-hover:shadow-xl transition-all group-hover:-translate-y-1">
-        <img src={album.image} alt={album.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        <LazyImage src={album.image} alt={album.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
         <Link to={`/album/${album.id}`} className="absolute inset-0 z-10" />
         <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 z-20 ${hovered ? "opacity-100" : "opacity-0"}`}>
           <button 
@@ -95,7 +97,7 @@ function PlaylistCard({ playlist }) {
   return (
     <div className="group" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <div className="relative rounded-lg overflow-hidden aspect-square mb-3 bg-white/5 shadow-md group-hover:shadow-xl transition-all group-hover:-translate-y-1">
-        <img src={playlist.image} alt={playlist.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        <LazyImage src={playlist.image} alt={playlist.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
         <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 ${hovered ? "opacity-100" : "opacity-0"}`}>
           <button className="w-12 h-12 rounded-full bg-nct-primary hover:bg-[#2591c4] flex items-center justify-center shadow-lg transform scale-90 hover:scale-105 transition-all">
             <FiPlay className="w-5 h-5 text-white fill-current ml-0.5" />
@@ -170,9 +172,7 @@ export default function SearchResults() {
 
       <div className="pt-4">
         {!query ? (
-          <div className="flex flex-col items-center justify-center py-24 text-nct-text-dim">
-            <p className="text-lg font-bold">Nhập từ khóa để tìm kiếm</p>
-          </div>
+          <EmptyState type="search" title="Nhập từ khóa để tìm kiếm" className="py-24" />
         ) : (
           <>
             {/* Tất cả */}
@@ -270,10 +270,7 @@ export default function SearchResults() {
 
             {/* Video */}
             {tabParam === "videos" && (
-              <div className="flex flex-col items-center justify-center py-24 text-nct-text-dim">
-                <p className="text-lg font-bold">Không tìm thấy video nào</p>
-                <p className="text-sm mt-1">Thử tìm kiếm với từ khóa khác</p>
-              </div>
+              <EmptyState type="search" title="Không tìm thấy video nào" description="Thử tìm kiếm với từ khóa khác" className="py-24" />
             )}
           </>
         )}
