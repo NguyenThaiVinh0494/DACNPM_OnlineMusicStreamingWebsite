@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import {
-  FiPlay, FiHeart, FiShare2, FiMoreHorizontal,
-  FiDownload, FiClock, FiCheck
-} from "react-icons/fi";
+import { FiPlay, FiHeart, FiShare2, FiMoreHorizontal, FiDownload, FiClock, FiCheck, FiChevronRight } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
+import AlbumActionMenu from "../components/common/AlbumActionMenu";
+import SongActionMenu from "../components/common/SongActionMenu";
 
 // ── Mock album data keyed by id ────────────────────────────────────────────
 const ALBUMS_DATA = {
@@ -54,10 +53,26 @@ const FALLBACK = {
 export default function AlbumDetail() {
   const { id } = useParams();
   const album = ALBUMS_DATA[parseInt(id)] || FALLBACK;
-  const { playSong, playAll, currentSong, isPlaying, toggleFavorite, favorites } = useMusic();
-
+  const { playSong, playAll, currentSong, isPlaying, favorites } = useMusic();
   const [liked, setLiked] = useState(false);
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [showAlbumMenu, setShowAlbumMenu] = useState(false);
+  const [activeSongMenu, setActiveSongMenu] = useState(null);
+  const albumMenuRef = useRef(null);
+  const songMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (albumMenuRef.current && !albumMenuRef.current.contains(event.target)) {
+        setShowAlbumMenu(false);
+      }
+      if (songMenuRef.current && !songMenuRef.current.contains(event.target)) {
+        setActiveSongMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handlePlayAll = () => playAll(album.songs);
 
@@ -113,31 +128,37 @@ export default function AlbumDetail() {
               onClick={() => setLiked(l => !l)}
               className={`flex flex-col items-center gap-0.5 group/btn`}
             >
-              <div className={`p-2.5 rounded-full transition-colors ${liked ? "bg-red-50 dark:bg-red-900/20" : "bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10"}`}>
+              <div className={`p-2.5 rounded-full transition-colors ${liked ? "bg-red-900/20" : "bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10"}`}>
                 <FiHeart className={`w-5 h-5 transition-colors ${liked ? "text-red-500 fill-current" : "text-gray-700 dark:text-white"}`} />
               </div>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400">{liked ? 1 : 0}</span>
+              <span className="text-[10px] text-nct-text-dim">{liked ? 1 : 0}</span>
             </button>
 
             <button className="flex flex-col items-center gap-0.5">
               <div className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
                 <FiShare2 className="w-5 h-5 text-gray-700 dark:text-white" />
               </div>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400">0</span>
+              <span className="text-[10px] text-nct-text-dim">0</span>
             </button>
 
-            <button className="flex flex-col items-center gap-0.5">
-              <div className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
-                <FiMoreHorizontal className="w-5 h-5 text-gray-700 dark:text-white" />
-              </div>
-            </button>
+            <div className="relative" ref={albumMenuRef}>
+              <button 
+                onClick={() => setShowAlbumMenu(!showAlbumMenu)}
+                className="flex flex-col items-center gap-0.5"
+              >
+                <div className={`p-2.5 rounded-full transition-colors ${showAlbumMenu ? "bg-gray-200 dark:bg-white/10" : "bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10"}`}>
+                  <FiMoreHorizontal className="w-5 h-5 text-gray-700 dark:text-white" />
+                </div>
+              </button>
+              {showAlbumMenu && <AlbumActionMenu onClose={() => setShowAlbumMenu(false)} />}
+            </div>
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3">
             <button
               onClick={handlePlayAll}
-              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white px-7 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg hover:shadow-teal-500/30 active:scale-95"
+              className="flex items-center gap-2 bg-nct-primary hover:bg-[#2591c4] text-white px-7 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg shadow-cyan-500/20 active:scale-95"
             >
               <FiPlay className="w-4 h-4 fill-current" />
               Phát tất cả
@@ -163,7 +184,7 @@ export default function AlbumDetail() {
 
         {/* Rows */}
         {album.songs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
+          <div className="flex flex-col items-center justify-center py-16 text-nct-text-dim">
             <p className="text-base font-medium">Chưa có bài hát nào</p>
           </div>
         ) : (
@@ -171,6 +192,7 @@ export default function AlbumDetail() {
             const isCurrent = currentSong?.id === song.id;
             const isFav = favorites.some(f => f.id === song.id);
             const isHovered = hoveredRow === song.id;
+            const isMenuOpen = activeSongMenu === song.id;
 
             return (
               <div
@@ -179,14 +201,14 @@ export default function AlbumDetail() {
                 onMouseLeave={() => setHoveredRow(null)}
                 onClick={() => playSong(song, album.songs)}
                 className={`grid grid-cols-[40px_1fr_1fr_60px_40px] gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors items-center group
-                  ${isCurrent ? "bg-teal-50 dark:bg-teal-900/20" : "hover:bg-gray-100 dark:hover:bg-white/5"}`}
+                  ${isCurrent ? "bg-nct-primary/5 dark:bg-white/10" : "hover:bg-gray-100 dark:hover:bg-white/5"}`}
               >
                 {/* Index / Play */}
-                <div className="text-center text-sm text-gray-500 dark:text-gray-400 font-medium">
+                <div className="text-center text-sm text-nct-text-dim font-medium">
                   {isHovered || isCurrent ? (
                     <button
                       onClick={e => { e.stopPropagation(); playSong(song, album.songs); }}
-                      className="text-teal-500"
+                      className="text-nct-primary"
                     >
                       {isCurrent && isPlaying ? "▐▐" : "▶"}
                     </button>
@@ -205,28 +227,37 @@ export default function AlbumDetail() {
                       </div>
                     )}
                   </div>
-                  <span className={`text-sm font-semibold truncate ${isCurrent ? "text-teal-500" : "text-gray-900 dark:text-white"}`}>
+                  <span className={`text-sm font-semibold truncate ${isCurrent ? "text-nct-primary" : "text-gray-900 dark:text-white"}`}>
                     {song.title}
                   </span>
                 </div>
 
                 {/* Artist */}
-                <span className="text-sm text-gray-600 dark:text-gray-400 truncate hover:text-teal-500 dark:hover:text-teal-400 transition-colors cursor-pointer">
+                <span className="text-sm text-nct-text-dim truncate hover:text-nct-primary transition-colors cursor-pointer">
                   {song.artist}
                 </span>
 
                 {/* Duration */}
-                <span className="text-sm text-gray-500 dark:text-gray-400 text-center">{song.duration}</span>
+                <span className="text-sm text-nct-text-dim text-center">{song.duration}</span>
 
                 {/* More options */}
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center relative" ref={isMenuOpen ? songMenuRef : null}>
                   <button
-                    onClick={e => { e.stopPropagation(); toggleFavorite(song); }}
-                    className={`p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100
-                      ${isFav ? "text-red-500 opacity-100" : "text-gray-400 dark:text-gray-500 hover:text-red-500"}`}
+                    onClick={e => { 
+                      e.stopPropagation(); 
+                      setActiveSongMenu(isMenuOpen ? null : song.id);
+                    }}
+                    className={`p-1.5 rounded-full transition-all dropdown-trigger
+                      ${isMenuOpen ? "bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white opacity-100" : "text-gray-400 dark:text-nct-text-dim opacity-0 group-hover:opacity-100 hover:text-gray-900 dark:hover:text-white"}`}
                   >
-                    <FiHeart className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+                    <FiMoreHorizontal className="w-5 h-5" />
                   </button>
+                  {isMenuOpen && (
+                    <SongActionMenu 
+                      song={song} 
+                      onClose={() => setActiveSongMenu(null)} 
+                    />
+                  )}
                 </div>
               </div>
             );

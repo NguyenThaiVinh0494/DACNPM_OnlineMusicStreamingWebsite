@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   FiPlay, FiHeart, FiMoreHorizontal,
-  FiUserPlus, FiCheck, FiClock, FiMusic
+  FiUserPlus, FiCheck, FiClock, FiMusic, FiChevronRight
 } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
+import SongActionMenu from "../components/common/SongActionMenu";
 
 // ── Mock artist data keyed by id ───────────────────────────────────────────
 const ARTISTS_DATA = {
@@ -108,19 +109,31 @@ function SongRow({ song, index, songList }) {
   const isCurrent = currentSong?.id === song.id;
   const isFav = favorites.some(f => f.id === song.id);
   const [hovered, setHovered] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => playSong(song, songList)}
-      className={`grid grid-cols-[40px_1fr_160px_1fr_60px_40px] gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors items-center group
-        ${isCurrent ? "bg-teal-50 dark:bg-teal-900/20" : "hover:bg-gray-100 dark:hover:bg-white/5"}`}
+      className={`grid grid-cols-[40px_1fr_160px_1fr_60px_40px] gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors items-center group relative
+        ${isCurrent ? "bg-nct-primary/5 dark:bg-white/10" : "hover:bg-gray-100 dark:hover:bg-white/5"}`}
     >
       {/* Index / Play */}
-      <div className="text-center text-sm text-gray-500 dark:text-gray-400 font-medium">
+      <div className="text-center text-sm text-gray-400 dark:text-nct-text-dim font-medium">
         {hovered || isCurrent ? (
-          <span className="text-teal-500 font-bold">
+          <span className="text-nct-primary font-bold">
             {isCurrent && isPlaying ? "▐▐" : "▶"}
           </span>
         ) : (
@@ -130,7 +143,7 @@ function SongRow({ song, index, songList }) {
 
       {/* Thumbnail + Title */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden">
+        <div className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden shadow-md">
           <img src={song.image} alt={song.title} className="w-full h-full object-cover" />
           {hovered && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -138,36 +151,45 @@ function SongRow({ song, index, songList }) {
             </div>
           )}
         </div>
-        <span className={`text-sm font-semibold truncate ${isCurrent ? "text-teal-500" : "text-gray-900 dark:text-white"}`}>
+        <span className={`text-sm font-semibold truncate ${isCurrent ? "text-nct-primary" : "text-gray-900 dark:text-white"}`}>
           {song.title}
         </span>
       </div>
 
       {/* Uploader */}
       <div className="flex items-center gap-1.5 min-w-0">
-        <div className="w-4 h-4 rounded-full bg-teal-500/20 flex items-center justify-center flex-shrink-0">
-          <FiMusic className="w-2.5 h-2.5 text-teal-500" />
+        <div className="w-4 h-4 rounded-full bg-nct-primary/20 flex items-center justify-center flex-shrink-0">
+          <FiMusic className="w-2.5 h-2.5 text-nct-primary" />
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{song.uploader}</span>
+        <span className="text-xs text-gray-500 dark:text-nct-text-dim truncate">{song.uploader}</span>
       </div>
 
       {/* Artist */}
-      <span className="text-sm text-gray-600 dark:text-gray-400 truncate hover:text-teal-500 transition-colors cursor-pointer">
+      <span className="text-sm text-gray-500 dark:text-nct-text-dim truncate hover:text-nct-primary transition-colors cursor-pointer">
         {song.artist}
       </span>
 
       {/* Duration */}
-      <span className="text-sm text-gray-500 dark:text-gray-400 text-center">{song.duration}</span>
+      <span className="text-sm text-gray-400 dark:text-nct-text-dim text-center">{song.duration}</span>
 
-      {/* Heart */}
-      <div className="flex items-center justify-center">
+      {/* More Options */}
+      <div className="flex items-center justify-center relative" ref={menuRef}>
         <button
-          onClick={e => { e.stopPropagation(); toggleFavorite(song); }}
-          className={`p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100
-            ${isFav ? "text-red-500 opacity-100" : "text-gray-400 dark:text-gray-500 hover:text-red-500"}`}
+          onClick={e => { 
+            e.stopPropagation(); 
+            setShowMenu(!showMenu);
+          }}
+          className={`p-1.5 rounded-full transition-all dropdown-trigger
+            ${showMenu ? "bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white opacity-100" : "text-gray-400 dark:text-nct-text-dim opacity-0 group-hover:opacity-100 hover:text-gray-900 dark:hover:text-white"}`}
         >
-          <FiHeart className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+          <FiMoreHorizontal className={`w-5 h-5`} />
         </button>
+        {showMenu && (
+          <SongActionMenu 
+            song={song} 
+            onClose={() => setShowMenu(false)} 
+          />
+        )}
       </div>
     </div>
   );
@@ -183,17 +205,17 @@ function AlbumMiniCard({ album }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div className="relative rounded-lg overflow-hidden aspect-square mb-2 bg-gray-200 dark:bg-gray-700 shadow-md group-hover:shadow-xl transition-shadow">
-          <img src={album.image} alt={album.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div className="relative rounded-lg overflow-hidden aspect-square mb-2 bg-white/5 shadow-md group-hover:shadow-xl transition-shadow">
+          <img src={album.image} alt={album.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
           {hovered && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <div className="w-11 h-11 rounded-full bg-teal-500 hover:bg-teal-400 flex items-center justify-center shadow-lg">
+              <div className="w-11 h-11 rounded-full bg-nct-primary hover:bg-[#2591c4] flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
                 <FiPlay className="w-5 h-5 text-white fill-current ml-0.5" />
               </div>
             </div>
           )}
         </div>
-        <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors line-clamp-2 leading-snug">
+        <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-nct-primary transition-colors line-clamp-2 leading-snug">
           {album.title}
         </p>
       </div>
@@ -237,13 +259,13 @@ export default function ArtistDetail() {
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-300 font-medium">
-              {formatFollowers(artist.followers)} followers
+              {formatFollowers(artist.followers)} người theo dõi
             </span>
             <button
               onClick={() => setFollowed(f => !f)}
               className={`flex items-center gap-1.5 px-5 py-1.5 rounded-full text-sm font-semibold border transition-all ${
                 followed
-                  ? "bg-teal-500 border-teal-500 text-white"
+                  ? "bg-nct-primary border-nct-primary text-white"
                   : "border-white/60 text-white hover:bg-white/10"
               }`}
             >
@@ -254,7 +276,7 @@ export default function ArtistDetail() {
 
           <button
             onClick={handlePlayAll}
-            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white px-7 py-2.5 rounded-full font-bold text-sm transition-all w-fit shadow-lg hover:shadow-teal-500/30 active:scale-95 mt-1"
+            className="flex items-center gap-2 bg-nct-primary hover:bg-[#2591c4] text-white px-7 py-2.5 rounded-full font-bold text-sm transition-all w-fit shadow-lg shadow-cyan-500/20 active:scale-95 mt-1"
           >
             <FiPlay className="w-4 h-4 fill-current" />
             Phát tất cả

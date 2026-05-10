@@ -101,7 +101,7 @@ export default function MyPlaylistDetail() {
     <div className="pb-20">
       {/* Header Section matching Nhaccuatui Library detail page */}
       <div className="flex gap-8 mb-10 items-end">
-        <div className="w-[230px] h-[230px] shrink-0 rounded-xl overflow-hidden bg-[#2a2a2a] relative group flex items-center justify-center shadow-lg border border-white/5">
+        <div className="w-[230px] h-[230px] shrink-0 rounded-xl overflow-hidden bg-gray-100 dark:bg-[#2a2a2a] relative group flex items-center justify-center shadow-lg border border-gray-200 dark:border-white/5">
           {playlist.songs.length > 0 ? (
             <>
               <img 
@@ -231,25 +231,25 @@ export default function MyPlaylistDetail() {
         ) : (
           <div className="bg-transparent">
             {selectedSongs.length > 0 ? (
-              <div className="flex items-center text-white text-sm font-medium px-4 py-0 border-b border-white/5 bg-[#282828] h-[56px] rounded-t-md">
+              <div className="flex items-center text-gray-900 dark:text-white text-sm font-medium px-4 py-0 border-b border-gray-200 dark:border-white/5 bg-gray-100 dark:bg-[#282828] h-[56px] rounded-t-md">
                 <div className="w-12 flex justify-center">
                   <button 
                     onClick={handleSelectAll}
-                    className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-colors ${
+                    className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-all ${
                       selectedSongs.length === playlist.songs.length && playlist.songs.length > 0
-                        ? 'bg-white' 
-                        : 'border border-[#666666] bg-transparent'
+                        ? 'bg-nct-primary dark:bg-white' 
+                        : 'border border-gray-400 dark:border-white/30 bg-transparent'
                     }`}
                   >
                     {selectedSongs.length === playlist.songs.length && playlist.songs.length > 0 && (
-                      <FiCheck className="w-3.5 h-3.5 text-[#282828] font-bold" strokeWidth={3} />
+                      <FiCheck className="w-3.5 h-3.5 text-white dark:text-gray-900 font-bold" strokeWidth={3} />
                     )}
                   </button>
                 </div>
                 <div className="flex-1 flex items-center gap-5 pl-2">
-                  <span className="text-white text-sm">{selectedSongs.length} bài hát được chọn</span>
-                  <div className="flex items-center gap-5 border-l border-white/10 pl-5">
-                    <button className="flex items-center gap-2 text-white hover:text-nct-primary transition-colors" title="Thêm vào playlist">
+                  <span className="text-gray-900 dark:text-white text-sm">{selectedSongs.length} bài hát được chọn</span>
+                  <div className="flex items-center gap-5 border-l border-gray-300 dark:border-white/10 pl-5">
+                    <button className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-nct-primary transition-colors" title="Thêm vào playlist">
                       <FiPlus className="w-5 h-5" />
                       <span className="text-sm">Thêm vào playlist</span>
                     </button>
@@ -262,7 +262,7 @@ export default function MyPlaylistDetail() {
                       <span className="text-sm">Tải nhạc</span>
                     </button>
                     <button 
-                      className="flex items-center gap-2 text-white hover:text-red-500 transition-colors" 
+                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-red-500 transition-colors" 
                       title="Xóa khỏi playlist"
                       onClick={() => {
                         selectedSongs.forEach(songId => removeSongFromMyPlaylist(playlist.id, songId));
@@ -276,7 +276,7 @@ export default function MyPlaylistDetail() {
                 </div>
               </div>
             ) : (
-              <div className="flex text-[#b3b3b3] text-xs font-bold uppercase tracking-wider px-4 py-0 items-center border-b border-white/5 h-[56px]">
+              <div className="flex text-gray-500 dark:text-[#b3b3b3] text-xs font-bold uppercase tracking-wider px-4 py-0 items-center border-b border-gray-200 dark:border-white/5 h-[56px]">
                 <div className="w-12 flex justify-center text-sm font-medium">#</div>
                 <div className="flex-1">Bài hát</div>
                 <div className="w-1/4">Nghệ sĩ</div>
@@ -291,18 +291,18 @@ export default function MyPlaylistDetail() {
                 const isSelected = selectedSongs.includes(song.id);
                 
                 return (
-                  <div key={song.id} className={`flex items-center px-4 py-2 transition-colors group rounded-md relative ${isSelected ? 'bg-[#323232]' : 'hover:bg-[#2b2b2b]'}`}>
-                    <div className="w-12 flex items-center justify-center text-[#b3b3b3] font-medium text-sm">
+                  <div key={song.id} className={`flex items-center px-4 py-2 transition-colors group rounded-md relative ${isSelected ? 'bg-gray-200 dark:bg-[#323232]' : 'hover:bg-gray-100 dark:hover:bg-[#2b2b2b]'}`}>
+                    <div className="w-12 flex items-center justify-center text-gray-500 dark:text-[#b3b3b3] font-medium text-sm">
                       <span className={`group-hover:hidden ${isSelected ? 'hidden' : ''}`}>{index + 1}</span>
                       <button 
                         onClick={() => toggleSelectSong(song.id)}
-                        className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-colors ${
+                        className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-all ${
                           isSelected 
-                            ? 'bg-white block' 
-                            : 'border border-[#666666] bg-transparent hidden group-hover:flex'
+                            ? 'bg-nct-primary dark:bg-white' 
+                            : 'border border-gray-300 dark:border-white/20 bg-transparent opacity-0 group-hover:opacity-100'
                         }`}
                       >
-                        {isSelected && <FiCheck className="w-3.5 h-3.5 text-[#282828] font-bold" strokeWidth={3} />}
+                        {isSelected && <FiCheck className="w-3.5 h-3.5 text-white dark:text-gray-900 font-bold" strokeWidth={3} />}
                       </button>
                     </div>
                     
@@ -318,7 +318,7 @@ export default function MyPlaylistDetail() {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span 
-                          className={`font-medium truncate cursor-pointer transition-colors ${currentSong?.id === song.id ? 'text-nct-primary' : 'text-white'}`}
+                          className={`font-medium truncate cursor-pointer transition-colors ${currentSong?.id === song.id ? 'text-nct-primary' : 'text-gray-900 dark:text-white'}`}
                           onClick={() => playSong(song, playlist.songs)}
                         >
                           {song.title}
@@ -326,11 +326,11 @@ export default function MyPlaylistDetail() {
                       </div>
                     </div>
                     
-                    <div className="w-1/4 text-[#b3b3b3] text-sm hover:underline hover:text-nct-primary cursor-pointer truncate pr-4">
+                    <div className="w-1/4 text-gray-500 dark:text-[#b3b3b3] text-sm hover:underline hover:text-nct-primary cursor-pointer truncate pr-4">
                       {song.artist}
                     </div>
 
-                    <div className="w-24 flex items-center justify-end relative text-[#b3b3b3] text-sm group-hover:opacity-0">
+                    <div className="w-24 flex items-center justify-end relative text-gray-500 dark:text-[#b3b3b3] text-sm group-hover:opacity-0">
                       {song.duration}
                     </div>
 
@@ -346,27 +346,27 @@ export default function MyPlaylistDetail() {
                       
                       <button 
                         onClick={() => toggleDropdown(song.id)}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors relative"
+                        className={`p-2 rounded-full transition-colors relative ${openDropdown === song.id ? 'bg-nct-primary text-white' : 'hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 hover:text-gray-900 dark:text-[#b3b3b3] dark:hover:text-white'}`}
                         title="Thêm"
                       >
-                        <FiMoreHorizontal className="w-4 h-4 text-[#b3b3b3] hover:text-white" />
+                        <FiMoreHorizontal className="w-4 h-4" />
                       </button>
 
                       {openDropdown === song.id && (
-                        <div className="absolute right-0 mt-10 w-56 bg-[#2d2f32] border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden py-1">
+                        <div className="absolute right-0 mt-10 w-56 bg-white dark:bg-[#2d2f32] border border-gray-200 dark:border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden py-1">
                           <button 
                             onClick={() => { setOpenDropdown(null); playNextInQueue(song); }}
-                            className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
+                            className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 hover:text-gray-900 dark:text-[#b3b3b3] dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                           >
                             <FiPlay className="w-4 h-4" /> Phát tiếp theo
                           </button>
                           <button 
                             onClick={() => { setOpenDropdown(null); addToQueue(song); }}
-                            className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
+                            className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 hover:text-gray-900 dark:text-[#b3b3b3] dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                           >
                             <FiList className="w-4 h-4" /> Thêm vào danh sách chờ
                           </button>
-                          <div className="h-px bg-white/10 my-1"></div>
+                          <div className="h-px bg-gray-200 dark:bg-white/10 my-1"></div>
                           <button 
                             onClick={() => { setOpenDropdown(null); setIsAddModalOpen(true); }}
                             className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
@@ -375,21 +375,21 @@ export default function MyPlaylistDetail() {
                           </button>
                           <button 
                             onClick={() => { toggleFavorite(song); setOpenDropdown(null); }}
-                            className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
+                            className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 hover:text-gray-900 dark:text-[#b3b3b3] dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                           >
                             <FiHeart className={`w-4 h-4 ${favorites.some(s => s.id === song.id) ? 'text-nct-primary fill-[#2daaed]' : ''}`} /> {favorites.some(s => s.id === song.id) ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
                           </button>
-                          <div className="h-px bg-white/10 my-1"></div>
-                          <button className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors">
+                          <div className="h-px bg-gray-200 dark:bg-white/10 my-1"></div>
+                          <button className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 hover:text-gray-900 dark:text-[#b3b3b3] dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors">
                             <FiShare2 className="w-4 h-4" /> Chia sẻ
                           </button>
-                          <button className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors">
+                          <button className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 hover:text-gray-900 dark:text-[#b3b3b3] dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors">
                             <FiDownload className="w-4 h-4" /> Tải xuống
                           </button>
                           <div className="h-px bg-white/10 my-1"></div>
                           <button 
                             onClick={() => { removeSongFromMyPlaylist(playlist.id, song.id); setOpenDropdown(null); }}
-                            className="w-full px-4 py-2 hover:bg-white/10 text-red-400 hover:text-red-300 text-sm text-left flex items-center gap-3 transition-colors"
+                            className="w-full px-4 py-2 hover:bg-red-50 dark:hover:bg-white/10 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 text-sm text-left flex items-center gap-3 transition-colors"
                           >
                             <FiTrash2 className="w-4 h-4" /> Xóa khỏi playlist
                           </button>
@@ -421,10 +421,10 @@ export default function MyPlaylistDetail() {
             onClick={() => setIsAddModalOpen(false)}
           ></div>
           
-          <div className="relative bg-[#1e1e1e] border border-white/10 w-full max-w-4xl h-[75vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="relative bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-white/10 w-full max-w-4xl h-[75vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-[#2a2a2a]">
-              <h3 className="text-xl font-bold text-white">Thêm bài hát vào "{playlist.title}"</h3>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-gray-50 dark:bg-[#2a2a2a]">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Thêm bài hát vào "{playlist.title}"</h3>
               <button 
                 onClick={() => setIsAddModalOpen(false)}
                 className="p-2 text-[#b3b3b3] hover:text-white rounded-full hover:bg-white/10 transition-colors"
@@ -436,16 +436,16 @@ export default function MyPlaylistDetail() {
             {/* Modal Body - 2 Columns */}
             <div className="flex-1 flex overflow-hidden">
               {/* Left Column: Sidebar / Sources */}
-              <div className="w-1/3 border-r border-white/5 bg-[#121212] overflow-y-auto p-4 flex flex-col gap-2">
+              <div className="w-1/3 border-r border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#121212] overflow-y-auto p-4 flex flex-col gap-2">
                 <button 
                   onClick={() => setAddSourceTab("all")}
-                  className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${addSourceTab === "all" ? 'bg-white/10 text-nct-primary' : 'text-[#b3b3b3] hover:text-white hover:bg-white/5'}`}
+                  className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${addSourceTab === "all" ? 'bg-nct-primary/10 dark:bg-white/10 text-nct-primary' : 'text-gray-500 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'}`}
                 >
                   <FiSearch className="inline-block w-4 h-4 mr-3" /> Kho nhạc hệ thống
                 </button>
                 <button 
                   onClick={() => setAddSourceTab("favorites")}
-                  className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${addSourceTab === "favorites" ? 'bg-white/10 text-nct-primary' : 'text-[#b3b3b3] hover:text-white hover:bg-white/5'}`}
+                  className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${addSourceTab === "favorites" ? 'bg-nct-primary/10 dark:bg-white/10 text-nct-primary' : 'text-gray-500 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'}`}
                 >
                   <FiHeart className="inline-block w-4 h-4 mr-3" /> Nhạc yêu thích của bạn
                 </button>
@@ -475,18 +475,18 @@ export default function MyPlaylistDetail() {
                     filteredSongs.map(song => {
                       const isAdded = playlist.songs.some(s => s.id === song.id);
                       return (
-                        <div key={song.id} className="flex items-center gap-4 px-4 py-2.5 hover:bg-white/5 rounded-lg group transition-colors">
+                        <div key={song.id} className="flex items-center gap-4 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg group transition-colors">
                           <img src={song.image} alt={song.title} className="w-12 h-12 rounded object-cover" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-white font-medium truncate">{song.title}</p>
-                            <p className="text-sm text-[#b3b3b3] truncate">{song.artist}</p>
+                            <p className="text-gray-900 dark:text-white font-medium truncate">{song.title}</p>
+                            <p className="text-sm text-gray-500 dark:text-[#b3b3b3] truncate">{song.artist}</p>
                           </div>
                           {isAdded ? (
-                            <span className="text-[#b3b3b3] text-sm font-medium px-3">Đã thêm</span>
+                            <span className="text-gray-400 dark:text-[#b3b3b3] text-sm font-medium px-3">Đã thêm</span>
                           ) : (
                             <button 
                               onClick={() => addSongToMyPlaylist(playlist.id, song)}
-                              className="px-4 py-1.5 rounded-full border border-white/20 text-white hover:border-nct-primary hover:text-nct-primary text-sm font-medium transition-colors opacity-0 group-hover:opacity-100"
+                              className="px-4 py-1.5 rounded-full border border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-nct-primary hover:text-nct-primary text-sm font-medium transition-colors opacity-0 group-hover:opacity-100"
                             >
                               Thêm
                             </button>
@@ -508,44 +508,44 @@ export default function MyPlaylistDetail() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setIsEditModalOpen(false)}
           ></div>
-          <div className="relative bg-[#2a2a2a] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white">Chỉnh sửa Playlist</h3>
+          <div className="relative bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-gray-50 dark:bg-[#2a2a2a]">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Chỉnh sửa Playlist</h3>
               <button 
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-2 text-[#b3b3b3] hover:text-white rounded-full hover:bg-white/10 transition-colors"
+                className="p-2 text-gray-400 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
               >
                 <FiX className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 flex flex-col gap-6">
+            <div className="p-6 flex flex-col gap-6 bg-white dark:bg-[#2a2a2a]">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-[#b3b3b3]">Tên Playlist</label>
+                <label className="text-sm font-medium text-gray-500 dark:text-[#b3b3b3]">Tên Playlist</label>
                 <input 
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full bg-[#1e1e1e] text-white border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-nct-primary transition-colors"
+                  className="w-full bg-gray-100 dark:bg-[#1e1e1e] text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-nct-primary transition-colors"
                   placeholder="Nhập tên playlist..."
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white font-medium">Chế độ công khai</p>
-                  <p className="text-xs text-[#b3b3b3]">Mọi người có thể thấy playlist này</p>
+                  <p className="text-gray-900 dark:text-white font-medium">Chế độ công khai</p>
+                  <p className="text-xs text-gray-500 dark:text-[#b3b3b3]">Mọi người có thể thấy playlist này</p>
                 </div>
                 <button 
                   onClick={() => setEditIsPrivate(!editIsPrivate)}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${!editIsPrivate ? 'bg-nct-primary' : 'bg-[#1e1e1e]'}`}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${!editIsPrivate ? 'bg-nct-primary' : 'bg-gray-200 dark:bg-[#1e1e1e]'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${!editIsPrivate ? 'right-1' : 'left-1'}`}></div>
                 </button>
               </div>
             </div>
-            <div className="px-6 py-4 bg-[#1e1e1e] flex justify-end gap-3">
+            <div className="px-6 py-4 bg-gray-50 dark:bg-[#1e1e1e] flex justify-end gap-3 border-t border-gray-200 dark:border-white/5">
               <button 
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-6 py-2 rounded-full font-bold text-[#b3b3b3] hover:text-white transition-colors"
+                className="px-6 py-2 rounded-full font-bold text-gray-500 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 Hủy
               </button>
