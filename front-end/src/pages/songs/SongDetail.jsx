@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import LazyImage from "../../components/common/LazyImage";
 import { FiHeart, FiShare2, FiMoreHorizontal, FiPlay, FiDownload, FiChevronDown, FiChevronUp, FiPlus, FiFlag, FiFacebook, FiLink } from 'react-icons/fi';
 
 // Mock Data cho bài hát "Chúng Ta Không Thuộc Về Nhau"
@@ -67,7 +68,7 @@ export default function SongDetail() {
       <div className="flex flex-col md:flex-row gap-10 mb-16">
         {/* Cover Image */}
         <div className="w-[300px] h-[300px] shrink-0 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative group">
-          <img src={data.cover} alt={data.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <LazyImage src={data.cover} alt={data.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         </div>
         
         {/* Info */}
@@ -80,7 +81,7 @@ export default function SongDetail() {
           
           {/* Artist Row */}
           <div className="flex items-center gap-3 mb-8">
-            <img src={data.artistAvatar} alt={data.artist} className="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-200 dark:border-white/10" />
+            <LazyImage src={data.artistAvatar} alt={data.artist} className="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-200 dark:border-white/10" />
             <span className="text-[17px] font-bold text-gray-800 dark:text-gray-200 cursor-pointer hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
               {data.artist}
             </span>
@@ -204,7 +205,7 @@ export default function SongDetail() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Nghệ sĩ</h2>
           
           <div className="flex items-center gap-4">
-            <img src={data.artistAvatar} alt={data.artist} className="w-[72px] h-[72px] rounded-full object-cover shadow-md border-2 border-transparent dark:border-white/5" />
+            <LazyImage src={data.artistAvatar} alt={data.artist} className="w-[72px] h-[72px] rounded-full object-cover shadow-md border-2 border-transparent dark:border-white/5" />
             
             <div className="flex flex-col gap-1">
               <h3 className="text-[17px] font-bold text-gray-900 dark:text-white cursor-pointer hover:text-nct-primary transition-colors">
@@ -237,7 +238,7 @@ export default function SongDetail() {
             >
               <div className="flex items-center gap-5">
                 <div className="relative w-14 h-14 rounded-lg overflow-hidden">
-                  <img src={song.cover} alt={song.title} className="w-full h-full object-cover" />
+                  <LazyImage src={song.cover} alt={song.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                      <FiPlay className="text-white fill-white text-lg" />
                   </div>
@@ -347,7 +348,7 @@ export default function SongDetail() {
           {data.featuredAlbums.map(album => (
             <div key={album.id} className="flex flex-col gap-3 group cursor-pointer">
               <div className="w-full aspect-square rounded-2xl overflow-hidden shadow-sm relative">
-                <img src={album.cover} alt={album.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <LazyImage src={album.cover} alt={album.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                    <div className="w-12 h-12 rounded-full bg-black/50 border border-white/30 backdrop-blur-sm flex items-center justify-center text-white">
                       <FiPlay className="text-xl ml-1 fill-white" />

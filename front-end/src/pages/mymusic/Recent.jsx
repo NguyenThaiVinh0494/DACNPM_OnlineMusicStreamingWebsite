@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FiPlay,  FiClock, FiTrash2, FiPlus, FiList, FiCheck } from "react-icons/fi";
+import { FiPlay, FiClock, FiTrash2, FiPlus, FiCheck } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import SongItem from "../../components/common/SongItem";
 import SongActionMenu from "../../components/common/SongActionMenu";
@@ -15,8 +15,6 @@ export default function Recent() {
     toggleFavorite, 
     favorites, 
     openAddToPlaylistModal,
-    addToQueue,
-    playNextInQueue,
     clearRecentSongs,
     recentPlaylists,
     playPlaylist,

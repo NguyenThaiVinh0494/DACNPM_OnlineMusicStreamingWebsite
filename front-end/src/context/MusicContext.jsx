@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const MusicContext = createContext();
 
@@ -73,6 +74,7 @@ export const MusicProvider = ({ children }) => {
       image: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop" // default image
     };
     setMyPlaylists([...myPlaylists, newPlaylist]);
+    toast.success(`Đã tạo playlist "${name}"`);
   };
 
   const addSongToMyPlaylist = (playlistId, song) => {
@@ -80,7 +82,10 @@ export const MusicProvider = ({ children }) => {
       if (pl.id === playlistId) {
         // prevent duplicate
         if (!pl.songs.some(s => s.id === song.id)) {
+          toast.success(`Đã thêm "${song.title}" vào playlist`);
           return { ...pl, songs: [...pl.songs, song], image: song.image };
+        } else {
+          toast.error(`Bài hát đã tồn tại trong playlist`);
         }
       }
       return pl;
@@ -91,6 +96,7 @@ export const MusicProvider = ({ children }) => {
   const removeSongFromMyPlaylist = (playlistId, songId) => {
     setMyPlaylists(myPlaylists.map(pl => {
       if (pl.id === playlistId) {
+        toast.success(`Đã xóa bài hát khỏi playlist`);
         return { ...pl, songs: pl.songs.filter(s => s.id !== songId) };
       }
       return pl;
@@ -99,6 +105,7 @@ export const MusicProvider = ({ children }) => {
 
   const deleteMyPlaylist = (playlistId) => {
     setMyPlaylists(myPlaylists.filter(pl => pl.id !== playlistId));
+    toast.success('Đã xóa playlist');
   };
 
   const updateMyPlaylist = (playlistId, updates) => {
@@ -202,8 +209,10 @@ export const MusicProvider = ({ children }) => {
     const isFav = favorites.some(s => s.id === song.id);
     if (isFav) {
       setFavorites(favorites.filter(s => s.id !== song.id));
+      toast.success(`Đã xóa "${song.title}" khỏi Yêu thích`);
     } else {
       setFavorites([song, ...favorites]);
+      toast.success(`Đã thêm "${song.title}" vào Yêu thích`);
     }
   };
 
@@ -218,6 +227,9 @@ export const MusicProvider = ({ children }) => {
   const addToQueue = (song) => {
     if (!queue.some(s => s.id === song.id)) {
       setQueue(prev => [...prev, song]);
+      toast.success(`Đã thêm "${song.title}" vào danh sách phát`);
+    } else {
+      toast.error(`Bài hát đã có trong danh sách phát`);
     }
   };
 
@@ -229,6 +241,7 @@ export const MusicProvider = ({ children }) => {
       newQueue.splice(currentIndex + 1, 0, song);
       setQueue(newQueue);
     }
+    toast.success(`Sẽ phát tiếp theo: "${song.title}"`);
   };
 
   return (

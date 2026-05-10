@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
-import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiTrash2, FiClock, FiPlus, FiList, FiX, FiMusic, FiSearch, FiCheck } from "react-icons/fi";
+import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiTrash2, FiClock, FiPlus, FiX, FiMusic, FiSearch, FiCheck } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import SongItem from "../../components/common/SongItem";
 import SongActionMenu from "../../components/common/SongActionMenu";
+import EmptyState from "../../components/common/EmptyState";
+import { useClickOutside } from "../../hooks/useClickOutside";
 
 export default function MyPlaylistDetail() {
   const { id } = useParams();
@@ -21,8 +23,6 @@ export default function MyPlaylistDetail() {
     addSongToMyPlaylist, 
     updateMyPlaylist, 
     toggleFavorite, 
-    addToQueue, 
-    playNextInQueue,
     openAddToPlaylistModal
   } = useMusic();
   
@@ -37,17 +37,8 @@ export default function MyPlaylistDetail() {
 
   const playlist = myPlaylists.find(pl => pl.id === parseInt(id));
 
-  // Close dropdown when clicking outside
-  // ✅ useEffect phải được gọi trước mọi early return (Rules of Hooks)
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (openDropdown && !event.target.closest('.dropdown-container')) {
-        setOpenDropdown(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openDropdown]);
+  const dropdownRef = useRef(null);
+  useClickOutside(dropdownRef, () => setOpenDropdown(null));
 
   if (!playlist) {
     return <Navigate to="/" replace />;
@@ -158,7 +149,7 @@ export default function MyPlaylistDetail() {
             >
               <FiShare2 className="w-5 h-5" />
             </button>
-            <div className="relative dropdown-container">
+            <div className="relative dropdown-container" ref={dropdownRef}>
               <button 
                 onClick={() => setOpenDropdown(openDropdown === 'playlist-menu' ? null : 'playlist-menu')}
                 className={`p-2.5 rounded-full transition-colors ${
@@ -216,13 +207,16 @@ export default function MyPlaylistDetail() {
 
       <div>
         {playlist.songs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 mt-10 border-t border-gray-200 dark:border-white/5 text-center">
-            <FiMusic className="w-16 h-16 text-gray-400 dark:text-[#b3b3b3]/30 mb-6" />
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Playlist này đang trống</h3>
-            <p className="text-gray-500 dark:text-[#b3b3b3] mb-8">Hãy tìm và thêm những bài hát bạn yêu thích vào đây</p>
+          <div className="flex flex-col items-center justify-center border-t border-gray-200 dark:border-white/5 mt-10 text-center">
+            <EmptyState 
+              type="music" 
+              title="Playlist này đang trống" 
+              description="Hãy tìm và thêm những bài hát bạn yêu thích vào đây" 
+              className="py-10" 
+            />
             <button 
               onClick={() => setIsAddModalOpen(true)}
-              className="px-8 py-2.5 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-900 dark:text-white font-bold transition-colors"
+              className="px-8 py-2.5 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-900 dark:text-white font-bold transition-colors mb-20"
             >
               Thêm bài hát
             </button>
@@ -355,28 +349,32 @@ export default function MyPlaylistDetail() {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2">
-                  {filteredSongs.map(song => {
-                    const isAdded = playlist.songs.some(s => s.id === song.id);
-                    return (
-                      <div key={song.id} className="flex items-center gap-4 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg group transition-colors">
-                        <img src={song.image} alt={song.title} className="w-12 h-12 rounded object-cover" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 dark:text-white font-medium truncate">{song.title}</p>
-                          <p className="text-sm text-gray-500 dark:text-[#b3b3b3] truncate">{song.artist}</p>
+                  {filteredSongs.length === 0 ? (
+                    <EmptyState type="search" title="Không tìm thấy bài hát nào." className="py-10" />
+                  ) : (
+                    filteredSongs.map(song => {
+                      const isAdded = playlist.songs.some(s => s.id === song.id);
+                      return (
+                        <div key={song.id} className="flex items-center gap-4 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg group transition-colors">
+                          <img src={song.image} alt={song.title} className="w-12 h-12 rounded object-cover" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-gray-900 dark:text-white font-medium truncate">{song.title}</p>
+                            <p className="text-sm text-gray-500 dark:text-[#b3b3b3] truncate">{song.artist}</p>
+                          </div>
+                          {isAdded ? (
+                            <span className="text-gray-500 dark:text-[#b3b3b3] text-sm font-medium px-3">Đã thêm</span>
+                          ) : (
+                            <button 
+                              onClick={() => addSongToMyPlaylist(playlist.id, song)}
+                              className="px-4 py-1.5 rounded-full border border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-nct-primary hover:text-nct-primary text-sm font-medium transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              Thêm
+                            </button>
+                          )}
                         </div>
-                        {isAdded ? (
-                          <span className="text-gray-500 dark:text-[#b3b3b3] text-sm font-medium px-3">Đã thêm</span>
-                        ) : (
-                          <button 
-                            onClick={() => addSongToMyPlaylist(playlist.id, song)}
-                            className="px-4 py-1.5 rounded-full border border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-nct-primary hover:text-nct-primary text-sm font-medium transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            Thêm
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>

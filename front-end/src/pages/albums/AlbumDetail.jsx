@@ -7,6 +7,7 @@ import {
 import { useMusic } from "../../context/MusicContext";
 import AlbumActionMenu from "../../components/common/AlbumActionMenu";
 import SongActionMenu from "../../components/common/SongActionMenu";
+import LazyImage from "../../components/common/LazyImage";
 // ── Mock album data keyed by id ────────────────────────────────────────────
 const ALBUMS_DATA = {
   1: {
@@ -190,11 +191,11 @@ export default function AlbumDetail() {
       {/* ── Header ── */}
       <div className="flex gap-8 items-start">
         {/* Cover Image */}
-        <div className="w-[230px] h-[230px] flex-shrink-0 rounded-xl overflow-hidden shadow-2xl group relative">
-          <img
+        <div className="w-[230px] h-[230px] shadow-2xl rounded-xl overflow-hidden group relative bg-gray-200 dark:bg-white/5">
+          <LazyImage
             src={album.image}
             alt={album.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <button
@@ -330,8 +331,8 @@ export default function AlbumDetail() {
 
                 {/* Thumbnail + Title */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden">
-                    <img
+                  <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 relative group-hover:shadow-md transition-shadow">
+                    <LazyImage
                       src={song.image}
                       alt={song.title}
                       className="w-full h-full object-cover"

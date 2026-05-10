@@ -1,8 +1,6 @@
 import { FiShare2, FiFlag, FiChevronRight } from "react-icons/fi";
 
-export default function AlbumActionMenu({ 
-  onClose, 
-}) {
+export default function AlbumActionMenu() {
   return (
     <div className="absolute left-0 top-full mt-2 w-[180px] bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-white/5 rounded-lg shadow-2xl z-[100] overflow-hidden py-1 text-gray-700 dark:text-[#b3b3b3]">
       <button 
