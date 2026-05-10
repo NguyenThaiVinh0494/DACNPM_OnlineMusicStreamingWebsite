@@ -15,8 +15,8 @@ import MoodPlaylists from "./pages/discover/MoodPlaylists";
 import Top100 from "./pages/discover/Top100";
 import MoodTopics from "./pages/discover/MoodTopics";
 import SearchResults from "./pages/SearchResults";
-import AlbumDetail from "./pages/AlbumDetail";
-import ArtistDetail from "./pages/ArtistDetail";
+import AlbumDetail from "./pages/albums/AlbumDetail";
+import ArtistDetail from "./pages/artists/ArtistDetail";
 
 function App() {
   return (
@@ -26,7 +26,7 @@ function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
           <Route path="for-you" element={<ForYou />} />
-          
+
           {/* Discover Routes */}
           <Route path="discover/popular" element={<PopularPlaylists />} />
           <Route path="discover/mood" element={<MoodPlaylists />} />

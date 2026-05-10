@@ -119,7 +119,7 @@ function AlbumCard({ album }) {
 
 function PlaylistCard({ playlist }) {
   const [hovered, setHovered] = useState(false);
-  const { playSong } = useMusic();
+
 
   return (
     <div
