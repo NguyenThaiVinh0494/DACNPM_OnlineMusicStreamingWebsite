@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { FiPlay, FiHeart, FiMoreHorizontal, FiUserPlus, FiCheck, FiChevronRight } from "react-icons/fi";
+import { FiPlay, FiChevronRight } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
 
@@ -129,18 +129,16 @@ export default function SearchResults() {
     setSearchParams({ q: query, t: id });
   };
 
-  const filteredSongs = useMemo(() => {
-    const q = query.toLowerCase();
-    const systemSongs = allSongs.filter(s => 
-      s.title.toLowerCase().includes(q) || 
-      s.artist.toLowerCase().includes(q)
-    );
-    const mockSongs = MOCK_SONGS.filter(s => 
-      s.title.toLowerCase().includes(q) || 
-      s.artist.toLowerCase().includes(q)
-    );
-    return [...systemSongs, ...mockSongs];
-  }, [query, allSongs]);
+  const q = query.toLowerCase();
+  const systemSongs = allSongs.filter(s => 
+    s.title.toLowerCase().includes(q) || 
+    s.artist.toLowerCase().includes(q)
+  );
+  const mockSongs = MOCK_SONGS.filter(s => 
+    s.title.toLowerCase().includes(q) || 
+    s.artist.toLowerCase().includes(q)
+  );
+  const filteredSongs = [...systemSongs, ...mockSongs];
 
   return (
     <div className="pb-24 space-y-8">

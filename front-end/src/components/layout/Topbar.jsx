@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiChevronLeft, FiChevronRight, FiUpload, FiX } from "react-icons/fi";
+import { FiSearch, FiUpload, FiX } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import LoginModal from '../auth/LoginModal';
 import RegisterModal from '../auth/RegisterModal';
