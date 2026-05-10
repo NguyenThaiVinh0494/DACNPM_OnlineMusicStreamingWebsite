@@ -119,14 +119,14 @@ export default function Recent() {
                   <div className="w-12 flex justify-center">
                     <button 
                       onClick={handleSelectAll}
-                      className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-colors ${
+                      className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-all ${
                         selectedSongs.length === recentSongs.length && recentSongs.length > 0
                           ? 'bg-nct-primary dark:bg-white' 
-                          : 'border border-gray-400 dark:border-[#666666] bg-transparent'
+                          : 'border border-gray-400 dark:border-white/30 bg-transparent'
                       }`}
                     >
                       {selectedSongs.length === recentSongs.length && recentSongs.length > 0 && (
-                        <FiCheck className="w-3.5 h-3.5 text-white dark:text-[#282828] font-bold" strokeWidth={3} />
+                        <FiCheck className="w-3.5 h-3.5 text-white dark:text-gray-900 font-bold" strokeWidth={3} />
                       )}
                     </button>
                   </div>
@@ -177,13 +177,13 @@ export default function Recent() {
                           <span className={`group-hover:hidden ${isSelected ? 'hidden' : ''}`}>{index + 1}</span>
                           <button 
                             onClick={() => toggleSelectSong(song.id)}
-                            className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-colors ${
+                            className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-all ${
                               isSelected 
-                                ? 'bg-nct-primary dark:bg-white block' 
-                                : 'border border-gray-400 dark:border-[#666666] bg-transparent hidden group-hover:flex'
+                                ? 'bg-nct-primary dark:bg-white' 
+                                : 'border border-gray-300 dark:border-white/20 bg-transparent opacity-0 group-hover:opacity-100'
                             }`}
                           >
-                            {isSelected && <FiCheck className="w-3.5 h-3.5 text-white dark:text-[#282828] font-bold" strokeWidth={3} />}
+                            {isSelected && <FiCheck className="w-3.5 h-3.5 text-white dark:text-gray-900 font-bold" strokeWidth={3} />}
                           </button>
                         </div>
 
@@ -268,7 +268,7 @@ export default function Recent() {
                               <div className="h-px bg-white/10 my-1"></div>
                               <button 
                                 onClick={() => { removeFromRecent(song.id); setOpenDropdown(null); }}
-                                className="w-full px-4 py-2 hover:bg-white/10 text-red-400 hover:text-red-300 text-sm text-left flex items-center gap-3 transition-colors"
+                                className="w-full px-4 py-2 hover:bg-red-50 dark:hover:bg-white/10 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 text-sm text-left flex items-center gap-3 transition-colors"
                               >
                                 <FiTrash2 className="w-4 h-4" /> Xóa khỏi lịch sử
                               </button>
@@ -313,9 +313,9 @@ export default function Recent() {
                     </div>
                     <div className="flex flex-col">
                       <Link to={`/playlist/${playlist.id}`}>
-                        <h4 className="font-bold text-white hover:text-nct-primary transition-colors truncate">{playlist.title}</h4>
+                        <h4 className="font-bold text-gray-900 dark:text-white hover:text-nct-primary transition-colors truncate">{playlist.title}</h4>
                       </Link>
-                      <p className="text-sm text-[#b3b3b3] truncate">{playlist.artist || "Nhiều nghệ sĩ"}</p>
+                      <p className="text-sm text-gray-500 dark:text-[#b3b3b3] truncate">{playlist.artist || "Nhiều nghệ sĩ"}</p>
                     </div>
                   </div>
                 ))

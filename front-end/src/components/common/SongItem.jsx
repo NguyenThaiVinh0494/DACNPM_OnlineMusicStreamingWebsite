@@ -1,8 +1,10 @@
+import { useState, useEffect, useRef } from "react";
 import { FiPlay, FiPause, FiHeart, FiMoreHorizontal, FiCheck } from "react-icons/fi";
+import SongActionMenu from "./SongActionMenu";
 
 export default function SongItem({ 
   song, 
-  index, 
+  index,
   isCurrent, 
   isPlaying, 
   isFavorite,
@@ -15,103 +17,126 @@ export default function SongItem({
   openDropdown,
   dropdownContent
 }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
   const isThisSongPlaying = isCurrent && isPlaying;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleDropdownClick = (e) => {
+    e.stopPropagation();
+    if (onMore) {
+      onMore(song.id);
+    } else {
+      setShowMenu(!showMenu);
+    }
+  };
 
   return (
     <div 
-      className={`flex items-center px-4 py-2 transition-colors group rounded-md relative ${
-        isSelected 
-          ? 'bg-nct-primary/10 dark:bg-[#323232] border border-nct-primary/20 dark:border-transparent' 
-          : 'hover:bg-gray-100 dark:hover:bg-[#2b2b2b]'
-      } ${isCurrent ? 'bg-nct-primary/5 dark:bg-white/5' : ''}`}
+      className={`flex items-center gap-4 px-3 py-2 transition-all group rounded relative cursor-pointer h-[56px] border-b border-transparent ${
+        isCurrent 
+          ? 'bg-nct-primary/10 dark:bg-white/10' 
+          : isSelected 
+            ? 'bg-gray-200 dark:bg-[#323232]' 
+            : 'hover:bg-gray-100 dark:hover:bg-[#2b2b2b]'
+      }`}
+      onClick={() => onPlay?.(song)}
     >
-      <div className="w-12 flex items-center justify-center text-gray-500 dark:text-[#b3b3b3] font-medium text-sm">
-        {!isSelected && (
-          <span className={`group-hover:hidden ${isCurrent ? 'hidden' : ''}`}>
-            {index + 1}
-          </span>
-        )}
-        
+      {/* Index or Checkbox */}
+      <div className="w-10 flex items-center justify-center shrink-0">
         {showCheckbox ? (
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSelect?.(song.id);
-            }}
-            className={`w-[18px] h-[18px] rounded flex items-center justify-center transition-colors ${
-              isSelected 
-                ? 'bg-gray-900 dark:bg-white block shadow-sm' 
-                : 'border border-gray-300 dark:border-[#666666] bg-transparent hidden group-hover:flex'
-            }`}
-          >
-            {isSelected && <FiCheck className="w-3.5 h-3.5 text-white dark:text-[#282828] font-bold" strokeWidth={3} />}
-          </button>
-        ) : (
-          <button 
-            className={`hidden group-hover:block text-gray-900 dark:text-white ${isCurrent ? '!block text-nct-primary' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onPlay?.(song);
-            }}
-          >
-            {isThisSongPlaying ? <FiPause className="w-4 h-4 fill-current" /> : <FiPlay className="w-4 h-4 fill-current" />}
-          </button>
-        )}
-      </div>
-      
-      <div className="flex-1 flex items-center gap-3 pr-4 min-w-0">
-        <div 
-          className="relative w-10 h-10 rounded object-cover cursor-pointer shrink-0 group/play shadow-sm"
-          onClick={() => onPlay?.(song)}
-        >
-          <img src={song.image} alt={song.title} className="w-full h-full rounded object-cover" />
-          <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${isThisSongPlaying ? 'opacity-100' : 'opacity-0 group-hover/play:opacity-100'}`}>
-            {isThisSongPlaying ? <FiPause className="w-4 h-4 text-white fill-current" /> : <FiPlay className="w-4 h-4 text-white fill-current" />}
+          <div className="relative w-[18px] h-[18px]">
+             {/* Show index normally, hidden on hover or if selected */}
+            {!isSelected && (
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-500 dark:text-nct-text-dim group-hover:hidden">
+                {index !== undefined ? index + 1 : ''}
+              </span>
+            )}
+            
+            {/* Checkbox: shown on hover or if selected */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelect?.(song.id);
+              }}
+              className={`w-[18px] h-[18px] rounded border transition-all flex items-center justify-center ${
+                isSelected 
+                  ? 'bg-white border-white' 
+                  : 'border-gray-400 dark:border-white/20 bg-transparent hidden group-hover:flex'
+              }`}
+            >
+              {isSelected && <FiCheck className="w-3.5 h-3.5 text-black font-bold" strokeWidth={4} />}
+            </button>
           </div>
-        </div>
-        <div className="flex flex-col min-w-0">
-          <span 
-            className={`font-medium truncate cursor-pointer transition-colors ${isCurrent ? 'text-nct-primary' : 'text-gray-900 dark:text-white'}`}
-            onClick={() => onPlay?.(song)}
-          >
-            {song.title}
-          </span>
-        </div>
-      </div>
-      
-      <div className="w-1/4 text-gray-500 dark:text-[#b3b3b3] text-sm hover:underline hover:text-nct-primary cursor-pointer truncate pr-4 hidden sm:block">
-        {song.artist}
+        ) : (
+          <div className="text-sm font-medium text-gray-500 dark:text-nct-text-dim">
+            {index !== undefined ? index + 1 : ''}
+          </div>
+        )}
       </div>
 
-      <div className="w-24 flex items-center justify-end relative text-gray-500 dark:text-[#b3b3b3] text-sm group-hover:opacity-0">
+      <div className="relative w-10 h-10 rounded overflow-hidden shrink-0 shadow-md">
+        <img src={song.image} alt={song.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+        <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${isThisSongPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          {isThisSongPlaying ? <FiPause className="w-5 h-5 text-white fill-current" /> : <FiPlay className="w-5 h-5 text-white fill-current" />}
+        </div>
+      </div>
+      
+      <div className="flex-1 flex flex-col min-w-0">
+        <span className={`font-bold text-sm truncate transition-colors ${isCurrent ? 'text-nct-primary' : 'text-gray-900 dark:text-white'}`}>
+          {song.title}
+        </span>
+        <div className="flex items-center gap-1 mt-0.5">
+           <span className="text-[12px] text-gray-500 dark:text-nct-text-dim truncate group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+            {song.artist}
+          </span>
+        </div>
+      </div>
+
+      {/* Duration - hidden on hover to show buttons if needed, but NhacCuaTui usually keeps it */}
+      <div className={`w-16 text-right text-sm text-gray-500 dark:text-nct-text-dim ${isCurrent ? 'text-nct-primary' : ''}`}>
         {song.duration}
       </div>
 
       {/* Hover Actions */}
-      <div className={`absolute right-4 flex items-center justify-end gap-2 pr-4 transition-opacity dropdown-container ${openDropdown === song.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
         <button 
           onClick={(e) => {
             e.stopPropagation();
             onToggleFavorite?.(song);
           }}
-          className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-gray-500 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white"
+          className="p-2 text-gray-400 dark:text-nct-text-dim hover:text-gray-900 dark:hover:text-white transition-colors"
           title={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
         >
-          <FiHeart className={`w-4 h-4 ${isFavorite ? 'text-nct-primary fill-nct-primary' : ''}`} />
+          <FiHeart className={`w-4 h-4 ${isFavorite ? 'text-red-500 fill-red-500' : ''}`} />
         </button>
         
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onMore?.(song.id);
-          }}
-          className={`p-2 rounded-full transition-colors relative ${openDropdown === song.id ? 'bg-nct-primary text-white' : 'hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white'}`}
-          title="Thêm"
-        >
-          <FiMoreHorizontal className="w-4 h-4" />
-        </button>
+        <div className="relative dropdown-container" ref={menuRef}>
+          <button 
+            onClick={handleDropdownClick}
+            className={`p-2 rounded-full transition-colors ${showMenu || openDropdown === song.id ? 'bg-nct-primary/20 text-nct-primary' : 'text-gray-400 dark:text-nct-text-dim hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10'}`}
+          >
+            <FiMoreHorizontal className="w-5 h-5" />
+          </button>
 
-        {openDropdown === song.id && dropdownContent}
+          {(showMenu || openDropdown === song.id) && (
+            dropdownContent || (
+              <SongActionMenu 
+                song={song} 
+                onClose={() => setShowMenu(false)} 
+              />
+            )
+          )}
+        </div>
       </div>
     </div>
   );
