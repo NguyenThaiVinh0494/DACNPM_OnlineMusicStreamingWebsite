@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
-  FiPlay, FiHeart, FiMoreHorizontal,
-  FiUserPlus, FiCheck, FiClock, FiMusic, FiChevronRight
-} from "react-icons/fi";
+  FiPlay, FiMoreHorizontal,
+  FiUserPlus, FiCheck, FiClock, FiMusic} from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import SongActionMenu from "../../components/common/SongActionMenu";
 
@@ -276,10 +275,8 @@ const FALLBACK_ARTIST = {
 
 // ── Song Row ───────────────────────────────────────────────────────────────
 function SongRow({ song, index, songList }) {
-  const { playSong, currentSong, isPlaying, toggleFavorite, favorites } =
-    useMusic();
+  const { playSong, currentSong, isPlaying } = useMusic();
   const isCurrent = currentSong?.id === song.id;
-  const isFav = favorites.some((f) => f.id === song.id);
   const [hovered, setHovered] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);

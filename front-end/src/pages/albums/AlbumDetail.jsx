@@ -4,8 +4,9 @@ import {
   FiPlay, FiHeart, FiShare2, FiMoreHorizontal,
   FiDownload, FiClock, FiCheck
 } from "react-icons/fi";
-import { useMusic } from "../context/MusicContext";
-
+import { useMusic } from "../../context/MusicContext";
+import AlbumActionMenu from "../../components/common/AlbumActionMenu";
+import SongActionMenu from "../../components/common/SongActionMenu";
 // ── Mock album data keyed by id ────────────────────────────────────────────
 const ALBUMS_DATA = {
   1: {
