@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import PlayerBar from "./PlayerBar";
+import LyricsView from "./LyricsView";
 
 export default function MainLayout() {
   const location = useLocation();
@@ -32,7 +33,8 @@ export default function MainLayout() {
         </div>
       </div>
       
-      {/* Bottom section: PlayerBar */}
+      {/* Bottom section: PlayerBar & Overlay */}
+      <LyricsView />
       <PlayerBar />
     </div>
   );
