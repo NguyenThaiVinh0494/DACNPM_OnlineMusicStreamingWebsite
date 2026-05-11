@@ -152,7 +152,7 @@ export default function SearchResults() {
       </div>
 
       {/* Tab Bar */}
-      <div className="flex items-center gap-8 border-b border-gray-200 dark:border-white/5 sticky top-0 bg-white dark:bg-nct-bg z-30">
+      <div className="flex items-center gap-8 border-b border-gray-200 dark:border-white/5">
         {TABS.map(tab => (
           <button
             key={tab.id}

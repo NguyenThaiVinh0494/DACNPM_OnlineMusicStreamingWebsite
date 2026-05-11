@@ -1,0 +1,22 @@
+export const MOCK_LYRICS = [
+  { time: 0, text: "Nếu không có ai mỉm cười nghe" },
+  { time: 4, text: "Vậy thì bao lời anh viết ra làm gì" },
+  { time: 8, text: "Anh đã có mọi thứ mình từng ngắm" },
+  { time: 12, text: "Cũng không tuyệt vời lắm" },
+  { time: 16, text: "Áo hoodie và trùm lấy" },
+  { time: 20, text: "Không để cho người nào thấy" },
+  { time: 24, text: "Vì em từ ngày em đi xa" },
+  { time: 28, text: "Nắng mai đâu còn chiếu xuyên qua" },
+  { time: 32, text: "Nỗi nhớ vương đọng lại trong phòng" },
+  { time: 36, text: "Có chút mơ mộng chìm theo dòng" },
+  { time: 40, text: "Biết đến khi nào được gặp lại" },
+  { time: 44, text: "Trái tim ai rồi cũng sẽ mệt nhoài" },
+  { time: 48, text: "(Nhạc nền...)" },
+  { time: 60, text: "Dạo gần đây anh thấy..." },
+  { time: 64, text: "Anh không bằng ai hết" },
+  { time: 68, text: "Nên đành chôn vùi trong những khúc ca" },
+  { time: 72, text: "Không để cho người nào thấy" },
+  { time: 76, text: "Vì em từ ngày em đi xa" },
+  { time: 80, text: "Nắng mai đâu còn chiếu xuyên qua" },
+  { time: 85, text: "Dạo gần đây anh thấy anh không bằng ai hết..." }
+];

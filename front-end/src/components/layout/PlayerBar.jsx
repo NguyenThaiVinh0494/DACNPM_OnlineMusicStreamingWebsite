@@ -1,85 +1,221 @@
-import { FiHeart, FiMoreHorizontal, FiShuffle, FiRepeat, FiVolume2, FiList } from "react-icons/fi";
-import { FaPlay, FaStepBackward, FaStepForward } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { FiHeart, FiMoreHorizontal, FiShuffle, FiRepeat, FiVolume2, FiVolumeX, FiList, FiMusic, FiMic } from "react-icons/fi";
+import { FaPlay, FaPause, FaStepBackward, FaStepForward } from "react-icons/fa";
+import { useMusic } from "../../context/MusicContext";
+
+// Utility to format time (seconds to mm:ss)
+const formatTime = (time) => {
+  if (isNaN(time)) return "00:00";
+  const m = Math.floor(time / 60);
+  const s = Math.floor(time % 60);
+  return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+};
 
 export default function PlayerBar() {
+  const { 
+    currentSong, isPlaying, togglePlay, playNext, playPrev, 
+    toggleFavorite, favorites, 
+    isShuffle, repeatMode, toggleShuffle, toggleRepeat,
+    audioRef, isLyricsOpen, toggleLyrics
+  } = useMusic();
+  
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Sync audio play/pause with Context
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch(e => console.error("Auto-play prevented", e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying, currentSong, audioRef]);
+
+  // Sync volume
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted, audioRef]);
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleEnded = () => {
+    // If repeat one, just replay
+    if (repeatMode === 2) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
+      }
+    } else {
+      playNext(true); // Pass true to indicate autoPlay
+    }
+  };
+
+  const handleSeek = (e) => {
+    if (!currentSong) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const newTime = percent * duration;
+    setCurrentTime(newTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
+  };
+
+  const handleVolumeChange = (e) => {
+    if (!currentSong) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    setVolume(percent);
+    setIsMuted(false);
+  };
+
+  const isFav = currentSong && favorites.some(s => s.id === currentSong.id);
+
+  // Calculate progress percentage
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const volumePercent = isMuted ? 0 : volume * 100;
+
+  // Repeat button icon logic
+  const getRepeatIcon = () => {
+    if (repeatMode === 2) {
+      return (
+        <div className="relative text-nct-primary flex items-center justify-center">
+          <FiRepeat className="w-4 h-4" />
+          <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-white dark:bg-[#1e1e1e] rounded-full w-3 h-3 flex items-center justify-center border border-nct-primary/30">1</span>
+        </div>
+      );
+    }
+    return <FiRepeat className={`w-4 h-4 ${repeatMode === 1 ? 'text-nct-primary' : ''}`} />;
+  };
+
   return (
-    <div className="h-20 md:h-24 bg-white dark:!bg-nct-player border-t border-gray-200 dark:border-white/5 px-4 md:px-6 flex items-center justify-between transition-colors duration-300">
+    <div className={`h-20 md:h-24 px-4 md:px-6 flex items-center justify-between transition-colors duration-300 z-[60] relative ${isLyricsOpen ? 'bg-transparent border-t-0 dark' : !currentSong ? 'bg-gray-50 dark:bg-[#181818] border-t border-gray-200 dark:border-white/5' : 'bg-white dark:!bg-nct-player border-t border-gray-200 dark:border-white/5'}`}>
+      
+      {/* Hidden Audio Element */}
+      <audio 
+        ref={audioRef}
+        src={currentSong?.audioUrl || ""}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+      />
+
       {/* Left: Song Info */}
       <div className="flex items-center gap-3 md:gap-4 w-full md:w-[30%]">
-        <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-white/10 flex-shrink-0 shadow-md">
-          <img 
-            src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=150&h=150&fit=crop" 
-            alt="Song Cover" 
-            className="w-full h-full object-cover"
-          />
+        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg overflow-hidden flex-shrink-0 shadow-md flex items-center justify-center transition-all ${currentSong ? 'bg-gray-100 dark:bg-white/10' : 'bg-gray-200 dark:bg-white/5 border border-dashed border-gray-300 dark:border-white/10'}`}>
+          {currentSong ? (
+            <img 
+              src={currentSong.image} 
+              alt={currentSong.title} 
+              className={`w-full h-full object-cover transition-transform duration-[10s] ease-linear ${isPlaying ? 'scale-110' : 'scale-100'}`}
+            />
+          ) : (
+            <FiMusic className="w-5 h-5 md:w-6 md:h-6 text-gray-400 dark:text-white/20" />
+          )}
         </div>
         <div className="flex flex-col truncate flex-1 md:flex-none">
-          <h4 className="text-gray-900 dark:text-white font-medium text-sm truncate hover:text-nct-primary dark:hover:text-nct-primary cursor-pointer">NGÁO NGƠ</h4>
-          <p className="text-gray-500 dark:text-nct-text-dim text-xs truncate hover:text-nct-primary dark:hover:text-nct-primary cursor-pointer hover:underline">
-            HIEUTHUHAI, ERIK, Anh Tú Atus
+          <h4 className={`font-medium text-sm truncate transition-colors ${currentSong ? 'text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary cursor-pointer' : 'text-gray-400 dark:text-nct-text-dim/50 select-none'}`}>
+            {currentSong ? currentSong.title : "Chưa chọn bài hát"}
+          </h4>
+          <p className={`text-xs truncate transition-colors ${currentSong ? 'text-gray-500 dark:text-nct-text-dim hover:text-nct-primary dark:hover:text-nct-primary cursor-pointer hover:underline mt-0.5' : 'text-gray-400 dark:text-nct-text-dim/30 select-none mt-0.5'}`}>
+            {currentSong ? currentSong.artist : "-"}
           </p>
         </div>
-        <div className="hidden md:flex items-center gap-3 ml-2 text-gray-500 dark:text-nct-text-dim">
-          <button aria-label="Thêm vào yêu thích" className="hover:text-red-500 transition-colors"><FiHeart className="w-4 h-4" /></button>
-          <button aria-label="Thêm tùy chọn" className="hover:text-gray-900 dark:hover:text-white transition-colors"><FiMoreHorizontal className="w-4 h-4" /></button>
-        </div>
+        {currentSong && (
+          <div className="hidden md:flex items-center gap-3 ml-2 text-gray-500 dark:text-nct-text-dim">
+            <button onClick={() => toggleFavorite(currentSong)} aria-label="Thêm vào yêu thích" className={`${isFav ? 'text-nct-primary' : 'hover:text-red-500'} transition-colors`}>
+              <FiHeart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
+            </button>
+            <button aria-label="Thêm tùy chọn" className="hover:text-gray-900 dark:hover:text-white transition-colors"><FiMoreHorizontal className="w-4 h-4" /></button>
+          </div>
+        )}
         
         {/* Mobile quick controls (hidden on desktop) */}
-        <div className="flex md:hidden items-center gap-4 text-gray-900 dark:text-white ml-auto">
-          <button aria-label="Phát nhạc">
-            <FaPlay className="w-4 h-4" />
-          </button>
-          <button aria-label="Tiếp theo">
-            <FaStepForward className="w-4 h-4" />
-          </button>
-        </div>
+        {currentSong && (
+          <div className="flex md:hidden items-center gap-4 text-gray-900 dark:text-white ml-auto">
+            <button aria-label="Phát nhạc" onClick={togglePlay} className="p-2 bg-nct-primary text-white rounded-full shadow-lg">
+              {isPlaying ? <FaPause className="w-3 h-3" /> : <FaPlay className="w-3 h-3 ml-0.5" />}
+            </button>
+            <button aria-label="Tiếp theo" onClick={() => playNext()} className="p-2">
+              <FaStepForward className="w-4 h-4 text-gray-700 dark:text-white" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Center: Controls (Hidden on Mobile) */}
-      <div className="hidden md:flex flex-col items-center justify-center gap-2 w-[40%] max-w-[500px]">
+      <div className={`hidden md:flex flex-col items-center justify-center gap-2 w-[40%] max-w-[500px] transition-opacity duration-300 ${!currentSong ? 'opacity-40 pointer-events-none grayscale' : 'opacity-100'}`}>
         <div className="flex items-center gap-6">
-          <button aria-label="Phát ngẫu nhiên" className="text-gray-500 dark:text-nct-text-dim hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
+          <button aria-label="Phát ngẫu nhiên" onClick={toggleShuffle} className={`transition-colors p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 ${isShuffle ? 'text-nct-primary' : 'text-gray-500 dark:text-nct-text-dim hover:text-gray-900 dark:hover:text-white'}`}>
             <FiShuffle className="w-4 h-4" />
           </button>
-          <button aria-label="Bài trước" className="text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
+          <button aria-label="Bài trước" onClick={playPrev} className="text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary transition-colors p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/5">
             <FaStepBackward className="w-4 h-4" />
           </button>
-          <button aria-label="Phát nhạc" className="w-9 h-9 rounded-full bg-nct-primary dark:bg-white flex items-center justify-center text-white dark:text-black hover:scale-105 transition-transform">
-            <FaPlay className="w-4 h-4 ml-0.5" />
+          <button aria-label="Phát nhạc" onClick={togglePlay} className="w-10 h-10 rounded-full bg-nct-primary dark:bg-white flex items-center justify-center text-white dark:text-black hover:scale-105 transition-transform shadow-lg shadow-nct-primary/20 dark:shadow-white/10 active:scale-95">
+            {isPlaying ? <FaPause className="w-4 h-4" /> : <FaPlay className="w-4 h-4 ml-0.5" />}
           </button>
-          <button aria-label="Bài tiếp" className="text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
+          <button aria-label="Bài tiếp" onClick={() => playNext()} className="text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary transition-colors p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/5">
             <FaStepForward className="w-4 h-4" />
           </button>
-          <button aria-label="Lặp lại" className="text-gray-500 dark:text-nct-text-dim hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
-            <FiRepeat className="w-4 h-4" />
+          <button aria-label="Lặp lại" onClick={toggleRepeat} className={`transition-colors p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 ${repeatMode !== 0 ? 'text-nct-primary' : 'text-gray-500 dark:text-nct-text-dim hover:text-gray-900 dark:hover:text-white'}`}>
+            {getRepeatIcon()}
           </button>
         </div>
-        <div className="w-full flex items-center gap-2 text-[10px] text-gray-500 dark:text-nct-text-dim font-medium">
-          <span>00:00</span>
-          <div className="h-1 flex-1 bg-gray-200 dark:bg-white/10 rounded-full cursor-pointer group">
-            <div className="h-full w-1/3 bg-nct-primary dark:bg-nct-primary rounded-full group-hover:bg-[#2591c4] dark:group-hover:bg-nct-primary/80 relative">
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white dark:bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity border border-gray-200 dark:border-transparent"></div>
+        <div className="w-full flex items-center gap-3 text-[11px] text-gray-500 dark:text-nct-text-dim font-medium tracking-wider">
+          <span className="w-9 text-right">{formatTime(currentTime)}</span>
+          <div className="h-1.5 flex-1 bg-gray-200 dark:bg-white/10 rounded-full cursor-pointer group relative overflow-hidden md:overflow-visible" onClick={handleSeek}>
+            {/* Progress Track */}
+            <div className="h-full bg-nct-primary dark:bg-nct-primary rounded-full group-hover:bg-[#2591c4] dark:group-hover:bg-nct-primary/80 relative transition-all duration-100" style={{ width: `${progressPercent}%` }}>
+              {/* Thumb */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-white dark:bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity border border-gray-200 dark:border-transparent z-10"></div>
             </div>
           </div>
-          <span>03:45</span>
+          <span className="w-9 text-left">{formatTime(duration)}</span>
         </div>
       </div>
 
       {/* Right: Actions (Hidden on Mobile) */}
-      <div className="hidden md:flex items-center justify-end gap-4 w-[30%] text-gray-500 dark:text-nct-text-dim">
-        <div className="text-[10px] font-bold border border-gray-300 dark:border-white/20 px-1.5 py-0.5 rounded cursor-pointer hover:border-gray-500 dark:hover:border-white/40 hover:text-gray-900 dark:hover:text-white transition-colors">
-          128 kbps
+      <div className={`hidden md:flex items-center justify-end gap-4 w-[30%] text-gray-500 dark:text-nct-text-dim transition-opacity duration-300 ${!currentSong ? 'opacity-40 pointer-events-none grayscale' : 'opacity-100'}`}>
+        <div className="text-[10px] font-bold border border-gray-300 dark:border-white/20 px-1.5 py-0.5 rounded hover:border-gray-500 dark:hover:border-white/40 hover:text-gray-900 dark:hover:text-white transition-colors cursor-default select-none">
+          320 kbps
         </div>
-        <div className="flex items-center gap-2 group">
-          <button aria-label="Âm lượng" className="hover:text-gray-900 dark:hover:text-white transition-colors">
-            <FiVolume2 className="w-5 h-5" />
+        <div className="flex items-center gap-2 group w-24">
+          <button aria-label="Âm lượng" onClick={() => setIsMuted(!isMuted)} className="hover:text-gray-900 dark:hover:text-white transition-colors p-1.5">
+            {isMuted || volume === 0 ? <FiVolumeX className="w-4 h-4" /> : <FiVolume2 className="w-4 h-4" />}
           </button>
-          <div className="w-20 h-1 bg-gray-200 dark:bg-white/10 rounded-full cursor-pointer">
-            <div className="h-full w-2/3 bg-gray-900 dark:bg-white rounded-full group-hover:bg-nct-primary dark:group-hover:bg-nct-primary"></div>
+          <div className="h-1.5 flex-1 bg-gray-200 dark:bg-white/10 rounded-full cursor-pointer relative" onClick={handleVolumeChange}>
+            <div className="h-full bg-gray-900 dark:bg-white rounded-full group-hover:bg-nct-primary dark:group-hover:bg-nct-primary transition-all duration-100" style={{ width: `${volumePercent}%` }}>
+               <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity border border-gray-200 dark:border-transparent"></div>
+            </div>
           </div>
         </div>
-        <button aria-label="Danh sách phát" className="hover:text-gray-900 dark:hover:text-white transition-colors p-2 bg-gray-100 dark:bg-white/5 rounded">
-          <FiList className="w-5 h-5" />
+        <div className="w-px h-4 bg-gray-300 dark:bg-white/10 mx-1"></div>
+        <button 
+          aria-label="Lời bài hát" 
+          onClick={toggleLyrics}
+          className={`transition-colors p-2 rounded-lg ${isLyricsOpen ? 'bg-nct-primary/10 dark:bg-nct-primary/20 text-nct-primary' : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-nct-primary dark:hover:text-nct-primary'}`}
+        >
+          <FiMic className="w-4 h-4" />
+        </button>
+        <button aria-label="Danh sách phát" className="hover:text-nct-primary dark:hover:text-nct-primary transition-colors p-2 bg-gray-100 dark:bg-white/5 hover:bg-nct-primary/10 dark:hover:bg-nct-primary/20 rounded-lg">
+          <FiList className="w-4 h-4" />
         </button>
       </div>
     </div>

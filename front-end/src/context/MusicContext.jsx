@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 const MusicContext = createContext();
@@ -11,17 +11,23 @@ export const MusicProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueue] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [repeatMode, setRepeatMode] = useState(0); // 0: no repeat, 1: repeat all, 2: repeat one
+  const [isLyricsOpen, setIsLyricsOpen] = useState(false);
+
+  // Audio Ref shared globally so LyricsView can read currentTime
+  const audioRef = useRef(null);
 
   // Global library of songs for searching/adding
   const allSongs = [
-    { id: 1, title: "Nơi Này Có Anh", artist: "Sơn Tùng M-TP", duration: "04:20", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop" },
-    { id: 2, title: "Lạc Trôi", artist: "Sơn Tùng M-TP", duration: "03:52", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop" },
-    { id: 3, title: "Âm Thầm Bên Em", artist: "Sơn Tùng M-TP", duration: "04:53", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&h=100&fit=crop" },
-    { id: 4, title: "Chắc Ai Đó Sẽ Về", artist: "Sơn Tùng M-TP", duration: "04:31", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" },
-    { id: 5, title: "Em Của Ngày Hôm Qua", artist: "Sơn Tùng M-TP", duration: "03:55", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=100&h=100&fit=crop" },
-    { id: 6, title: "Chúng Ta Của Hiện Tại", artist: "Sơn Tùng M-TP", duration: "05:01", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop" },
-    { id: 7, title: "Nâng Chén Tiêu Sầu", artist: "Bích Phương", duration: "03:22", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=100&h=100&fit=crop" },
-    { id: 8, title: "Thiên Lý Ơi", artist: "Jack - J97", duration: "04:10", image: "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=100&h=100&fit=crop" },
+    { id: 1, title: "Nơi Này Có Anh", artist: "Sơn Tùng M-TP", duration: "04:20", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+    { id: 2, title: "Lạc Trôi", artist: "Sơn Tùng M-TP", duration: "03:52", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+    { id: 3, title: "Âm Thầm Bên Em", artist: "Sơn Tùng M-TP", duration: "04:53", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+    { id: 4, title: "Chắc Ai Đó Sẽ Về", artist: "Sơn Tùng M-TP", duration: "04:31", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+    { id: 5, title: "Em Của Ngày Hôm Qua", artist: "Sơn Tùng M-TP", duration: "03:55", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+    { id: 6, title: "Chúng Ta Của Hiện Tại", artist: "Sơn Tùng M-TP", duration: "05:01", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+    { id: 7, title: "Nâng Chén Tiêu Sầu", artist: "Bích Phương", duration: "03:22", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+    { id: 8, title: "Thiên Lý Ơi", artist: "Jack - J97", duration: "04:10", image: "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
   ];
 
   // Load initial state from localStorage
@@ -150,34 +156,84 @@ export const MusicProvider = ({ children }) => {
     }
   };
 
-  const playNext = () => {
-    if (queue.length > 0 && currentIndex < queue.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
-      const song = queue[nextIndex];
-      setCurrentSong(song);
-      setIsPlaying(true);
+  const toggleShuffle = () => {
+    setIsShuffle(!isShuffle);
+  };
 
-      setRecentSongs(prev => {
-        const filtered = prev.filter(s => s.id !== song.id);
-        return [song, ...filtered].slice(0, 50);
-      });
+  const toggleRepeat = () => {
+    setRepeatMode((prev) => (prev + 1) % 3);
+  };
+
+  const toggleLyrics = () => {
+    setIsLyricsOpen(!isLyricsOpen);
+  };
+
+  const playNext = (isAutoPlay = false) => {
+    if (queue.length === 0) return;
+
+    if (isAutoPlay && repeatMode === 2) {
+      // Repeat current song, no index change needed
+      // (Actual playback restart is handled in audio element)
+      return;
     }
+
+    let nextIndex;
+    if (isShuffle) {
+      nextIndex = Math.floor(Math.random() * queue.length);
+      // Avoid playing the same song if queue > 1
+      if (queue.length > 1 && nextIndex === currentIndex) {
+        nextIndex = (nextIndex + 1) % queue.length;
+      }
+    } else {
+      if (currentIndex < queue.length - 1) {
+        nextIndex = currentIndex + 1;
+      } else {
+        if (repeatMode === 1) {
+          nextIndex = 0; // loop back
+        } else {
+          return; // end of queue, no repeat
+        }
+      }
+    }
+
+    setCurrentIndex(nextIndex);
+    const song = queue[nextIndex];
+    setCurrentSong(song);
+    setIsPlaying(true);
+
+    setRecentSongs(prev => {
+      const filtered = prev.filter(s => s.id !== song.id);
+      return [song, ...filtered].slice(0, 50);
+    });
   };
 
   const playPrev = () => {
-    if (queue.length > 0 && currentIndex > 0) {
-      const prevIndex = currentIndex - 1;
-      setCurrentIndex(prevIndex);
-      const song = queue[prevIndex];
-      setCurrentSong(song);
-      setIsPlaying(true);
+    if (queue.length === 0) return;
 
-      setRecentSongs(prev => {
-        const filtered = prev.filter(s => s.id !== song.id);
-        return [song, ...filtered].slice(0, 50);
-      });
+    let prevIndex;
+    if (isShuffle) {
+      prevIndex = Math.floor(Math.random() * queue.length);
+    } else {
+      if (currentIndex > 0) {
+        prevIndex = currentIndex - 1;
+      } else {
+        if (repeatMode === 1) {
+          prevIndex = queue.length - 1; // loop back to end
+        } else {
+          prevIndex = 0;
+        }
+      }
     }
+
+    setCurrentIndex(prevIndex);
+    const song = queue[prevIndex];
+    setCurrentSong(song);
+    setIsPlaying(true);
+
+    setRecentSongs(prev => {
+      const filtered = prev.filter(s => s.id !== song.id);
+      return [song, ...filtered].slice(0, 50);
+    });
   };
 
   const playAll = (songList) => {
@@ -273,7 +329,14 @@ export const MusicProvider = ({ children }) => {
       removeFromRecent,
       clearRecentSongs,
       addToQueue,
-      playNextInQueue
+      playNextInQueue,
+      isShuffle,
+      repeatMode,
+      toggleShuffle,
+      toggleRepeat,
+      isLyricsOpen,
+      toggleLyrics,
+      audioRef
     }}>
       {children}
     </MusicContext.Provider>
