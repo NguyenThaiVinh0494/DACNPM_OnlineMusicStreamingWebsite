@@ -13,6 +13,8 @@ from .views import (
     DanhSachPhatViewSet,
     YeuThichViewSet,
     LichSuNgheViewSet,
+    UploadAnhView,
+    UploadNhacView,
 )
 
 # Router tự động tạo tất cả URL CRUD cho ViewSet
@@ -30,6 +32,10 @@ urlpatterns = [
     path('register/',      DangKyView.as_view(),           name='api_register'),
     path('login/',         TokenObtainPairView.as_view(),  name='api_login'),
     path('login/refresh/', TokenRefreshView.as_view(),     name='api_token_refresh'),
+
+    # Upload lên Cloudinary
+    path('upload/image/', UploadAnhView.as_view(),  name='upload_image'),
+    path('upload/audio/', UploadNhacView.as_view(), name='upload_audio'),
 
     # Tất cả API CRUD qua Router
     path('', include(router.urls)),
