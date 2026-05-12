@@ -58,3 +58,36 @@ Tương tác của các tác nhân user, website, admin với nhau:
 * admin và user tương tác với nhau qua website:
   - admin duyệt/từ chối bài hát, album, playlist do user upload lên.
   - admin hướng dẫn, hỗ trợ user qua tính năng chat.
+
+
+### Dừng Server
+
+Trong Terminal đang chạy server, nhấn tổ hợp phím:
+
+<pre><div node="[object Object]" class="relative whitespace-pre-wrap word-break-all my-2 rounded-lg bg-list-hover-subtle border border-gray-500/20"><div class="min-h-7 relative box-border flex flex-row items-center justify-between rounded-t border-b border-gray-500/20 px-2 py-0.5"><div class="font-sans text-sm text-ide-text-color opacity-60"></div><div class="flex flex-row gap-2 justify-end"></div></div><div class="p-3"><div class="w-full h-full text-xs cursor-text"><div class="code-block"><div class="code-line" data-line-number="1" data-line-start="1" data-line-end="1"><div class="line-content"><span class="mtk1">Ctrl + C</span></div></div></div></div></div></div></pre>
+
+Terminal sẽ hiện thông báo và trả về dấu nhắc lệnh `(venv) PS D:\...>`
+
+---
+
+### Khởi động lại Server
+
+Sau khi đã dừng, gõ lệnh:
+
+<pre><div node="[object Object]" class="relative whitespace-pre-wrap word-break-all my-2 rounded-lg bg-list-hover-subtle border border-gray-500/20"><div class="min-h-7 relative box-border flex flex-row items-center justify-between rounded-t border-b border-gray-500/20 px-2 py-0.5"><div class="font-sans text-sm text-ide-text-color opacity-60">powershell</div><div class="flex flex-row gap-2 justify-end"></div></div><div class="p-3"><div class="w-full h-full text-xs cursor-text"><div class="code-block"><div class="code-line" data-line-number="1" data-line-start="1" data-line-end="1"><div class="line-content"><span class="mtk1">.\venv\Scripts\</span><span class="mtk16">python.exe</span><span class="mtk1"> manage.py runserver</span></div></div></div></div></div></div></pre>
+
+---
+
+### Mẹo hữu ích 💡
+
+**Dùng phím mũi tên ↑ để gọi lại lệnh cũ:** Thay vì gõ lại toàn bộ lệnh, bạn chỉ cần nhấn phím **↑ (mũi tên lên)** trong Terminal, nó sẽ tự điền lại lệnh đã chạy trước đó.
+
+**Chạy server ở port khác** (nếu port 8000 bị chiếm):
+
+<pre><div node="[object Object]" class="relative whitespace-pre-wrap word-break-all my-2 rounded-lg bg-list-hover-subtle border border-gray-500/20"><div class="min-h-7 relative box-border flex flex-row items-center justify-between rounded-t border-b border-gray-500/20 px-2 py-0.5"><div class="font-sans text-sm text-ide-text-color opacity-60">powershell</div><div class="flex flex-row gap-2 justify-end"></div></div><div class="p-3"><div class="w-full h-full text-xs cursor-text"><div class="code-block"><div class="code-line" data-line-number="1" data-line-start="1" data-line-end="1"><div class="line-content"><span class="mtk1">.\venv\Scripts\</span><span class="mtk16">python.exe</span><span class="mtk1"> manage.py runserver </span><span class="mtk7">8001</span></div></div></div></div></div></div></pre>
+
+**Kích hoạt môi trường ảo trước khi chạy** (nếu mở Terminal mới):
+
+<pre><div node="[object Object]" class="relative whitespace-pre-wrap word-break-all my-2 rounded-lg bg-list-hover-subtle border border-gray-500/20"><div class="min-h-7 relative box-border flex flex-row items-center justify-between rounded-t border-b border-gray-500/20 px-2 py-0.5"><div class="font-sans text-sm text-ide-text-color opacity-60">powershell</div><div class="flex flex-row gap-2 justify-end"></div></div><div class="p-3"><div class="w-full h-full text-xs cursor-text"><div class="code-block"><div class="code-line" data-line-number="1" data-line-start="1" data-line-end="1"><div class="line-content"><span class="mtk1">.\venv\Scripts\activate</span></div></div><div class="code-line" data-line-number="2" data-line-start="2" data-line-end="2"><div class="line-content"><span class="mtk1">python manage.py runserver</span></div></div></div></div></div></div></pre>
+
+*(Sau khi activate, bạn có thể dùng `python` ngắn gọn thay vì phải gõ đường dẫn dài)*

@@ -1,13 +1,67 @@
 from rest_framework import generics, viewsets, filters, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
+import cloudinary.uploader
 from .models import NguoiDung, BaiHat, NgheSi, TheLoai, Album, DanhSachPhat, YeuThich, LichSuNghe
 from .serializers import (
     DangKySerializer, BaiHatSerializer, NgheSiSerializer,
     TheLoaiSerializer, AlbumSerializer, DanhSachPhatSerializer,
     YeuThichSerializer, LichSuNgheSerializer
 )
+
+
+# ============================
+# Upload lên Cloudinary
+# ============================
+class UploadAnhView(APIView):
+    """
+    Upload ảnh (avatar, ảnh bìa, ảnh nghệ sĩ) lên Cloudinary.
+    POST /api/upload/image/
+    - Body: form-data, key = "file", value = file ảnh
+    - Trả về: URL ảnh trên Cloudinary
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'Không tìm thấy file. Hãy gửi file với key là "file".'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Upload lên Cloudinary folder "images"
+        result = cloudinary.uploader.upload(
+            file,
+            folder='music_streaming/images',
+            resource_type='image'
+        )
+        return Response({'url': result['secure_url']}, status=status.HTTP_200_OK)
+
+
+class UploadNhacView(APIView):
+    """
+    Upload file nhạc (mp3, wav,...) lên Cloudinary.
+    POST /api/upload/audio/
+    - Body: form-data, key = "file", value = file nhạc
+    - Trả về: URL nhạc trên Cloudinary
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'Không tìm thấy file. Hãy gửi file với key là "file".'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Upload lên Cloudinary folder "audio" với resource_type="video" (Cloudinary dùng "video" cho cả audio)
+        result = cloudinary.uploader.upload(
+            file,
+            folder='music_streaming/audio',
+            resource_type='video'
+        )
+        return Response({'url': result['secure_url']}, status=status.HTTP_200_OK)
 
 # ============================
 # Auth Views
