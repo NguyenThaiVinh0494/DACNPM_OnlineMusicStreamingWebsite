@@ -14,6 +14,7 @@ export const MusicProvider = ({ children }) => {
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState(0); // 0: no repeat, 1: repeat all, 2: repeat one
   const [isLyricsOpen, setIsLyricsOpen] = useState(false);
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
 
   // Audio Ref shared globally so LyricsView can read currentTime
   const audioRef = useRef(null);
@@ -166,6 +167,24 @@ export const MusicProvider = ({ children }) => {
 
   const toggleLyrics = () => {
     setIsLyricsOpen(!isLyricsOpen);
+  };
+
+  const toggleQueue = () => {
+    setIsQueueOpen(!isQueueOpen);
+  };
+
+  const jumpToQueueIndex = (index) => {
+    if (index >= 0 && index < queue.length) {
+      setCurrentIndex(index);
+      const song = queue[index];
+      setCurrentSong(song);
+      setIsPlaying(true);
+      
+      setRecentSongs(prev => {
+        const filtered = prev.filter(s => s.id !== song.id);
+        return [song, ...filtered].slice(0, 50);
+      });
+    }
   };
 
   const playNext = (isAutoPlay = false) => {
@@ -336,6 +355,9 @@ export const MusicProvider = ({ children }) => {
       toggleRepeat,
       isLyricsOpen,
       toggleLyrics,
+      isQueueOpen,
+      toggleQueue,
+      jumpToQueueIndex,
       audioRef
     }}>
       {children}
