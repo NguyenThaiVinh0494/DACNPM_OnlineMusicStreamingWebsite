@@ -16,7 +16,7 @@ export default function PlayerBar() {
     currentSong, isPlaying, togglePlay, playNext, playPrev, 
     toggleFavorite, favorites, 
     isShuffle, repeatMode, toggleShuffle, toggleRepeat,
-    audioRef, isLyricsOpen, toggleLyrics
+    audioRef, isLyricsOpen, toggleLyrics, isQueueOpen, toggleQueue
   } = useMusic();
   
   const [currentTime, setCurrentTime] = useState(0);
@@ -214,7 +214,11 @@ export default function PlayerBar() {
         >
           <FiMic className="w-4 h-4" />
         </button>
-        <button aria-label="Danh sách phát" className="hover:text-nct-primary dark:hover:text-nct-primary transition-colors p-2 bg-gray-100 dark:bg-white/5 hover:bg-nct-primary/10 dark:hover:bg-nct-primary/20 rounded-lg">
+        <button 
+          aria-label="Danh sách phát" 
+          onClick={toggleQueue}
+          className={`transition-colors p-2 rounded-lg ${isQueueOpen ? 'bg-nct-primary/10 dark:bg-nct-primary/20 text-nct-primary' : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-nct-primary dark:hover:text-nct-primary'}`}
+        >
           <FiList className="w-4 h-4" />
         </button>
       </div>

@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import PlayerBar from "./PlayerBar";
 import LyricsView from "./LyricsView";
+import QueueDrawer from "./QueueDrawer";
 
 export default function MainLayout() {
   const location = useLocation();
@@ -35,6 +36,7 @@ export default function MainLayout() {
       
       {/* Bottom section: PlayerBar & Overlay */}
       <LyricsView />
+      <QueueDrawer />
       <PlayerBar />
     </div>
   );

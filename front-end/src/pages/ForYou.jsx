@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { FiHeart, FiMoreHorizontal, FiArrowUp, FiArrowDown, FiMessageCircle, FiShare2, FiPlay, FiPause, FiDownload, FiPlus, FiFlag, FiChevronRight, FiFacebook, FiLink } from "react-icons/fi";
+import OnboardingModal from "../components/layout/OnboardingModal";
 
 // Mock data
 const mockForYouData = [
   {
-    id: 1,
+    id: 101,
     title: "Chạy Ngay Đi",
     artist: "Sơn Tùng M-TP",
     cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&h=500&fit=crop",
+    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&h=500&fit=crop",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     uploaderAvatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
     likes: "1.2M",
     comments: "45K",
@@ -25,10 +28,12 @@ const mockForYouData = [
     ]
   },
   {
-    id: 2,
+    id: 102,
     title: "Kẻ Cắp Gặp Bà Già",
     artist: "Hoàng Thùy Linh",
     cover: "https://images.unsplash.com/photo-1493225457124-a1a2a5f529db?w=500&h=500&fit=crop",
+    image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f529db?w=500&h=500&fit=crop",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
     uploaderAvatar: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop",
     likes: "2.5M",
     comments: "89K",
@@ -46,10 +51,12 @@ const mockForYouData = [
     ]
   },
   {
-    id: 3,
+    id: 103,
     title: "Nàng Thơ",
     artist: "Hoàng Dũng",
     cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&h=500&fit=crop",
+    image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&h=500&fit=crop",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
     uploaderAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
     likes: "800K",
     comments: "20K",
@@ -66,16 +73,38 @@ const mockForYouData = [
   }
 ];
 
+import { useMusic } from "../context/MusicContext";
+
 export default function ForYou() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const { playSong, currentSong, isPlaying, togglePlay } = useMusic();
   const [activeLyricIndex, setActiveLyricIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const menuRef = useRef(null);
+
+  // Derive current index from global song state
+  let derivedIndex = mockForYouData.findIndex(s => s.id === currentSong?.id);
+  if (derivedIndex === -1) derivedIndex = 0;
   
-  const currentItem = mockForYouData[currentIndex];
+  const currentItem = mockForYouData[derivedIndex];
   const lyricContainerRef = useRef(null);
   const lyricRefs = useRef([]);
+
+  // Auto-play the first song when opening ForYou if not already playing a ForYou song
+  useEffect(() => {
+    const isPlayingForYou = mockForYouData.some(s => s.id === currentSong?.id);
+    if (!isPlayingForYou) {
+      playSong(mockForYouData[0], mockForYouData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [prevDerivedIndex, setPrevDerivedIndex] = useState(derivedIndex);
+
+  if (derivedIndex !== prevDerivedIndex) {
+    setPrevDerivedIndex(derivedIndex);
+    setActiveLyricIndex(0);
+  }
 
   // Giả lập lyric chạy theo thời gian
   useEffect(() => {
@@ -89,7 +118,7 @@ export default function ForYou() {
       }, 3000); // Đổi câu mỗi 3 giây (giả lập)
     }
     return () => clearInterval(interval);
-  }, [isPlaying, currentIndex, currentItem.lyrics.length]);
+  }, [isPlaying, derivedIndex, currentItem.lyrics.length]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -100,6 +129,23 @@ export default function ForYou() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Check onboarding for new users
+  useEffect(() => {
+    const hasCompleted = localStorage.getItem("onboardingCompleted");
+    if (!hasCompleted) {
+      // Delay slightly for better UX
+      const timer = setTimeout(() => {
+        setShowOnboarding(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCloseOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem("onboardingCompleted", "true");
+  };
 
   // Cuộn đến lyric đang active
   useEffect(() => {
@@ -118,23 +164,21 @@ export default function ForYou() {
   }, [activeLyricIndex]);
 
   const handleNext = () => {
-    if (currentIndex < mockForYouData.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setActiveLyricIndex(0);
+    if (derivedIndex < mockForYouData.length - 1) {
+      playSong(mockForYouData[derivedIndex + 1], mockForYouData);
     }
   };
 
   const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
-      setActiveLyricIndex(0);
+    if (derivedIndex > 0) {
+      playSong(mockForYouData[derivedIndex - 1], mockForYouData);
     }
   };
 
-  const togglePlay = () => setIsPlaying(!isPlaying);
-
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col w-full relative">
+      <OnboardingModal isOpen={showOnboarding} onClose={handleCloseOnboarding} />
+      
       <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 shrink-0 px-2">Dành Cho Bạn</h2>
       
       <div className="flex-1 flex gap-8 h-full relative overflow-hidden">
@@ -276,9 +320,9 @@ export default function ForYou() {
             <div className="flex flex-col gap-4">
               <button 
                 onClick={handlePrev}
-                disabled={currentIndex === 0}
+                disabled={derivedIndex === 0}
                 className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-lg border
-                  ${currentIndex === 0 
+                  ${derivedIndex === 0 
                     ? 'bg-gray-100 dark:bg-white/5 border-transparent text-gray-300 dark:text-gray-600 cursor-not-allowed' 
                     : 'bg-white/80 dark:bg-white/10 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:bg-white dark:hover:bg-white/20 hover:scale-105'}`}
               >
@@ -286,9 +330,9 @@ export default function ForYou() {
               </button>
               <button 
                 onClick={handleNext}
-                disabled={currentIndex === mockForYouData.length - 1}
+                disabled={derivedIndex === mockForYouData.length - 1}
                 className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-lg border
-                  ${currentIndex === mockForYouData.length - 1 
+                  ${derivedIndex === mockForYouData.length - 1 
                     ? 'bg-gray-100 dark:bg-white/5 border-transparent text-gray-300 dark:text-gray-600 cursor-not-allowed' 
                     : 'bg-white/80 dark:bg-white/10 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:bg-white dark:hover:bg-white/20 hover:scale-105'}`}
               >
