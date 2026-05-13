@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { FiPlay, FiPause, FiHeart, FiMoreHorizontal, FiCheck } from "react-icons/fi";
 import SongActionMenu from "./SongActionMenu";
 
@@ -19,6 +20,7 @@ export default function SongItem({
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
   const isThisSongPlaying = isCurrent && isPlaying;
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function SongItem({
             ? 'bg-gray-200 dark:bg-[#323232]' 
             : 'hover:bg-gray-100 dark:hover:bg-[#2b2b2b]'
       }`}
-      onClick={() => onPlay?.(song)}
+      onClick={() => navigate(`/song/${song.id || 1}`)}
     >
       {/* Index or Checkbox */}
       <div className="w-10 flex items-center justify-center shrink-0">
@@ -86,7 +88,13 @@ export default function SongItem({
 
       <div className="relative w-10 h-10 rounded overflow-hidden shrink-0 shadow-md">
         <img src={song.image} alt={song.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-        <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${isThisSongPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            onPlay?.(song);
+          }}
+          className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity cursor-pointer ${isThisSongPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+        >
           {isThisSongPlaying ? <FiPause className="w-5 h-5 text-white fill-current" /> : <FiPlay className="w-5 h-5 text-white fill-current" />}
         </div>
       </div>

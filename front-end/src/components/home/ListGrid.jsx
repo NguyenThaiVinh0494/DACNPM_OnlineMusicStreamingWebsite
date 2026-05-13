@@ -31,7 +31,7 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link }) {
       {/* Lưới thẻ (5 thẻ trên 1 hàng) */}
       <div className="grid grid-cols-5 gap-5">
         {danhSach.map((item, index) => (
-          <div key={index} className="group cursor-pointer">
+          <Link to={`/playlist/${index + 1}`} key={index} className="group cursor-pointer">
             {/* Khung ảnh */}
             <div className="w-full aspect-square rounded-xl overflow-hidden mb-3">
               <img 
@@ -43,7 +43,7 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link }) {
             {/* Thông tin */}
             <h4 className="text-black dark:text-white text-base font-bold mb-1 truncate">{item.ten}</h4>
             <p className="text-gray-500 dark:text-gray-400 text-sm truncate">{item.moTa}</p>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

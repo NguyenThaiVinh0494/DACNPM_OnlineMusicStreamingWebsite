@@ -86,7 +86,7 @@ export default function Home() {
       <MusicChart />
 
       {/* Tái sử dụng component lưới cho tất cả các phần còn lại! */}
-      <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" />
+      <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" link="/discover/vu-tru-nhac-viet" />
       <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" link="/discover/mood" />
       <ListGrid tieuDeKhuVuc="Top 100" link="/top-100" />
 
@@ -95,7 +95,7 @@ export default function Home() {
       <DanhSachPhatNgang tieuDeKhuVuc="TikTok Top Mix" />
 
       <ListGrid tieuDeKhuVuc="Đang được yêu thích" link="/discover/popular" />
-      <ListGrid tieuDeKhuVuc="Mới phát hành" />
+      <ListGrid tieuDeKhuVuc="Mới phát hành" link="/discover/new-releases" />
       <Footer />
     </div>
   );

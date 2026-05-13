@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   FiPlay, FiMoreHorizontal,
   FiUserPlus, FiCheck, FiClock, FiMusic} from "react-icons/fi";
@@ -281,6 +281,7 @@ function SongRow({ song, index, songList }) {
   const [hovered, setHovered] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -296,7 +297,7 @@ function SongRow({ song, index, songList }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => playSong(song, songList)}
+      onClick={() => navigate(`/song/${song.id}`)}
       className={`grid grid-cols-[40px_1fr_160px_1fr_60px_40px] gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors items-center group relative
         ${isCurrent ? "bg-nct-primary/5 dark:bg-white/10" : "hover:bg-gray-100 dark:hover:bg-white/5"}`}
     >
@@ -313,7 +314,10 @@ function SongRow({ song, index, songList }) {
 
       {/* Thumbnail + Title */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden shadow-md">
+        <div 
+          className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden shadow-md"
+          onClick={(e) => { e.stopPropagation(); playSong(song, songList); }}
+        >
           <LazyImage src={song.image} alt={song.title} className="w-full h-full object-cover" />
           {hovered && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
