@@ -1,22 +1,41 @@
+import { useState, useContext } from 'react';
 import { FiHeart, FiClock, FiUpload, FiPlus } from 'react-icons/fi';
+import { AuthContext } from '../../context/AuthContext';
+import ProfileModal from '../../components/auth/ProfileModal';
 
 export default function MyMusic() {
+  const { user } = useContext(AuthContext);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Dùng trực tiếp username theo yêu cầu
+  const displayName = user?.username || 'User';
+
   return (
     <div className="w-full flex flex-col pt-6 pb-20">
       
       {/* 1. User Profile Header */}
       <div className="flex items-center gap-6 mb-12 px-2">
         {/* Avatar */}
-        <div className="w-[100px] h-[100px] rounded-full bg-purple-600 flex items-center justify-center text-white text-[42px] font-normal shrink-0 shadow-lg">
-          V
-        </div>
+        {user?.avatar ? (
+          <img 
+            src={user.avatar} 
+            alt="avatar" 
+            className="w-[100px] h-[100px] rounded-full object-cover shadow-lg border border-gray-200 dark:border-white/10"
+          />
+        ) : (
+          <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-white text-[42px] font-normal shrink-0 shadow-lg uppercase">
+            {displayName?.[0] || 'U'}
+          </div>
+        )}
         
         {/* Info */}
         <div className="flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-2.5">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">vinh</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {displayName}
+            </h2>
             <span className="text-sm font-medium text-gray-400 dark:text-gray-500">|</span>
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">ID: 66194690</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">ID: {user?.id || 'Unknown'}</span>
             <span className="px-3 py-1 bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-full ml-1">
               Miễn phí
             </span>

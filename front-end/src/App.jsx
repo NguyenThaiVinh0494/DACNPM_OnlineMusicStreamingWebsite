@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import AddToPlaylistModal from "./components/layout/AddToPlaylistModal";
 import Home from "./pages/Home";
@@ -9,6 +9,14 @@ import Recent from "./pages/mymusic/Recent";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import MyPlaylistDetail from "./pages/mymusic/MyPlaylistDetail";
 import SongDetail from "./pages/songs/SongDetail";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AdminRoute from "./components/auth/AdminRoute";
+import AdminLayout from "./components/layout/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageUsers from "./pages/admin/ManageUsers";
+import ManageMusic from "./pages/admin/ManageMusic";
+import PendingUploads from "./pages/admin/PendingUploads";
+import AdminStats from "./pages/admin/AdminStats";
 
 import PopularPlaylists from "./pages/discover/PopularPlaylists";
 import MoodPlaylists from "./pages/discover/MoodPlaylists";
@@ -46,7 +54,7 @@ function App() {
           <Route path="discover/vu-tru-nhac-viet" element={<VuTruNhacViet />} />
           <Route path="discover/new-releases" element={<NewReleases />} />
 
-          <Route path="my-music" element={<Outlet />}>
+          <Route path="my-music" element={<ProtectedRoute />}>
             <Route index element={<MyMusic />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="recent" element={<Recent />} />
@@ -57,6 +65,22 @@ function App() {
           <Route path="album/:id" element={<AlbumDetail />} />
           <Route path="artist/:id" element={<ArtistDetail />} />
           <Route path="song/:id" element={<SongDetail />} />
+        </Route>
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<ManageUsers />} />
+          <Route path="music" element={<ManageMusic />} />
+          <Route path="pending" element={<PendingUploads />} />
+          <Route path="stats" element={<AdminStats />} />
         </Route>
       </Routes>
     </BrowserRouter>

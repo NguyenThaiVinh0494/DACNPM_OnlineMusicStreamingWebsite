@@ -1,12 +1,34 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import Footer from "../components/layout/Footer";
 import ListGrid from "../components/home/ListGrid";
 import MusicChart from "../components/home/MusicChart";
 import DanhSachPhatNgang from "../components/home/HorizontalPlaylist";
+import { songService } from "../api/services";
 
 export default function Home() {
   const { t } = useTranslation();
+  const [newSongs, setNewSongs] = useState([]);
+
+  useEffect(() => {
+    const fetchNewSongs = async () => {
+      try {
+        const data = await songService.getAll({ ordering: '-ngay_tao', limit: 5 });
+        // Map data để khớp với props của ListGrid
+        const mappedSongs = data.results.map(song => ({
+          ten: song.ten_bai_hat,
+          moTa: song.nghe_si && song.nghe_si.length > 0 ? "Nghệ sĩ " + song.nghe_si.join(', ') : "Đang cập nhật...",
+          anh: song.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop"
+        }));
+        setNewSongs(mappedSongs);
+      } catch (error) {
+        console.error("Lỗi khi tải bài hát mới:", error);
+      }
+    };
+    fetchNewSongs();
+  }, []);
+
   const topics = [
     { name: "Pop", color: "from-purple-500 to-indigo-500", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=200&h=200&fit=crop" },
     { name: "Buồn", color: "from-orange-700 to-orange-900", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop" },
@@ -95,7 +117,7 @@ export default function Home() {
       <DanhSachPhatNgang tieuDeKhuVuc="TikTok Top Mix" />
 
       <ListGrid tieuDeKhuVuc="Đang được yêu thích" link="/discover/popular" />
-      <ListGrid tieuDeKhuVuc="Mới phát hành" link="/discover/new-releases" />
+      <ListGrid tieuDeKhuVuc="Mới phát hành" link="/discover/new-releases" items={newSongs} />
       <Footer />
     </div>
   );

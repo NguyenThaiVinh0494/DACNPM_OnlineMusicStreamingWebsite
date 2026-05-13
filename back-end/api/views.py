@@ -1,4 +1,5 @@
 from rest_framework import generics, viewsets, filters, status
+from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -70,6 +71,80 @@ class DangKyView(generics.CreateAPIView):
     queryset = NguoiDung.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = DangKySerializer
+
+class UserProfileView(APIView):
+    """
+    API Quản lý tài khoản cá nhân:
+    - PUT /api/users/me/ : Cập nhật thông tin (first_name, last_name, anh_dai_dien)
+    - DELETE /api/users/me/ : Xóa tài khoản
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'anh_dai_dien': user.anh_dai_dien,
+            'vai_tro': user.vai_tro,
+        })
+
+    def put(self, request):
+        user = request.user
+        # Cập nhật thông tin cơ bản
+        if 'first_name' in request.data:
+            user.first_name = request.data['first_name']
+        if 'last_name' in request.data:
+            user.last_name = request.data['last_name']
+        if 'anh_dai_dien' in request.data:
+            user.anh_dai_dien = request.data['anh_dai_dien']
+            
+        User = get_user_model()
+
+        # Xử lý cập nhật Username
+        new_username = request.data.get('username')
+        if new_username and new_username != user.username:
+            if User.objects.filter(username=new_username).exists():
+                return Response({'error': 'Tên người dùng này đã tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+            user.username = new_username
+
+        # Xử lý cập nhật Email
+        new_email = request.data.get('email')
+        if new_email and new_email != user.email:
+            if User.objects.filter(email=new_email).exists():
+                return Response({'error': 'Email này đã được sử dụng.'}, status=status.HTTP_400_BAD_REQUEST)
+            user.email = new_email
+
+        # Xử lý cập nhật Password
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+        
+        if old_password and new_password:
+            if not user.check_password(old_password):
+                return Response({'error': 'Mật khẩu cũ không chính xác.'}, status=status.HTTP_400_BAD_REQUEST)
+            user.set_password(new_password)
+            
+        user.save()
+        
+        return Response({
+            'message': 'Cập nhật thông tin thành công',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'anh_dai_dien': user.anh_dai_dien,
+            }
+        }, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response({'message': 'Tài khoản đã được xóa vĩnh viễn'}, status=status.HTTP_204_NO_CONTENT)
 
 
 # ============================
