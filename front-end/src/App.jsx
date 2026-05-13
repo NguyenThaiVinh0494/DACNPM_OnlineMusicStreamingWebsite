@@ -14,6 +14,8 @@ import PopularPlaylists from "./pages/discover/PopularPlaylists";
 import MoodPlaylists from "./pages/discover/MoodPlaylists";
 import Top100 from "./pages/discover/Top100";
 import MoodTopics from "./pages/discover/MoodTopics";
+import VuTruNhacViet from "./pages/discover/VuTruNhacViet";
+import NewReleases from "./pages/discover/NewReleases";
 import SearchResults from "./pages/SearchResults";
 import AlbumDetail from "./pages/albums/AlbumDetail";
 import ArtistDetail from "./pages/artists/ArtistDetail";
@@ -41,6 +43,8 @@ function App() {
           <Route path="discover/mood" element={<MoodPlaylists />} />
           <Route path="discover/topics" element={<MoodTopics />} />
           <Route path="top-100" element={<Top100 />} />
+          <Route path="discover/vu-tru-nhac-viet" element={<VuTruNhacViet />} />
+          <Route path="discover/new-releases" element={<NewReleases />} />
 
           <Route path="my-music" element={<Outlet />}>
             <Route index element={<MyMusic />} />

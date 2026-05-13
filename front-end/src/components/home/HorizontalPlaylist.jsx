@@ -1,5 +1,6 @@
 import { FaRandom } from 'react-icons/fa'; // Icon trộn bài
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
   const { t } = useTranslation();
@@ -30,7 +31,8 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
       {/* Lưới 4 cột */}
       <div className="grid grid-cols-4 gap-x-4 gap-y-3">
         {danhSachBaiHat.map((item, index) => (
-          <div 
+          <Link 
+            to={`/song/${index + 1}`}
             key={index} 
             className="flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 group transition-colors"
           >
@@ -67,7 +69,7 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
               </div>
             </div>
 
-          </div>
+          </Link>
         ))}
       </div>
     </div>

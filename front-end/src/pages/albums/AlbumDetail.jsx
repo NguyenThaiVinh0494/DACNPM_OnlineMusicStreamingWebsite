@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   FiPlay, FiHeart, FiShare2, FiMoreHorizontal,
   FiDownload, FiClock, FiCheck
@@ -163,6 +163,7 @@ export default function AlbumDetail() {
   const { id } = useParams();
   const album = ALBUMS_DATA[parseInt(id)] || FALLBACK;
   const { playSong, playAll, currentSong, isPlaying, toggleFavorite, favorites } = useMusic();
+  const navigate = useNavigate();
 
   const [liked, setLiked] = useState(false);
   const [hoveredRow, setHoveredRow] = useState(null);
@@ -188,6 +189,13 @@ export default function AlbumDetail() {
 
   return (
     <div className="pb-24 space-y-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-[#b3b3b3]">
+        <Link to="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">Trang chủ</Link>
+        <span>/</span>
+        <span className="text-gray-900 dark:text-white">{album.title}</span>
+      </nav>
+
       {/* ── Header ── */}
       <div className="flex gap-8 items-start">
         {/* Cover Image */}
@@ -200,7 +208,7 @@ export default function AlbumDetail() {
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <button
               onClick={handlePlayAll}
-              className="w-14 h-14 rounded-full bg-teal-500 hover:bg-teal-400 flex items-center justify-center shadow-xl transition-colors"
+              className="w-14 h-14 rounded-full bg-nct-primary hover:bg-[#00b8b8] flex items-center justify-center shadow-xl transition-colors"
             >
               <FiPlay className="w-7 h-7 text-white fill-current ml-1" />
             </button>
@@ -222,9 +230,9 @@ export default function AlbumDetail() {
           {/* Artist */}
           <Link
             to={`/artist/${album.artistId}`}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-teal-500 dark:hover:text-teal-400 transition-colors w-fit mb-5"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-nct-primary transition-colors w-fit mb-5"
           >
-            <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-nct-primary flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">
                 {album.artistName.charAt(0)}
               </span>
@@ -311,7 +319,7 @@ export default function AlbumDetail() {
                 key={song.id}
                 onMouseEnter={() => setHoveredRow(song.id)}
                 onMouseLeave={() => setHoveredRow(null)}
-                onClick={() => playSong(song, album.songs)}
+                onClick={() => navigate(`/song/${song.id}`)}
                 className={`grid grid-cols-[40px_1fr_1fr_60px_40px] gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors items-center group
                   ${isCurrent ? "bg-nct-primary/5 dark:bg-white/10" : "hover:bg-gray-100 dark:hover:bg-white/5"}`}
               >
@@ -331,7 +339,10 @@ export default function AlbumDetail() {
 
                 {/* Thumbnail + Title */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 relative group-hover:shadow-md transition-shadow">
+                  <div 
+                    className="w-10 h-10 rounded overflow-hidden flex-shrink-0 relative group-hover:shadow-md transition-shadow"
+                    onClick={(e) => { e.stopPropagation(); playSong(song, album.songs); }}
+                  >
                     <LazyImage
                       src={song.image}
                       alt={song.title}
@@ -380,8 +391,8 @@ export default function AlbumDetail() {
 
       {/* ── Upload info ── */}
       <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-white/5">
-        <div className="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center flex-shrink-0">
-          <FiCheck className="w-4 h-4 text-teal-500" />
+        <div className="w-8 h-8 rounded-full bg-nct-primary/20 flex items-center justify-center flex-shrink-0">
+          <FiCheck className="w-4 h-4 text-nct-primary" />
         </div>
         <div>
           <p className="text-xs text-gray-500 dark:text-gray-400">
