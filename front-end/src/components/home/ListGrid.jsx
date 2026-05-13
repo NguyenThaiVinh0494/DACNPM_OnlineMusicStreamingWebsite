@@ -1,16 +1,18 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link }) {
+export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
   const { t } = useTranslation();
   // Dữ liệu mẫu
-  const danhSach = [
+  const danhSachFallback = [
     { ten: "Hit Việt Quốc Dân", moTa: "HIEUTHUHAI, Trọng Nhân...", anh: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&h=200&fit=crop" },
     { ten: "TikTok Remix Việt", moTa: "Inso, Ness Remix...", anh: "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=200&h=200&fit=crop" },
     { ten: "V-Pop Thịnh Hành", moTa: "GREY D, Đặng Thanh Tuyền...", anh: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop" },
     { ten: "Gen Gì Gen Z", moTa: "HIEUTHUHAI, Ogenus...", anh: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=200&h=200&fit=crop" },
     { ten: "Ballad Việt", moTa: "Lyly, Đỗ Hoàng Long...", anh: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=200&h=200&fit=crop" }
   ];
+  
+  const danhSach = items && items.length > 0 ? items : danhSachFallback;
 
   return (
     <div className="mb-8">

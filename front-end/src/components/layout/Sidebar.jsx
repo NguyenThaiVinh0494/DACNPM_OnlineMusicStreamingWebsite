@@ -1,17 +1,22 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { NavLink } from "react-router-dom";
 import { FiStar, FiUser, FiHeart, FiClock, FiPlus, FiX } from "react-icons/fi";
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { TbVinyl } from "react-icons/tb";
 import { useTranslation } from "react-i18next";
 import { useMusic } from "../../context/MusicContext";
+import { AuthContext } from "../../context/AuthContext";
+import LoginModal from "../auth/LoginModal";
+import RegisterModal from "../auth/RegisterModal";
 
 export default function Sidebar() {
   const { t } = useTranslation();
+  const { user } = useContext(AuthContext);
   const { myPlaylists, createNewPlaylist } = useMusic();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [activeModal, setActiveModal] = useState(null);
 
   const mainLinks = [
     { name: t("discover"), path: "/", icon: <HiOutlineSparkles className="w-6 h-6" /> },
@@ -44,22 +49,30 @@ export default function Sidebar() {
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-          {mainLinks.map((link) => (
-            <NavLink
-              key={link.path}
-              to={link.path}
-              className={({ isActive }) =>
-                `flex items-center gap-4 px-4 py-3 rounded-lg transition-colors font-medium ${
-                  isActive
-                    ? "bg-black/5 dark:bg-white/10 text-nct-primary"
-                    : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-nct-text hover:bg-gray-200 dark:hover:bg-white/5"
-                }`
-              }
-            >
-              {link.icon}
-              {link.name}
-            </NavLink>
-          ))}
+          {mainLinks.map((link) => {
+            return (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                onClick={(e) => {
+                  if (!user && link.path === '/my-music') {
+                    e.preventDefault();
+                    setActiveModal('login');
+                  }
+                }}
+                className={({ isActive }) =>
+                  `flex items-center gap-4 px-4 py-3 rounded-lg transition-colors font-medium ${
+                    isActive
+                      ? "bg-black/5 dark:bg-white/10 text-nct-primary"
+                      : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-nct-text hover:bg-gray-200 dark:hover:bg-white/5"
+                  }`
+                }
+              >
+                {link.icon}
+                {link.name}
+              </NavLink>
+            );
+          })}
 
           <div className="mt-8 mb-4 border-t border-gray-200 dark:border-white/5 mx-4"></div>
 
@@ -69,6 +82,7 @@ export default function Sidebar() {
           <div className="space-y-1">
             <NavLink 
               to="/my-music/favorites" 
+              onClick={(e) => { if (!user) { e.preventDefault(); setActiveModal('login'); } }}
               className={({ isActive }) => `flex items-center gap-4 px-4 py-2 rounded-lg font-medium transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-nct-text hover:bg-gray-200 dark:hover:bg-white/5"}`}
             >
               <FiHeart className="w-5 h-5" />
@@ -76,6 +90,7 @@ export default function Sidebar() {
             </NavLink>
             <NavLink 
               to="/my-music/recent" 
+              onClick={(e) => { if (!user) { e.preventDefault(); setActiveModal('login'); } }}
               className={({ isActive }) => `flex items-center gap-4 px-4 py-2 rounded-lg font-medium transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-nct-text hover:bg-gray-200 dark:hover:bg-white/5"}`}
             >
               <FiClock className="w-5 h-5" />
@@ -83,30 +98,48 @@ export default function Sidebar() {
             </NavLink>
           </div>
 
-          <div className="mt-8 mb-4 border-t border-gray-200 dark:border-white/5 mx-4"></div>
-
-          <div className="px-4 flex items-center justify-between mb-4">
-            <span className="text-xs font-bold text-gray-500 dark:text-nct-text-dim uppercase tracking-wider">
-              {t('my_playlists')}
-            </span>
-            <button 
-              onClick={() => setIsCreateModalOpen(true)}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded-full transition-colors text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white"
-            >
-              <FiPlus className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="space-y-1 pb-6">
-            {myPlaylists.map(playlist => (
-              <NavLink 
-                key={playlist.id}
-                to={`/my-music/playlist/${playlist.id}`} 
-                className={({ isActive }) => `block px-4 py-2 rounded-lg font-medium truncate transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5"}`}
+          {!user && (
+            <div className="px-4 mt-6 flex flex-col items-center">
+              <p className="text-[11px] text-gray-500 dark:text-nct-text-dim text-center mb-3">
+                Đăng nhập để khám phá nhạc hay
+              </p>
+              <button 
+                onClick={() => setActiveModal('login')}
+                className="w-full bg-nct-primary hover:bg-[#2591c4] dark:bg-cyan-400 dark:hover:bg-cyan-500 text-white dark:text-black py-2.5 rounded-full text-sm font-bold transition-colors cursor-pointer shadow-[0_0_15px_rgba(45,170,237,0.3)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
               >
-                {playlist.title}
-              </NavLink>
-            ))}
-          </div>
+                Đăng nhập
+              </button>
+            </div>
+          )}
+
+          {user && (
+            <>
+              <div className="mt-8 mb-4 border-t border-gray-200 dark:border-white/5 mx-4"></div>
+
+              <div className="px-4 flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-gray-500 dark:text-nct-text-dim uppercase tracking-wider">
+                  {t('my_playlists')}
+                </span>
+                <button 
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded-full transition-colors text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white"
+                >
+                  <FiPlus className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="space-y-1 pb-6">
+                {myPlaylists.map(playlist => (
+                  <NavLink 
+                    key={playlist.id}
+                    to={`/my-music/playlist/${playlist.id}`} 
+                    className={({ isActive }) => `block px-4 py-2 rounded-lg font-medium truncate transition-colors ${isActive ? "bg-black/5 dark:bg-white/10 text-nct-primary" : "text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5"}`}
+                  >
+                    {playlist.title}
+                  </NavLink>
+                ))}
+              </div>
+            </>
+          )}
         </nav>
       </aside>
 
@@ -185,6 +218,18 @@ export default function Sidebar() {
           </div>
         </div>
       )}
+
+      {/* Modals cho trạng thái chưa đăng nhập */}
+      <LoginModal 
+        isOpen={activeModal === 'login'} 
+        onClose={() => setActiveModal(null)} 
+        onSwitchToRegister={() => setActiveModal('register')}
+      />
+      <RegisterModal 
+        isOpen={activeModal === 'register'} 
+        onClose={() => setActiveModal(null)} 
+        onSwitchToLogin={() => setActiveModal('login')}
+      />
     </>
   );
 }

@@ -13,6 +13,7 @@ from .views import (
     DanhSachPhatViewSet,
     YeuThichViewSet,
     LichSuNgheViewSet,
+    UserProfileView,
     UploadAnhView,
     UploadNhacView,
 )
@@ -28,10 +29,11 @@ router.register(r'favorites', YeuThichViewSet,    basename='yeu-thich')
 router.register(r'history',   LichSuNgheViewSet,  basename='lich-su-nghe')
 
 urlpatterns = [
-    # Auth
+    # Auth & Profile
     path('register/',      DangKyView.as_view(),           name='api_register'),
     path('login/',         TokenObtainPairView.as_view(),  name='api_login'),
     path('login/refresh/', TokenRefreshView.as_view(),     name='api_token_refresh'),
+    path('users/me/',      UserProfileView.as_view(),      name='api_user_profile'),
 
     # Upload lên Cloudinary
     path('upload/image/', UploadAnhView.as_view(),  name='upload_image'),

@@ -136,6 +136,10 @@ STATIC_URL = 'static/'
 
 # Custom User Model
 AUTH_USER_MODEL = 'api.NguoiDung'
+AUTHENTICATION_BACKENDS = [
+    'api.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Django REST Framework
