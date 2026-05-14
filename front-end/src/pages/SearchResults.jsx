@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { FiPlay, FiChevronRight } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
 import LazyImage from "../components/common/LazyImage";
 import EmptyState from "../components/common/EmptyState";
+import { songService } from "../api/services";
 
 // ── Mock Data ──────────────────────────────────────────────────────────────
 const MOCK_SONGS = [
@@ -125,22 +126,43 @@ export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const tabParam = searchParams.get("t") || "all";
-  const { allSongs, playSong, currentSong, isPlaying } = useMusic();
+  const { playSong, currentSong, isPlaying } = useMusic();
+  
+  const [realSongs, setRealSongs] = useState([]);
+
+  useEffect(() => {
+    const fetchRealSongs = async () => {
+      if (!query) return;
+      try {
+        const data = await songService.getAll({ search: query });
+        const results = data.results || data;
+        const mapped = results.map(s => ({
+          id: s.id,
+          title: s.tieu_de,
+          artist: s.id_nghe_si?.ten_nghe_si || "Không rõ",
+          image: s.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop",
+          audioUrl: s.duong_dan_am_thanh,
+          lyrics: s.loi_bai_hat,
+          duration: s.thoi_luong || null
+        }));
+        setRealSongs(mapped);
+      } catch (error) {
+        console.error("Lỗi tìm kiếm:", error);
+      }
+    };
+    fetchRealSongs();
+  }, [query]);
 
   const setActiveTab = (id) => {
     setSearchParams({ q: query, t: id });
   };
 
   const q = query.toLowerCase();
-  const systemSongs = allSongs.filter(s => 
-    s.title.toLowerCase().includes(q) || 
-    s.artist.toLowerCase().includes(q)
-  );
   const mockSongs = MOCK_SONGS.filter(s => 
     s.title.toLowerCase().includes(q) || 
     s.artist.toLowerCase().includes(q)
   );
-  const filteredSongs = [...systemSongs, ...mockSongs];
+  const filteredSongs = [...realSongs, ...mockSongs];
 
   return (
     <div className="pb-24 space-y-8">

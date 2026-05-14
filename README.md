@@ -59,7 +59,6 @@ Tương tác của các tác nhân user, website, admin với nhau:
   - admin duyệt/từ chối bài hát, album, playlist do user upload lên.
   - admin hướng dẫn, hỗ trợ user qua tính năng chat.
 
-
 ### Dừng Server
 
 Trong Terminal đang chạy server, nhấn tổ hợp phím:
@@ -91,3 +90,17 @@ Sau khi đã dừng, gõ lệnh:
 <pre><div node="[object Object]" class="relative whitespace-pre-wrap word-break-all my-2 rounded-lg bg-list-hover-subtle border border-gray-500/20"><div class="min-h-7 relative box-border flex flex-row items-center justify-between rounded-t border-b border-gray-500/20 px-2 py-0.5"><div class="font-sans text-sm text-ide-text-color opacity-60">powershell</div><div class="flex flex-row gap-2 justify-end"></div></div><div class="p-3"><div class="w-full h-full text-xs cursor-text"><div class="code-block"><div class="code-line" data-line-number="1" data-line-start="1" data-line-end="1"><div class="line-content"><span class="mtk1">.\venv\Scripts\activate</span></div></div><div class="code-line" data-line-number="2" data-line-start="2" data-line-end="2"><div class="line-content"><span class="mtk1">python manage.py runserver</span></div></div></div></div></div></div></pre>
 
 *(Sau khi activate, bạn có thể dùng `python` ngắn gọn thay vì phải gõ đường dẫn dài)*
+
+Chúng ta của hiện tại:
+
+https://res.cloudinary.com/dzpsypij2/image/upload/v1778727247/music_streaming/images/ne3yaikf5u8leewsgbkn.jpg
+
+https://res.cloudinary.com/dzpsypij2/video/upload/v1778727956/music_streaming/audio/wojdmidlnerzetdshdgk.mp3
+
+Chạy ngay đi
+
+https://res.cloudinary.com/dzpsypij2/image/upload/v1778727376/music_streaming/images/b2xg1kid9zppe5zfqlxt.jpg
+
+https://res.cloudinary.com/dzpsypij2/video/upload/v1778728002/music_streaming/audio/ljgetgewj1wgslczqkb4.mp3
+
+python generate_lrc.py --audio https://res.cloudinary.com/dzpsypij2/video/upload/v1778727956/music_streaming/audio/wojdmidlnerzetdshdgk.mp3 --lyrics D:\DACNPM_OnlineMusicStreamingWebsite\tool\lrc_generator\song_components\ChungTaCuaHienTai.txt

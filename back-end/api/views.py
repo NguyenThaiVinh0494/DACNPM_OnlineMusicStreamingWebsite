@@ -281,3 +281,10 @@ class BaiHatViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['tieu_de', 'id_nghe_si__ten_nghe_si', 'quoc_gia']
     ordering_fields = ['luot_nghe', 'nam_phat_hanh', 'id']
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

@@ -112,7 +112,7 @@ export default function SongItem({
 
       {/* Duration - hidden on hover to show buttons if needed, but NhacCuaTui usually keeps it */}
       <div className={`w-16 text-right text-sm text-gray-500 dark:text-nct-text-dim ${isCurrent ? 'text-nct-primary' : ''}`}>
-        {song.duration}
+        {song.duration || "—"}
       </div>
 
       {/* Hover Actions */}
