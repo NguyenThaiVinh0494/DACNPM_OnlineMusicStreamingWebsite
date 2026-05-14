@@ -41,7 +41,12 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class BaiHatSerializer(serializers.ModelSerializer):
-    # Bạn có thể thêm Serializer của NgheSi, Album vào đây nếu muốn API trả về thông tin chi tiết thay vì chỉ trả về ID
+    # Nhúng thông tin nghệ sĩ vào response thay vì chỉ trả ID
+    id_nghe_si = NgheSiSerializer(read_only=True)
+    id_nghe_si_id = serializers.PrimaryKeyRelatedField(
+        queryset=NgheSi.objects.all(), source='id_nghe_si', write_only=True, required=False, allow_null=True
+    )
+
     class Meta:
         model = BaiHat
         fields = '__all__'

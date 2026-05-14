@@ -1,46 +1,50 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import LazyImage from "../../components/common/LazyImage";
-import { FiHeart, FiShare2, FiMoreHorizontal, FiPlay, FiDownload, FiChevronDown, FiChevronUp, FiPlus, FiFlag, FiFacebook, FiLink } from 'react-icons/fi';
-
-// Mock Data cho bài hát "Chúng Ta Không Thuộc Về Nhau"
-const mockSongDetail = {
-  id: 1,
-  title: "Chúng Ta Không Thuộc Về Nhau",
-  artist: "Sơn Tùng M-TP",
-  artistFollowers: 130057,
-  artistAvatar: "https://avatar-ex-swe.nixcdn.com/singer/avatar/2019/10/29/4/b/a/b/1572338166649_600.jpg",
-  cover: "https://avatar-ex-swe.nixcdn.com/song/2016/08/02/b/e/8/2/1470146059275_640.jpg",
-  likes: "282816",
-  shares: "3606",
-  contributor: "Thái Trần",
-  lyrics: `Niềm tin đã mất, giọt nước mắt cuốn kí ức anh chìm sâu\nTình về nơi đâu, cô đơn đôi chân lạc trôi giữa bầu trời\nMàn đêm che giấu, từng góc tối khuất lấp phía sau bờ môi\n\nNơi này có em, nơi này có anh, nơi này có chúng ta\nNhưng mà tại sao tình yêu kia nay đã vội vã rời xa\nThanh xuân kia như một cơn gió bay ngang qua đời nhau\n\nChúng ta không thuộc về nhau... chúng ta không thuộc về nhau\nChúng ta không thuộc về nhau... em hãy cứ đi bên người mà em ước ao.`,
-  featuredSongs: [
-    { id: 1, title: "Nơi Này Có Anh", artist: "Sơn Tùng M-TP", cover: "https://avatar-ex-swe.nixcdn.com/song/2017/02/13/a/c/c/c/1487002011166_640.jpg", uploader: "VIVI ENM", duration: "04:20" },
-    { id: 2, title: "Âm Thầm Bên Em", artist: "Sơn Tùng M-TP", cover: "https://avatar-ex-swe.nixcdn.com/song/2015/08/21/f/7/f/d/1440150993074_640.jpg", uploader: "VIVI ENM", duration: "04:51" },
-    { id: 3, title: "Hãy Trao Cho Anh", artist: "Sơn Tùng M-TP", cover: "https://avatar-ex-swe.nixcdn.com/song/2019/07/01/a/2/c/9/1561994348270_640.jpg", uploader: "VIVI ENM", duration: "04:05" },
-    { id: 4, title: "Chúng Ta Không Thuộc Về Nhau", artist: "Sơn Tùng M-TP", cover: "https://avatar-ex-swe.nixcdn.com/song/2016/08/02/b/e/8/2/1470146059275_640.jpg", uploader: "VIVI ENM", duration: "03:53", isActive: true },
-    { id: 5, title: "Buông Đôi Tay Nhau Ra", artist: "Sơn Tùng M-TP", cover: "https://avatar-ex-swe.nixcdn.com/song/2015/12/02/b/5/e/7/1449048128330_640.jpg", uploader: "VIVI ENM", duration: "03:46" },
-    { id: 6, title: "Chạy Ngay Đi", artist: "Sơn Tùng M-TP", cover: "https://avatar-ex-swe.nixcdn.com/song/2018/05/12/7/b/c/2/1526058097560_640.jpg", uploader: "VIVI ENM", duration: "04:08" },
-    { id: 7, title: "Chúng Ta Của Hiện Tại", artist: "Sơn Tùng M-TP", cover: "https://avatar-ex-swe.nixcdn.com/song/2020/12/20/9/a/6/9/1608479532851_640.jpg", uploader: "VIVI ENM", duration: "05:01" },
-  ],
-  featuredAlbums: [
-    { id: 1, title: "Album Remix #2", artist: "Sơn Tùng M-TP", cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80" },
-    { id: 2, title: "KOV Remix #1", artist: "Sơn Tùng M-TP", cover: "https://images.unsplash.com/photo-1493225457124-a1a2a5956020?w=400&q=80" },
-    { id: 3, title: "KOV Remix #1 (Instrumental)", artist: "Sơn Tùng M-TP", cover: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80" },
-    { id: 4, title: "You Of Yesterday", artist: "Sơn Tùng M-TP, Khắc Hưng", cover: "https://images.unsplash.com/photo-1611339555312-e607c8352fd7?w=400&q=80" },
-    { id: 5, title: "SKY DECADE (EP)", artist: "Sơn Tùng M-TP", cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" },
-  ]
-};
+import { FiHeart, FiShare2, FiMoreHorizontal, FiPlay, FiDownload, FiChevronDown, FiChevronUp, FiPlus, FiFlag, FiFacebook, FiLink, FiMusic } from 'react-icons/fi';
+import { useMusic } from '../../context/MusicContext';
+import { songService } from '../../api/services';
 
 export default function SongDetail() {
   const { id } = useParams();
+  const { playSong, currentSong, isPlaying } = useMusic();
   const [showFullLyrics, setShowFullLyrics] = useState(false);
   const [activePopup, setActivePopup] = useState(null);
   const [isHeaderPopupOpen, setIsHeaderPopupOpen] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const popupRef = useRef(null);
   const headerPopupRef = useRef(null);
-  const data = mockSongDetail; // Thực tế sẽ gọi API fetch data theo id
+
+  // Fetch bài hát từ API theo id
+  useEffect(() => {
+    const fetchSong = async () => {
+      setLoading(true);
+      try {
+        const raw = await songService.getById(id);
+        setData({
+          id: raw.id,
+          title: raw.tieu_de,
+          artist: raw.id_nghe_si?.ten_nghe_si || 'Không rõ',
+          artistAvatar: raw.id_nghe_si?.anh_nghe_si || null,
+          artistFollowers: 0,
+          cover: raw.duong_dan_hinh_anh || 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=400&h=400&fit=crop',
+          audioUrl: raw.duong_dan_am_thanh,
+          lyrics: raw.loi_bai_hat || 'Chưa có lời bài hát.',
+          likes: raw.luot_nghe?.toLocaleString() || '0',
+          shares: '0',
+          contributor: 'Hệ thống',
+          featuredSongs: [],
+          featuredAlbums: [],
+        });
+      } catch (err) {
+        console.error('Không thể tải bài hát:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSong();
+  }, [id]);
 
   // Handle click outside to close popup
   useEffect(() => {
@@ -60,6 +64,23 @@ export default function SongDetail() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-10 h-10 border-4 border-nct-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500 dark:text-gray-400">
+        <FiMusic className="w-12 h-12 opacity-30" />
+        <p>Không tìm thấy bài hát.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col pb-24 px-4 pt-6 max-w-7xl mx-auto">
@@ -155,7 +176,10 @@ export default function SongDetail() {
           
           {/* Call to Actions */}
           <div className="flex items-center gap-4 mt-auto">
-            <button className="flex items-center gap-2 px-10 py-[14px] bg-gradient-to-r from-[#00f2fe] to-[#4facfe] hover:opacity-90 hover:scale-105 text-white font-bold rounded-full shadow-[0_8px_20px_rgba(0,242,254,0.3)] transition-all">
+            <button
+              onClick={() => playSong({ id: data.id, title: data.title, artist: data.artist, image: data.cover, audioUrl: data.audioUrl, lyrics: data.lyrics })}
+              className="flex items-center gap-2 px-10 py-[14px] bg-gradient-to-r from-[#00f2fe] to-[#4facfe] hover:opacity-90 hover:scale-105 text-white font-bold rounded-full shadow-[0_8px_20px_rgba(0,242,254,0.3)] transition-all"
+            >
               <FiPlay className="text-xl fill-white" />
               <span className="text-[15px]">Phát</span>
             </button>

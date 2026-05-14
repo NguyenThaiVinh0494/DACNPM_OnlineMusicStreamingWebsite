@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { FiHeart, FiMoreHorizontal, FiShuffle, FiRepeat, FiVolume2, FiVolumeX, FiList, FiMusic, FiMic } from "react-icons/fi";
 import { FaPlay, FaPause, FaStepBackward, FaStepForward } from "react-icons/fa";
 import { useMusic } from "../../context/MusicContext";
@@ -130,9 +131,13 @@ export default function PlayerBar() {
           )}
         </div>
         <div className="flex flex-col truncate flex-1 md:flex-none">
-          <h4 className={`font-medium text-sm truncate transition-colors ${currentSong ? 'text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary cursor-pointer' : 'text-gray-400 dark:text-nct-text-dim/50 select-none'}`}>
-            {currentSong ? currentSong.title : "Chưa chọn bài hát"}
-          </h4>
+          {currentSong ? (
+            <Link to={`/song/${currentSong.id}`} className="font-medium text-sm truncate text-gray-900 dark:text-white hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
+              {currentSong.title}
+            </Link>
+          ) : (
+            <h4 className="font-medium text-sm truncate text-gray-400 dark:text-nct-text-dim/50 select-none">Chưa chọn bài hát</h4>
+          )}
           <p className={`text-xs truncate transition-colors ${currentSong ? 'text-gray-500 dark:text-nct-text-dim hover:text-nct-primary dark:hover:text-nct-primary cursor-pointer hover:underline mt-0.5' : 'text-gray-400 dark:text-nct-text-dim/30 select-none mt-0.5'}`}>
             {currentSong ? currentSong.artist : "-"}
           </p>
