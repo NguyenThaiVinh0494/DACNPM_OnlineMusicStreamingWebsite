@@ -88,13 +88,17 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'music_streaming_db',
-        'USER': 'root',
-        'PASSWORD': '',         
-        'HOST': 'localhost',    
-        'PORT': '3306',
+        'NAME': os.getenv('DB_NAME', 'defaultdb'),
+        'USER': os.getenv('DB_USER', 'avnadmin'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),         
+        'HOST': os.getenv('DB_HOST'),    
+        'PORT': os.getenv('DB_PORT', '20282'),
+        'OPTIONS': {
+            'ssl': {'ssl_mode': 'REQUIRED'} 
+        }
     }
 }
+
 
 
 
