@@ -1,12 +1,14 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { playlistService, songService, favoriteService } from '../api/services';
+import { AuthContext } from './AuthContext';
 
 const MusicContext = createContext();
 
 export const useMusic = () => useContext(MusicContext);
 
 export const MusicProvider = ({ children }) => {
+  const { user } = useContext(AuthContext);
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueue] = useState([]);
@@ -16,112 +18,140 @@ export const MusicProvider = ({ children }) => {
   const [isLyricsOpen, setIsLyricsOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
 
-  // Audio Ref shared globally so LyricsView can read currentTime
-  const audioRef = useRef(null);
-
-  // Global library of songs for searching/adding
-  const allSongs = [
-    { id: 1, title: "Nơi Này Có Anh", artist: "Sơn Tùng M-TP", duration: "04:20", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-    { id: 2, title: "Lạc Trôi", artist: "Sơn Tùng M-TP", duration: "03:52", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-    { id: 3, title: "Âm Thầm Bên Em", artist: "Sơn Tùng M-TP", duration: "04:53", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
-    { id: 4, title: "Chắc Ai Đó Sẽ Về", artist: "Sơn Tùng M-TP", duration: "04:31", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
-    { id: 5, title: "Em Của Ngày Hôm Qua", artist: "Sơn Tùng M-TP", duration: "03:55", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
-    { id: 6, title: "Chúng Ta Của Hiện Tại", artist: "Sơn Tùng M-TP", duration: "05:01", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
-    { id: 7, title: "Nâng Chén Tiêu Sầu", artist: "Bích Phương", duration: "03:22", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
-    { id: 8, title: "Thiên Lý Ơi", artist: "Jack - J97", duration: "04:10", image: "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=100&h=100&fit=crop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
-  ];
-
-  // Load initial state from localStorage
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('nct_favorites');
-    return saved ? JSON.parse(saved) : allSongs.slice(0, 5);
-  });
-
-  const [recentSongs, setRecentSongs] = useState(() => {
-    const saved = localStorage.getItem('nct_recentSongs');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [recentPlaylists, setRecentPlaylists] = useState(() => {
-    const saved = localStorage.getItem('nct_recentPlaylists');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [myPlaylists, setMyPlaylists] = useState(() => {
-    const saved = localStorage.getItem('nct_myPlaylists');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Global library of songs
+  const [allSongs, setAllSongs] = useState([]);
+  const [myPlaylists, setMyPlaylists] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [recentSongs, setRecentSongs] = useState([]);
+  const [recentPlaylists, setRecentPlaylists] = useState([]);
+  const [loadingUserMusic, setLoadingUserMusic] = useState(true);
 
   const [isAddPlaylistModalOpen, setIsAddPlaylistModalOpen] = useState(false);
   const [songToAdd, setSongToAdd] = useState(null);
 
-  // Persistence Effects
-  useEffect(() => {
-    localStorage.setItem('nct_favorites', JSON.stringify(favorites));
-  }, [favorites]);
+  // Audio Ref shared globally
+  const audioRef = useRef(null);
 
-  useEffect(() => {
-    localStorage.setItem('nct_recentSongs', JSON.stringify(recentSongs));
-  }, [recentSongs]);
+  // Helper to map BE song to FE song structure
+  const mapSong = (s) => ({
+    id: s.id,
+    title: s.tieu_de,
+    artist: s.id_nghe_si?.ten_nghe_si || "Unknown Artist",
+    image: s.duong_dan_hinh_anh,
+    audioUrl: s.duong_dan_am_thanh,
+    duration: "04:00", // Default or calculated
+    lyrics: s.loi_bai_hat,
+    plays: s.luot_nghe
+  });
 
-  useEffect(() => {
-    localStorage.setItem('nct_recentPlaylists', JSON.stringify(recentPlaylists));
-  }, [recentPlaylists]);
+  // Helper to map BE playlist to FE playlist structure
+  const mapPlaylist = (p) => ({
+    id: p.id,
+    title: p.tieu_de,
+    isPrivate: false, // Default
+    songs: (p.bai_hats_detail || []).map(mapSong),
+    image: p.bai_hats_detail?.[0]?.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop",
+    songCount: p.so_luong_bai_hat || 0
+  });
 
+  // Fetch all songs
   useEffect(() => {
-    localStorage.setItem('nct_myPlaylists', JSON.stringify(myPlaylists));
-  }, [myPlaylists]);
-
-  const createNewPlaylist = (name, isPrivate) => {
-    const newPlaylist = {
-      id: Date.now(),
-      title: name,
-      isPrivate: isPrivate,
-      songs: [],
-      image: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop" // default image
+    const fetchSongs = async () => {
+      try {
+        const data = await songService.getAll();
+        setAllSongs(data.results ? data.results.map(mapSong) : data.map(mapSong));
+      } catch (error) {
+        console.error("Failed to fetch songs:", error);
+      }
     };
-    setMyPlaylists([...myPlaylists, newPlaylist]);
-    toast.success(`Đã tạo playlist "${name}"`);
+    fetchSongs();
+  }, []);
+
+  // Fetch playlists and favorites when user logs in
+  useEffect(() => {
+    const fetchData = async () => {
+      if (user) {
+        setLoadingUserMusic(true);
+        try {
+          const [playlistsData, favoritesData] = await Promise.all([
+            playlistService.getAll(),
+            favoriteService.getAll()
+          ]);
+          setMyPlaylists(Array.isArray(playlistsData) ? playlistsData.map(mapPlaylist) : []);
+          setFavorites(Array.isArray(favoritesData) ? favoritesData.map(f => f.song_detail ? mapSong(f.song_detail) : null).filter(Boolean) : []);
+        } catch (error) {
+          console.error("Failed to fetch user data:", error);
+        } finally {
+          setLoadingUserMusic(false);
+        }
+      } else {
+        setMyPlaylists([]);
+        setFavorites([]);
+        setLoadingUserMusic(false);
+      }
+    };
+    fetchData();
+  }, [user]);
+
+  const createNewPlaylist = async (name, isPrivate) => {
+    try {
+      const data = await playlistService.create({ tieu_de: name });
+      setMyPlaylists([mapPlaylist(data), ...myPlaylists]);
+      toast.success(`Đã tạo playlist "${name}"`);
+    } catch (error) {
+      toast.error("Không thể tạo playlist");
+    }
   };
 
-  const addSongToMyPlaylist = (playlistId, song) => {
-    setMyPlaylists(myPlaylists.map(pl => {
-      if (pl.id === playlistId) {
-        // prevent duplicate
-        if (!pl.songs.some(s => s.id === song.id)) {
-          toast.success(`Đã thêm "${song.title}" vào playlist`);
-          return { ...pl, songs: [...pl.songs, song], image: song.image };
-        } else {
-          toast.error(`Bài hát đã tồn tại trong playlist`);
-        }
-      }
-      return pl;
-    }));
+  const addSongToMyPlaylist = async (playlistId, song) => {
+    try {
+      await playlistService.addSong(playlistId, song.id);
+      const updatedPlaylistData = await playlistService.getById(playlistId);
+      setMyPlaylists(myPlaylists.map(pl => 
+        pl.id === playlistId ? mapPlaylist(updatedPlaylistData) : pl
+      ));
+      toast.success(`Đã thêm "${song.title}" vào playlist`);
+    } catch (error) {
+      toast.error("Không thể thêm bài hát vào playlist");
+    }
     closeAddToPlaylistModal();
   };
 
-  const removeSongFromMyPlaylist = (playlistId, songId) => {
-    setMyPlaylists(myPlaylists.map(pl => {
-      if (pl.id === playlistId) {
-        toast.success(`Đã xóa bài hát khỏi playlist`);
-        return { ...pl, songs: pl.songs.filter(s => s.id !== songId) };
-      }
-      return pl;
-    }));
+  const removeSongFromMyPlaylist = async (playlistId, songId) => {
+    try {
+      await playlistService.removeSong(playlistId, songId);
+      setMyPlaylists(myPlaylists.map(pl => {
+        if (pl.id === playlistId) {
+          return { ...pl, songs: pl.songs.filter(s => s.id !== songId), songCount: pl.songCount - 1 };
+        }
+        return pl;
+      }));
+      toast.success(`Đã xóa bài hát khỏi playlist`);
+    } catch (error) {
+      toast.error("Không thể xóa bài hát khỏi playlist");
+    }
   };
 
-  const deleteMyPlaylist = (playlistId) => {
-    setMyPlaylists(myPlaylists.filter(pl => pl.id !== playlistId));
-    toast.success('Đã xóa playlist');
+  const deleteMyPlaylist = async (playlistId) => {
+    try {
+      await playlistService.delete(playlistId);
+      setMyPlaylists(myPlaylists.filter(pl => pl.id !== playlistId));
+      toast.success('Đã xóa playlist');
+    } catch (error) {
+      toast.error("Không thể xóa playlist");
+    }
   };
 
-  const updateMyPlaylist = (playlistId, updates) => {
-    setMyPlaylists(myPlaylists.map(pl => {
-      if (pl.id === playlistId) {
-        return { ...pl, ...updates };
-      }
-      return pl;
-    }));
+  const updateMyPlaylist = async (playlistId, updates) => {
+    try {
+      const data = await playlistService.update(playlistId, { tieu_de: updates.title });
+      setMyPlaylists(myPlaylists.map(pl => 
+        pl.id === playlistId ? mapPlaylist(data) : pl
+      ));
+      toast.success("Đã cập nhật playlist");
+    } catch (error) {
+      toast.error("Không thể cập nhật playlist");
+    }
   };
 
   const openAddToPlaylistModal = (song) => {
@@ -280,14 +310,25 @@ export const MusicProvider = ({ children }) => {
     }
   };
 
-  const toggleFavorite = (song) => {
-    const isFav = favorites.some(s => s.id === song.id);
-    if (isFav) {
-      setFavorites(favorites.filter(s => s.id !== song.id));
-      toast.success(`Đã xóa "${song.title}" khỏi Yêu thích`);
-    } else {
-      setFavorites([song, ...favorites]);
-      toast.success(`Đã thêm "${song.title}" vào Yêu thích`);
+  const toggleFavorite = async (song) => {
+    try {
+      const isFav = favorites.some(s => s.id === song.id);
+      if (isFav) {
+        // Find the favorite ID to delete
+        const favs = await favoriteService.getAll();
+        const favToDelete = favs.find(f => f.id_bai_hat === song.id);
+        if (favToDelete) {
+          await favoriteService.remove(favToDelete.id);
+        }
+        setFavorites(favorites.filter(s => s.id !== song.id));
+        toast.success(`Đã xóa "${song.title}" khỏi Yêu thích`);
+      } else {
+        await favoriteService.toggle(song.id);
+        setFavorites([song, ...favorites]);
+        toast.success(`Đã thêm "${song.title}" vào Yêu thích`);
+      }
+    } catch (error) {
+      toast.error("Thao tác thất bại");
     }
   };
 
@@ -358,7 +399,8 @@ export const MusicProvider = ({ children }) => {
       isQueueOpen,
       toggleQueue,
       jumpToQueueIndex,
-      audioRef
+      audioRef,
+      loadingUserMusic
     }}>
       {children}
     </MusicContext.Provider>

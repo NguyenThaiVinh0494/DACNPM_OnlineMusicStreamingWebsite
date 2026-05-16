@@ -222,6 +222,28 @@ class DanhSachPhatViewSet(viewsets.ModelViewSet):
         # Tự động gán người tạo là người dùng đang đăng nhập
         serializer.save(id_chu_so_huu=self.request.user)
 
+    @action(detail=True, methods=['post'])
+    def add_song(self, request, pk=None):
+        playlist = self.get_object()
+        song_id = request.data.get('song_id')
+        try:
+            song = BaiHat.objects.get(id=song_id)
+            playlist.bai_hats.add(song)
+            return Response({'status': 'song added'}, status=status.HTTP_200_OK)
+        except BaiHat.DoesNotExist:
+            return Response({'error': 'Song not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'])
+    def remove_song(self, request, pk=None):
+        playlist = self.get_object()
+        song_id = request.data.get('song_id')
+        try:
+            song = BaiHat.objects.get(id=song_id)
+            playlist.bai_hats.remove(song)
+            return Response({'status': 'song removed'}, status=status.HTTP_200_OK)
+        except BaiHat.DoesNotExist:
+            return Response({'error': 'Song not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 class YeuThichViewSet(viewsets.ModelViewSet):
     """

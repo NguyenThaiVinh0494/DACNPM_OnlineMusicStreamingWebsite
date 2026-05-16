@@ -127,8 +127,12 @@ export const AuthProvider = ({ children }) => {
       toast.success('Đăng ký thành công! Đang tự động đăng nhập...');
       // Tự động đăng nhập luôn sau khi đăng ký thành công
       return await login(userData.username, userData.password);
-    } catch {
-      toast.error('Đăng ký thất bại. Tên đăng nhập có thể đã tồn tại.');
+    } catch (error) {
+      const errorMsg = error.response?.data?.username?.[0] || 
+                       error.response?.data?.email?.[0] || 
+                       error.response?.data?.detail || 
+                       'Đăng ký thất bại. Kiểm tra lại thông tin!';
+      toast.error(errorMsg);
       return false;
     }
   };

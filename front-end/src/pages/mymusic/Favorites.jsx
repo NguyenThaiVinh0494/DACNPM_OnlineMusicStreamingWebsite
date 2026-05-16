@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiClock, FiPlus, FiCheck, FiX, FiSearch, FiMusic } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
+import { AuthContext } from "../../context/AuthContext";
 import SongItem from "../../components/common/SongItem";
 import SongActionMenu from "../../components/common/SongActionMenu";
 import EmptyState from "../../components/common/EmptyState";
 
 export default function Favorites() {
+  const { user } = useContext(AuthContext);
   const { 
     favorites, 
     playAll, 
@@ -94,7 +96,7 @@ export default function Favorites() {
             <h4 className="text-sm font-bold text-gray-500 dark:text-[#b3b3b3] uppercase tracking-wider mb-2">Thư viện</h4>
             <h1 className="text-[64px] font-black text-gray-900 dark:text-white leading-tight mb-4 tracking-tighter uppercase">Bài hát yêu thích</h1>
             <div className="flex items-center gap-3 text-sm font-medium">
-              <span className="text-gray-900 dark:text-white font-bold">Nguyễn Thái Vinh</span>
+              <span className="text-gray-900 dark:text-white font-bold">{user?.username || 'User'}</span>
               <span className="text-gray-500 dark:text-[#b3b3b3]">• {favorites.length} bài hát</span>
             </div>
           </div>

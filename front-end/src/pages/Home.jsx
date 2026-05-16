@@ -16,9 +16,10 @@ export default function Home() {
       try {
         const data = await songService.getAll({ ordering: '-ngay_tao', limit: 5 });
         // Map data để khớp với props của ListGrid
-        const mappedSongs = data.results.map(song => ({
-          ten: song.ten_bai_hat,
-          moTa: song.nghe_si && song.nghe_si.length > 0 ? "Nghệ sĩ " + song.nghe_si.join(', ') : "Đang cập nhật...",
+        const songs = data.results || data;
+        const mappedSongs = songs.slice(0, 5).map(song => ({
+          ten: song.tieu_de,
+          moTa: song.id_nghe_si?.ten_nghe_si || "Đang cập nhật...",
           anh: song.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop"
         }));
         setNewSongs(mappedSongs);
