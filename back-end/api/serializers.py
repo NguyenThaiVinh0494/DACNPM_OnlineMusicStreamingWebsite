@@ -52,9 +52,16 @@ class BaiHatSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class DanhSachPhatSerializer(serializers.ModelSerializer):
+    # Trả về chi tiết bài hát khi GET, nhưng cho phép truyền ID khi POST/PUT
+    bai_hats_detail = BaiHatSerializer(source='bai_hats', many=True, read_only=True)
+    so_luong_bai_hat = serializers.IntegerField(source='bai_hats.count', read_only=True)
+    ten_chu_so_huu = serializers.CharField(source='id_chu_so_huu.username', read_only=True)
+    bai_hats = serializers.PrimaryKeyRelatedField(many=True, queryset=BaiHat.objects.all(), required=False)
+
     class Meta:
         model = DanhSachPhat
-        fields = '__all__'
+        fields = ['id', 'tieu_de', 'id_chu_so_huu', 'ten_chu_so_huu', 'ngay_tao', 'bai_hats', 'bai_hats_detail', 'so_luong_bai_hat']
+        read_only_fields = ['id_chu_so_huu', 'ngay_tao']
 
 class BaoCaoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -72,6 +79,8 @@ class TinNhanSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class YeuThichSerializer(serializers.ModelSerializer):
+    song_detail = BaiHatSerializer(source='id_bai_hat', read_only=True)
     class Meta:
         model = YeuThich
-        fields = '__all__'
+        fields = ['id', 'id_nguoi_dung', 'id_bai_hat', 'song_detail', 'ngay_thich']
+        read_only_fields = ['id_nguoi_dung', 'ngay_thich']

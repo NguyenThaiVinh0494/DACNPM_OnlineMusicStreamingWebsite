@@ -23,7 +23,8 @@ export default function MyPlaylistDetail() {
     addSongToMyPlaylist, 
     updateMyPlaylist, 
     toggleFavorite, 
-    openAddToPlaylistModal
+    openAddToPlaylistModal,
+    loadingUserMusic
   } = useMusic();
   
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -40,8 +41,12 @@ export default function MyPlaylistDetail() {
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setOpenDropdown(null));
 
+  if (loadingUserMusic) {
+    return <div className="p-20 text-center text-gray-500">Đang tải playlist...</div>;
+  }
+
   if (!playlist) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/my-music" replace />;
   }
 
   const handlePlayAll = () => {
