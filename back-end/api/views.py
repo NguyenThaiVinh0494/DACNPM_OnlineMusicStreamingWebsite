@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 import cloudinary.uploader
+import mimetypes
 from .models import NguoiDung, BaiHat, NgheSi, TheLoai, Album, DanhSachPhat, YeuThich, LichSuNghe
 from .serializers import (
     DangKySerializer, BaiHatSerializer, NgheSiSerializer,
@@ -17,6 +18,20 @@ from .serializers import (
 # ============================
 # Upload lên Cloudinary
 # ============================
+def is_likely_image_file(file):
+    content_type = (getattr(file, 'content_type', '') or '').lower()
+    if content_type.startswith('image/'):
+        return True
+
+    guessed_type, _ = mimetypes.guess_type(getattr(file, 'name', ''))
+    if guessed_type and guessed_type.startswith('image/'):
+        return True
+
+    allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'}
+    filename = (getattr(file, 'name', '') or '').lower()
+    return any(filename.endswith(ext) for ext in allowed_extensions)
+
+
 class UploadAnhView(APIView):
     """
     Upload ảnh (avatar, ảnh bìa, ảnh nghệ sĩ) lên Cloudinary.
@@ -32,12 +47,22 @@ class UploadAnhView(APIView):
         if not file:
             return Response({'error': 'Không tìm thấy file. Hãy gửi file với key là "file".'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Upload lên Cloudinary folder "images"
-        result = cloudinary.uploader.upload(
-            file,
-            folder='music_streaming/images',
-            resource_type='image'
-        )
+        if not is_likely_image_file(file):
+            return Response({'error': 'File tải lên không phải là ảnh hợp lệ.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Upload lên Cloudinary folder "images"
+            result = cloudinary.uploader.upload(
+                file,
+                folder='music_streaming/images',
+                resource_type='image'
+            )
+        except Exception as exc:
+            return Response(
+                {'error': f'Lỗi upload ảnh lên Cloudinary: {exc}'},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
         return Response({'url': result['secure_url']}, status=status.HTTP_200_OK)
 
 
@@ -56,12 +81,19 @@ class UploadNhacView(APIView):
         if not file:
             return Response({'error': 'Không tìm thấy file. Hãy gửi file với key là "file".'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Upload lên Cloudinary folder "audio" với resource_type="video" (Cloudinary dùng "video" cho cả audio)
-        result = cloudinary.uploader.upload(
-            file,
-            folder='music_streaming/audio',
-            resource_type='video'
-        )
+        try:
+            # Upload lên Cloudinary folder "audio" với resource_type="video" (Cloudinary dùng "video" cho cả audio)
+            result = cloudinary.uploader.upload(
+                file,
+                folder='music_streaming/audio',
+                resource_type='video'
+            )
+        except Exception as exc:
+            return Response(
+                {'error': f'Lỗi upload audio lên Cloudinary: {exc}'},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
         return Response({'url': result['secure_url']}, status=status.HTTP_200_OK)
 
 # ============================
