@@ -10,7 +10,7 @@ export default function MainLayout() {
   const location = useLocation();
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-white dark:bg-nct-bg text-gray-900 dark:text-nct-text transition-colors duration-300">
+    <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-b from-white to-nct-primary/40 dark:!bg-gradient-to-b dark:!from-[#004d4d] dark:!to-nct-bg text-gray-900 dark:!text-nct-text transition-colors duration-300">
       {/* Top section: Sidebar + Main Content */}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />

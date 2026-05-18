@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import { FiCheckCircle, FiXCircle, FiPlay, FiMusic } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { getSongArtistNames } from '../../utils/songArtists';
 
 export default function PendingUploads() {
   const [songs, setSongs] = useState([]);
@@ -66,7 +67,7 @@ export default function PendingUploads() {
 
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">{song.tieu_de}</p>
-                <p className="text-sm text-gray-400">{song.id_nghe_si?.ten_nghe_si || 'Nghệ sĩ không xác định'}</p>
+                <p className="text-sm text-gray-400">{getSongArtistNames(song, 'Nghệ sĩ không xác định')}</p>
                 <p className="text-xs text-gray-300 mt-0.5">Upload bởi: {song.id_nguoi_dang?.username || '—'}</p>
               </div>
 

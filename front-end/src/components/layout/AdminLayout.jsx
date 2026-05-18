@@ -3,13 +3,16 @@ import { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import {
   FiGrid, FiUsers, FiMusic, FiUploadCloud,
-  FiBarChart2, FiLogOut, FiArrowLeft, FiShield
+  FiBarChart2, FiLogOut, FiArrowLeft, FiShield, FiDisc, FiMic, FiTag
 } from 'react-icons/fi';
 
 const navItems = [
   { to: '/admin', label: 'Tổng quan', icon: FiGrid, end: true },
   { to: '/admin/users', label: 'Người dùng', icon: FiUsers },
-  { to: '/admin/music', label: 'Kho nhạc', icon: FiMusic },
+  { to: '/admin/songs', label: 'Bài hát', icon: FiMusic },
+  { to: '/admin/albums', label: 'Album', icon: FiDisc },
+  { to: '/admin/artists', label: 'Nghệ sĩ', icon: FiMic },
+  { to: '/admin/topics', label: 'Chủ đề', icon: FiTag },
   { to: '/admin/pending', label: 'Duyệt Upload', icon: FiUploadCloud },
   { to: '/admin/stats', label: 'Thống kê', icon: FiBarChart2 },
 ];
@@ -20,6 +23,20 @@ export default function AdminLayout() {
 
   const handleLogout = () => {
     logout();
+    navigate('/');
+  };
+
+  const handleBackToUserApp = () => {
+    const canCloseWindow = typeof window !== 'undefined' && window.opener && !window.opener.closed;
+
+    if (canCloseWindow) {
+      window.close();
+      window.setTimeout(() => {
+        navigate('/');
+      }, 150);
+      return;
+    }
+
     navigate('/');
   };
 
@@ -62,7 +79,7 @@ export default function AdminLayout() {
         {/* Bottom */}
         <div className="px-3 py-4 border-t border-gray-100 space-y-1">
           <button
-            onClick={() => window.close()}
+            onClick={handleBackToUserApp}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
           >
             <FiArrowLeft className="w-5 h-5" />

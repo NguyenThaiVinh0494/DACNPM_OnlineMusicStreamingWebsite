@@ -10,6 +10,7 @@ from .views import (
     NgheSiViewSet,
     TheLoaiViewSet,
     AlbumViewSet,
+    AdminUserViewSet,
     DanhSachPhatViewSet,
     YeuThichViewSet,
     LichSuNgheViewSet,
@@ -24,6 +25,7 @@ router.register(r'songs',     BaiHatViewSet,      basename='bai-hat')
 router.register(r'artists',   NgheSiViewSet,      basename='nghe-si')
 router.register(r'genres',    TheLoaiViewSet,     basename='the-loai')
 router.register(r'albums',    AlbumViewSet,       basename='album')
+router.register(r'admin/users', AdminUserViewSet, basename='admin-users')
 router.register(r'playlists', DanhSachPhatViewSet,basename='playlist')
 router.register(r'favorites', YeuThichViewSet,    basename='yeu-thich')
 router.register(r'history',   LichSuNgheViewSet,  basename='lich-su-nghe')

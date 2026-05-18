@@ -1,11 +1,33 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { playlistService, songService, favoriteService } from '../api/services';
 import { AuthContext } from './AuthContext';
+import { getSongArtistNames } from '../utils/songArtists';
 
 const MusicContext = createContext();
 
 export const useMusic = () => useContext(MusicContext);
+
+const mapSong = (s) => ({
+  id: s.id,
+  title: s.tieu_de,
+  artist: getSongArtistNames(s, "Unknown Artist"),
+  image: s.duong_dan_hinh_anh,
+  audioUrl: s.duong_dan_am_thanh,
+  duration: "04:00",
+  lyrics: s.loi_bai_hat,
+  plays: s.luot_nghe
+});
+
+const mapPlaylist = (p) => ({
+  id: p.id,
+  title: p.tieu_de,
+  isPrivate: false,
+  songs: (p.bai_hats_detail || []).map(mapSong),
+  image: p.bai_hats_detail?.[0]?.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop",
+  songCount: p.so_luong_bai_hat || 0
+});
 
 export const MusicProvider = ({ children }) => {
   const { user } = useContext(AuthContext);
@@ -31,28 +53,6 @@ export const MusicProvider = ({ children }) => {
 
   // Audio Ref shared globally
   const audioRef = useRef(null);
-
-  // Helper to map BE song to FE song structure
-  const mapSong = (s) => ({
-    id: s.id,
-    title: s.tieu_de,
-    artist: s.id_nghe_si?.ten_nghe_si || "Unknown Artist",
-    image: s.duong_dan_hinh_anh,
-    audioUrl: s.duong_dan_am_thanh,
-    duration: "04:00", // Default or calculated
-    lyrics: s.loi_bai_hat,
-    plays: s.luot_nghe
-  });
-
-  // Helper to map BE playlist to FE playlist structure
-  const mapPlaylist = (p) => ({
-    id: p.id,
-    title: p.tieu_de,
-    isPrivate: false, // Default
-    songs: (p.bai_hats_detail || []).map(mapSong),
-    image: p.bai_hats_detail?.[0]?.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop",
-    songCount: p.so_luong_bai_hat || 0
-  });
 
   // Fetch all songs
   useEffect(() => {
@@ -93,12 +93,12 @@ export const MusicProvider = ({ children }) => {
     fetchData();
   }, [user]);
 
-  const createNewPlaylist = async (name, isPrivate) => {
+  const createNewPlaylist = async (name) => {
     try {
       const data = await playlistService.create({ tieu_de: name });
       setMyPlaylists([mapPlaylist(data), ...myPlaylists]);
       toast.success(`Đã tạo playlist "${name}"`);
-    } catch (error) {
+    } catch {
       toast.error("Không thể tạo playlist");
     }
   };
@@ -111,7 +111,7 @@ export const MusicProvider = ({ children }) => {
         pl.id === playlistId ? mapPlaylist(updatedPlaylistData) : pl
       ));
       toast.success(`Đã thêm "${song.title}" vào playlist`);
-    } catch (error) {
+    } catch {
       toast.error("Không thể thêm bài hát vào playlist");
     }
     closeAddToPlaylistModal();
@@ -127,7 +127,7 @@ export const MusicProvider = ({ children }) => {
         return pl;
       }));
       toast.success(`Đã xóa bài hát khỏi playlist`);
-    } catch (error) {
+    } catch {
       toast.error("Không thể xóa bài hát khỏi playlist");
     }
   };
@@ -137,7 +137,7 @@ export const MusicProvider = ({ children }) => {
       await playlistService.delete(playlistId);
       setMyPlaylists(myPlaylists.filter(pl => pl.id !== playlistId));
       toast.success('Đã xóa playlist');
-    } catch (error) {
+    } catch {
       toast.error("Không thể xóa playlist");
     }
   };
@@ -149,7 +149,7 @@ export const MusicProvider = ({ children }) => {
         pl.id === playlistId ? mapPlaylist(data) : pl
       ));
       toast.success("Đã cập nhật playlist");
-    } catch (error) {
+    } catch {
       toast.error("Không thể cập nhật playlist");
     }
   };
@@ -327,7 +327,7 @@ export const MusicProvider = ({ children }) => {
         setFavorites([song, ...favorites]);
         toast.success(`Đã thêm "${song.title}" vào Yêu thích`);
       }
-    } catch (error) {
+    } catch {
       toast.error("Thao tác thất bại");
     }
   };

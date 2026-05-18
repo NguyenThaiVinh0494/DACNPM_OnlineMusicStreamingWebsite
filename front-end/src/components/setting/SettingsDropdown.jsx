@@ -1,9 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
-import { FiSettings, FiGlobe, FiChevronRight, FiCheck, FiLifeBuoy, FiMessageSquare, FiMoon } from "react-icons/fi";
+import { useState, useRef, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FiSettings, FiGlobe, FiChevronRight, FiCheck, FiLifeBuoy, FiMessageSquare, FiMoon, FiBarChart2 } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { AuthContext } from '../../context/AuthContext';
 export default function SettingsDropdown() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [language, setLanguage] = useState(() => localStorage.getItem('appLanguage') || 'vi');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -107,6 +111,19 @@ export default function SettingsDropdown() {
             <FiLifeBuoy className="w-4 h-4" />
             <span>{t('help_support')}</span>
           </button>
+
+          {user?.vai_tro === 'ADMIN' && (
+            <button
+              onClick={() => {
+                setIsSettingsOpen(false);
+                navigate('/admin');
+              }}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-sm text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"
+            >
+              <FiBarChart2 className="w-4 h-4" />
+              <span>Quản lý & thống kê</span>
+            </button>
+          )}
 
           {/* Góp ý */}
           <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-sm text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white">
