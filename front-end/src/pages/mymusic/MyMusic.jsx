@@ -1,19 +1,17 @@
-import { useState, useContext } from 'react';
+import { useContext } from 'react';
 import { FiHeart, FiClock, FiUpload, FiPlus, FiMusic, FiPlay } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useMusic } from '../../context/MusicContext';
-import ProfileModal from '../../components/auth/ProfileModal';
 
 export default function MyMusic() {
   const { user } = useContext(AuthContext);
   const { myPlaylists, createNewPlaylist, playPlaylist, favorites, recentSongs } = useMusic();
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleCreatePlaylist = () => {
     const name = prompt("Nhập tên playlist mới:");
     if (name) {
-      createNewPlaylist(name, false);
+      createNewPlaylist(name);
     }
   };
 

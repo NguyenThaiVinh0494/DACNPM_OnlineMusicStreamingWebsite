@@ -6,6 +6,7 @@ import ListGrid from "../components/home/ListGrid";
 import MusicChart from "../components/home/MusicChart";
 import DanhSachPhatNgang from "../components/home/HorizontalPlaylist";
 import { songService } from "../api/services";
+import { getSongArtistNames } from "../utils/songArtists";
 
 export default function Home() {
   const { t } = useTranslation();
@@ -19,7 +20,7 @@ export default function Home() {
         const songs = data.results || data;
         const mappedSongs = songs.slice(0, 5).map(song => ({
           ten: song.tieu_de,
-          moTa: song.id_nghe_si?.ten_nghe_si || "Đang cập nhật...",
+          moTa: getSongArtistNames(song, "Đang cập nhật..."),
           anh: song.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop"
         }));
         setNewSongs(mappedSongs);

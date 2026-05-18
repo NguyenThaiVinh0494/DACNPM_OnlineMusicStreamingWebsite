@@ -6,6 +6,7 @@ import SongItem from "../components/common/SongItem";
 import LazyImage from "../components/common/LazyImage";
 import EmptyState from "../components/common/EmptyState";
 import { songService } from "../api/services";
+import { getSongArtistNames } from "../utils/songArtists";
 
 // ── Mock Data ──────────────────────────────────────────────────────────────
 const MOCK_SONGS = [
@@ -139,7 +140,7 @@ export default function SearchResults() {
         const mapped = results.map(s => ({
           id: s.id,
           title: s.tieu_de,
-          artist: s.id_nghe_si?.ten_nghe_si || "Không rõ",
+          artist: getSongArtistNames(s, "Không rõ"),
           image: s.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop",
           audioUrl: s.duong_dan_am_thanh,
           lyrics: s.loi_bai_hat,
