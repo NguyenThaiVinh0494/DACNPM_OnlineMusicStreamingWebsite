@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FiPlay, FiPause, FiMoreHorizontal, FiHeart, FiShare2, FiDownload, FiClock, FiTrash2, FiPlus, FiList, FiCheck } from "react-icons/fi";
+import { FiPlay, FiPause, FiMoreHorizontal, FiHeart, FiClock, FiTrash2, FiPlus, FiList, FiCheck } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
 
 export default function Recent() {
@@ -257,13 +257,6 @@ export default function Recent() {
                                 className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 hover:text-gray-900 dark:text-[#b3b3b3] dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                               >
                                 <FiHeart className={`w-4 h-4 ${favorites.some(s => s.id === song.id) ? 'text-nct-primary fill-[#2daaed]' : ''}`} /> {favorites.some(s => s.id === song.id) ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
-                              </button>
-                              <div className="h-px bg-gray-200 dark:bg-white/10 my-1"></div>
-                              <button className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 hover:text-gray-900 dark:text-[#b3b3b3] dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors">
-                                <FiShare2 className="w-4 h-4" /> Chia sẻ
-                              </button>
-                              <button className="w-full px-4 py-2 hover:bg-white/10 text-[#b3b3b3] hover:text-white text-sm text-left flex items-center gap-3 transition-colors">
-                                <FiDownload className="w-4 h-4" /> Tải xuống
                               </button>
                               <div className="h-px bg-white/10 my-1"></div>
                               <button 

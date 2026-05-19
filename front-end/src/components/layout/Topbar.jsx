@@ -1,6 +1,6 @@
 import { useState, useContext, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiUpload, FiX, FiPlay, FiChevronRight, FiEdit3, FiLogOut } from "react-icons/fi";
+import { FiSearch, FiX, FiEdit3, FiLogOut } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import LoginModal from '../auth/LoginModal';
 import RegisterModal from '../auth/RegisterModal';
@@ -8,7 +8,6 @@ import ProfileModal from '../auth/ProfileModal';
 import SettingsDropdown from '../setting/SettingsDropdown';
 import { AuthContext } from '../../context/AuthContext';
 import { useClickOutside } from '../../hooks/useClickOutside';
-import { useMusic } from '../../context/MusicContext';
 import { songService, artistService, albumService } from '../../api/services';
 import { getSongArtistNames } from '../../utils/songArtists';
 
@@ -16,7 +15,6 @@ export default function Topbar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
-  const { playSong } = useMusic();
   const [activeModal, setActiveModal] = useState(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -211,10 +209,6 @@ export default function Topbar() {
 
       {/* Right section: Actions & Profile */}
       <div className="flex items-center gap-6">
-        <button className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-900 dark:text-white transition-colors" title={t('upload')}>
-          <FiUpload className="w-5 h-5 cursor-pointer" />
-        </button>
-
         {user ? (
           <div className="relative" ref={profileRef}>
             <div 

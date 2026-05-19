@@ -41,6 +41,10 @@ export const songService = {
     const response = await api.get('songs/', { params });
     return response.data;
   },
+  getRecommended: async (params = {}) => {
+    const response = await api.get('songs/recommended/', { params });
+    return response.data;
+  },
   getById: async (id) => {
     const response = await api.get(`songs/${id}/`);
     return response.data;

@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
-  FiPlay, FiHeart, FiShare2, FiMoreHorizontal,
-  FiDownload, FiClock, FiCheck
+  FiPlay, FiHeart, FiMoreHorizontal, FiClock, FiCheck
 } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import AlbumActionMenu from "../../components/common/AlbumActionMenu";
@@ -154,7 +153,7 @@ export default function AlbumDetail() {
             <span className="text-sm font-semibold">{album.artistName}</span>
           </Link>
 
-          {/* Like / Share / More */}
+          {/* Like / More */}
           <div className="flex items-center gap-3 mb-6">
             <button
               onClick={() => setLiked((l) => !l)}
@@ -164,13 +163,6 @@ export default function AlbumDetail() {
                 <FiHeart className={`w-5 h-5 transition-colors ${liked ? "text-red-500 fill-current" : "text-gray-700 dark:text-white"}`} />
               </div>
               <span className="text-[10px] text-gray-500 dark:text-gray-400">{liked ? 1 : 0}</span>
-            </button>
-
-            <button className="flex flex-col items-center gap-0.5">
-              <div className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
-                <FiShare2 className="w-5 h-5 text-gray-700 dark:text-white" />
-              </div>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400">0</span>
             </button>
 
             <div className="relative" ref={albumMenuRef}>
@@ -194,10 +186,6 @@ export default function AlbumDetail() {
             >
               <FiPlay className="w-4 h-4 fill-current" />
               Phát tất cả
-            </button>
-            <button className="flex items-center gap-2 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-900 dark:text-white px-7 py-2.5 rounded-full font-bold text-sm transition-all active:scale-95 border border-gray-200 dark:border-white/10">
-              <FiDownload className="w-4 h-4" />
-              Tải về
             </button>
           </div>
         </div>

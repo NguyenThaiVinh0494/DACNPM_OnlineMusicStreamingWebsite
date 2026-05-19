@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal, FiClock, FiPlus, FiCheck, FiX, FiSearch, FiMusic } from "react-icons/fi";
+import { FiPlay, FiHeart, FiMoreHorizontal, FiClock, FiPlus, FiCheck, FiX, FiSearch, FiMusic } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import { AuthContext } from "../../context/AuthContext";
 import SongItem from "../../components/common/SongItem";
@@ -115,21 +115,6 @@ export default function Favorites() {
           >
             <FiPlay className="w-5 h-5 fill-current" /> PHÁT TẤT CẢ
           </button>
-          <button 
-            disabled={favorites.length === 0}
-            className={`p-2.5 rounded-full transition-colors ${
-              favorites.length > 0 ? 'bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 dark:hover:bg-[#3a3a3a] text-gray-900 dark:text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
-            }`}
-            title="Tải nhạc"
-          >
-            <FiDownload className="w-5 h-5" />
-          </button>
-          <button 
-            className="p-2.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 dark:hover:bg-[#3a3a3a] text-gray-900 dark:text-white transition-colors"
-            title="Chia sẻ"
-          >
-            <FiShare2 className="w-5 h-5" />
-          </button>
           <div className="relative dropdown-container">
             <button 
               onClick={() => setOpenDropdown(openDropdown === 'header-menu' ? null : 'header-menu')}
@@ -148,12 +133,6 @@ export default function Favorites() {
                   className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
                 >
                   <FiPlus className="w-4 h-4" /> Thêm bài hát
-                </button>
-                <button 
-                  onClick={() => setOpenDropdown(null)}
-                  className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
-                >
-                  <FiShare2 className="w-4 h-4" /> Chia sẻ
                 </button>
               </div>
             )}
@@ -202,10 +181,6 @@ export default function Favorites() {
                 >
                   <FiHeart className="w-4 h-4 fill-current text-red-500" />
                   <span className="text-[13px] font-bold">Xóa khỏi Yêu Thích</span>
-                </button>
-                <button className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-900 dark:text-white transition-all border border-transparent hover:border-gray-300 dark:hover:border-white/20">
-                  <FiDownload className="w-4 h-4" />
-                  <span className="text-[13px] font-bold">Tải nhạc</span>
                 </button>
               </div>
             </div>

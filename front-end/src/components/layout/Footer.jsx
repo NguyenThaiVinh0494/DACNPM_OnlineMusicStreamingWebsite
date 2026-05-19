@@ -66,30 +66,6 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="flex gap-3 mt-4">
-            <a href="#" className="hover:opacity-80 transition-opacity">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
-                alt="App Store"
-                className="h-[34px] object-contain"
-              />
-            </a>
-            <a href="#" className="hover:opacity-80 transition-opacity">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-                alt="Google Play"
-                className="h-[34px] object-contain"
-              />
-            </a>
-            <a href="#" className="hover:opacity-80 transition-opacity">
-              <img
-                src="https://consumer.huawei.com/content/dam/huawei-cbg-site/central-asia/tr/mkt/campaign/appgallery-promotion/huawei-gray.png"
-                alt="AppGallery"
-                className="h-[34px] object-contain"
-              />
-            </a>
-          </div>
-
           <div className="flex items-center gap-4 mt-2">
             <span className="text-sm text-gray-500 dark:text-nct-text-dim">Find us on</span>
             <div className="flex gap-2">

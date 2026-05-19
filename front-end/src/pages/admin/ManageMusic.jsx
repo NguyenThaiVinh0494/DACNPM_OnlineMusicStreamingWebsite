@@ -21,7 +21,6 @@ import {
 } from 'react-icons/fi';
 
 import { albumService, artistService, genreService, songService } from '../../api/services';
-import { enrichSongsWithDuration } from '../../utils/duration';
 import { getSongArtistNames, getSongArtists } from '../../utils/songArtists';
 
 const TAB_CONFIG = [
@@ -72,6 +71,59 @@ const IMAGE_FIELDS = new Set(['image_file', 'cover_file', 'artist_image_file', '
 const AUDIO_FIELDS = new Set(['audio_file']);
 const IMAGE_LIMIT_BYTES = 8 * 1024 * 1024;
 const AUDIO_LIMIT_BYTES = 25 * 1024 * 1024;
+const CATALOG_KEYS = ['songs', 'albums', 'artists', 'genres'];
+const EMPTY_CATALOG = { songs: [], albums: [], artists: [], genres: [] };
+const CATALOG_CACHE_TTL_MS = 60_000;
+const catalogCache = {
+  songs: [],
+  albums: [],
+  artists: [],
+  genres: [],
+  fetchedAt: {
+    songs: 0,
+    albums: 0,
+    artists: 0,
+    genres: 0,
+  },
+};
+
+const ENTITY_FETCHERS = {
+  songs: () => songService.getAll(),
+  albums: () => albumService.getAll(),
+  artists: () => artistService.getAll(),
+  genres: () => genreService.getAll(),
+};
+
+function getRequiredCatalogKeys(tabKey) {
+  if (tabKey === 'songs') return ['songs', 'albums', 'artists', 'genres'];
+  if (tabKey === 'albums') return ['songs', 'albums', 'artists'];
+  if (tabKey === 'artists') return ['songs', 'albums', 'artists'];
+  return ['songs', 'genres'];
+}
+
+function isCatalogKeyFresh(key) {
+  return Date.now() - (catalogCache.fetchedAt[key] || 0) < CATALOG_CACHE_TTL_MS;
+}
+
+function hasCatalogKeyData(key) {
+  return Boolean(catalogCache.fetchedAt[key]);
+}
+
+function getCachedCatalogSnapshot() {
+  return {
+    songs: catalogCache.songs,
+    albums: catalogCache.albums,
+    artists: catalogCache.artists,
+    genres: catalogCache.genres,
+  };
+}
+
+function invalidateCatalogCache(keys = CATALOG_KEYS) {
+  keys.forEach((key) => {
+    catalogCache[key] = [];
+    catalogCache.fetchedAt[key] = 0;
+  });
+}
 
 function formatBytes(bytes) {
   if (!bytes) return '0 B';
@@ -1302,14 +1354,14 @@ export default function ManageMusic({
   pageTitle,
   pageDescription,
 }) {
-  const [catalog, setCatalog] = useState({ songs: [], albums: [], artists: [], genres: [] });
+  const [catalog, setCatalog] = useState(() => getCachedCatalogSnapshot());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
   const [activeTab, setActiveTab] = useState(initialEntity);
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [sortOption, setSortOption] = useState(TAB_DEFAULT_SORT.songs);
+  const [sortOption, setSortOption] = useState(TAB_DEFAULT_SORT[initialEntity]);
   const [modalState, setModalState] = useState({ open: false, entity: 'songs', mode: 'create', item: null });
   const [formValues, setFormValues] = useState(getEmptyForm('songs'));
   const [previews, setPreviews] = useState({
@@ -1322,10 +1374,11 @@ export default function ManageMusic({
   });
   const [formAlert, setFormAlert] = useState('');
   const previewRef = useRef(previews);
+  const loadRequestIdRef = useRef(0);
 
   useEffect(() => {
-    loadCatalog();
-  }, []);
+    loadCatalog(activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     previewRef.current = previews;
@@ -1338,29 +1391,50 @@ export default function ManageMusic({
     };
   }, []);
 
-  async function loadCatalog() {
-    setLoading(true);
+  async function loadCatalog(tabKey = activeTab, { force = false } = {}) {
+    const requestId = ++loadRequestIdRef.current;
+    const requiredKeys = getRequiredCatalogKeys(tabKey);
+    const hasRequiredCache = requiredKeys.every(hasCatalogKeyData);
+    const keysToFetch = requiredKeys.filter((key) => force || !isCatalogKeyFresh(key));
+
+    startTransition(() => {
+      setCatalog(getCachedCatalogSnapshot());
+    });
+
+    if (!keysToFetch.length) {
+      setLoading(false);
+      return;
+    }
+
+    if (!hasRequiredCache) {
+      setLoading(true);
+    }
+
     try {
-      const [songsRes, albumsRes, artistsRes, genresRes] = await Promise.all([
-        songService.getAll(),
-        albumService.getAll(),
-        artistService.getAll(),
-        genreService.getAll(),
-      ]);
+      const responses = await Promise.all(
+        keysToFetch.map(async (key) => [key, normalizeList(await ENTITY_FETCHERS[key]())]),
+      );
+
+      if (requestId !== loadRequestIdRef.current) return;
+
+      responses.forEach(([key, items]) => {
+        catalogCache[key] = items;
+        catalogCache.fetchedAt[key] = Date.now();
+      });
 
       startTransition(() => {
-        setCatalog({
-          songs: normalizeList(songsRes),
-          albums: normalizeList(albumsRes),
-          artists: normalizeList(artistsRes),
-          genres: normalizeList(genresRes),
-        });
+        setCatalog(getCachedCatalogSnapshot());
       });
     } catch (error) {
+      if (requestId !== loadRequestIdRef.current) return;
       toast.error(extractErrorMessage(error));
-      setCatalog({ songs: [], albums: [], artists: [], genres: [] });
+      if (!hasRequiredCache) {
+        setCatalog(EMPTY_CATALOG);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === loadRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -1483,7 +1557,8 @@ export default function ManageMusic({
         else await genreService.update(item.id, payload);
       }
 
-      await loadCatalog();
+      invalidateCatalogCache();
+      await loadCatalog(activeTab, { force: true });
       closeModal();
       toast.success(mode === 'create' ? 'Đã tạo thành công.' : 'Đã cập nhật thành công.');
     } catch (error) {
@@ -1511,7 +1586,8 @@ export default function ManageMusic({
       if (entity === 'artists') await artistService.delete(item.id);
       if (entity === 'genres') await genreService.delete(item.id);
 
-      await loadCatalog();
+      invalidateCatalogCache();
+      await loadCatalog(activeTab, { force: true });
       toast.success(`Đã xóa ${entityLabel}.`);
     } catch (error) {
       toast.error(extractErrorMessage(error));
