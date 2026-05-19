@@ -48,7 +48,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
           {mainLinks.map((link) => {
             return (
               <NavLink

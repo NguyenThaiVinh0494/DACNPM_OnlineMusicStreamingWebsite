@@ -9,6 +9,7 @@ import AlbumActionMenu from "../../components/common/AlbumActionMenu";
 import SongActionMenu from "../../components/common/SongActionMenu";
 import LazyImage from "../../components/common/LazyImage";
 import { albumService, songService } from "../../api/services";
+import { enrichSongsWithDuration } from "../../utils/duration";
 
 
 
@@ -33,16 +34,17 @@ export default function AlbumDetail() {
         const albumData = await albumService.getById(id);
         const songsData = await songService.getAll({ id_album: id });
         const songsRes = songsData.results || songsData;
-        
-        const mappedSongs = songsRes.map((s) => ({
+        const albumArtistName = albumData.id_nghe_si_detail?.ten_nghe_si || "Nghệ sĩ";
+
+        const mappedSongs = await enrichSongsWithDuration(songsRes, (s) => ({
           id: s.id,
           title: s.tieu_de,
-          artist: s.id_nghe_si?.ten_nghe_si || albumData.ten_nghe_si || "Không rõ",
-          duration: s.thoi_luong || "04:00",
+          artist: s.id_nghe_si?.ten_nghe_si || albumArtistName,
+          duration: s.thoi_luong || null,
           image: s.duong_dan_hinh_anh || albumData.anh_bia || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop",
           audioUrl: s.duong_dan_am_thanh,
           lyrics: s.loi_bai_hat,
-          uploader: "Admin",
+          uploader: s.id_nguoi_dang?.username || "Admin",
           uploadDate: albumData.ngay_phat_hanh ? new Date(albumData.ngay_phat_hanh).toLocaleDateString("vi-VN") : "18/05/2026"
         }));
 
@@ -51,7 +53,7 @@ export default function AlbumDetail() {
           title: albumData.tieu_de,
           type: "Album",
           year: albumData.ngay_phat_hanh ? new Date(albumData.ngay_phat_hanh).getFullYear() : "2026",
-          artistName: albumData.ten_nghe_si || "Nghệ sĩ",
+          artistName: albumArtistName,
           artistId: albumData.id_nghe_si,
           uploader: "Admin",
           uploadDate: albumData.ngay_phat_hanh ? new Date(albumData.ngay_phat_hanh).toLocaleDateString("vi-VN") : "18/05/2026",

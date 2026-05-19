@@ -194,10 +194,12 @@ class TheLoaiSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerial
 class AlbumSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerializer):
     cover_file = serializers.FileField(write_only=True, required=False, allow_null=True)
     id_nghe_si_detail = NgheSiSummarySerializer(source='id_nghe_si', read_only=True)
+    song_ids = serializers.PrimaryKeyRelatedField(queryset=BaiHat.objects.all(), many=True, write_only=True, required=False)
+    song_count = serializers.IntegerField(source='bai_hats.count', read_only=True)
 
     class Meta:
         model = Album
-        fields = ['id', 'tieu_de', 'anh_bia', 'id_nghe_si', 'id_nghe_si_detail', 'trang_thai', 'ngay_phat_hanh', 'cover_file']
+        fields = ['id', 'tieu_de', 'anh_bia', 'id_nghe_si', 'id_nghe_si_detail', 'trang_thai', 'ngay_phat_hanh', 'cover_file', 'song_ids', 'song_count']
         extra_kwargs = {
             'anh_bia': {'required': False, 'allow_blank': True},
         }
@@ -209,12 +211,24 @@ class AlbumSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerializ
         return attrs
 
     def create(self, validated_data):
+        song_ids = validated_data.pop('song_ids', [])
         self._upload_image_into(validated_data, 'cover_file', 'anh_bia', 'music_streaming/albums')
-        return super().create(validated_data)
+        album = super().create(validated_data)
+        if song_ids:
+            BaiHat.objects.filter(id_album=album).exclude(id__in=[song.id for song in song_ids]).update(id_album=None)
+            BaiHat.objects.filter(id__in=[song.id for song in song_ids]).update(id_album=album)
+        return album
 
     def update(self, instance, validated_data):
+        song_ids = validated_data.pop('song_ids', None)
         self._upload_image_into(validated_data, 'cover_file', 'anh_bia', 'music_streaming/albums')
-        return super().update(instance, validated_data)
+        album = super().update(instance, validated_data)
+        if song_ids is not None:
+            selected_song_ids = [song.id for song in song_ids]
+            BaiHat.objects.filter(id_album=album).exclude(id__in=selected_song_ids).update(id_album=None)
+            if selected_song_ids:
+                BaiHat.objects.filter(id__in=selected_song_ids).update(id_album=album)
+        return album
 
 
 class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerializer):

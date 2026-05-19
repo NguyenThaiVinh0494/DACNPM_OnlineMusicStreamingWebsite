@@ -132,6 +132,10 @@ export const playlistService = {
     const response = await api.get('playlists/');
     return response.data;
   },
+  getMine: async () => {
+    const response = await api.get('playlists/mine/');
+    return response.data;
+  },
   getById: async (id) => {
     const response = await api.get(`playlists/${id}/`);
     return response.data;

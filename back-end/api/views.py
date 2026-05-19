@@ -216,10 +216,29 @@ class AlbumViewSet(MultipartEnabledViewSet):
 # ============================
 class DanhSachPhatViewSet(viewsets.ModelViewSet):
     serializer_class = DanhSachPhatSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        return DanhSachPhat.objects.filter(id_chu_so_huu=self.request.user).order_by('-ngay_tao')
+        queryset = DanhSachPhat.objects.select_related('id_chu_so_huu').prefetch_related(
+            'bai_hats',
+            'bai_hats__cac_nghe_si',
+        ).order_by('-ngay_tao')
+
+        if self.request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return queryset
+
+        return queryset.filter(id_chu_so_huu=self.request.user)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def mine(self, request):
+        playlists = DanhSachPhat.objects.filter(id_chu_so_huu=request.user).select_related(
+            'id_chu_so_huu',
+        ).prefetch_related(
+            'bai_hats',
+            'bai_hats__cac_nghe_si',
+        ).order_by('-ngay_tao')
+        serializer = self.get_serializer(playlists, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save(id_chu_so_huu=self.request.user)
