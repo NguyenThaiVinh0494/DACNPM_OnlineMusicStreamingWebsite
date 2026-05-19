@@ -8,160 +8,14 @@ import { useMusic } from "../../context/MusicContext";
 import AlbumActionMenu from "../../components/common/AlbumActionMenu";
 import SongActionMenu from "../../components/common/SongActionMenu";
 import LazyImage from "../../components/common/LazyImage";
-// ── Mock album data keyed by id ────────────────────────────────────────────
-const ALBUMS_DATA = {
-  1: {
-    id: 1,
-    title: "Yêu Em Thì Gật Đầu (Lofi Memories)",
-    type: "Album",
-    year: "2024",
-    artistName: "Ngô Mạnh Thắng, Meme Media",
-    artistId: 1,
-    uploader: "Meme Media",
-    uploadDate: "January 15, 2024",
-    image:
-      "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&h=400&fit=crop",
-    songs: [
-      {
-        id: 101,
-        title: "Yêu Em Thì Gật Đầu (Lofi Ver)",
-        artist: "Ngô Mạnh Thắng",
-        uploader: "Meme Media",
-        duration: "03:45",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop",
-      },
-      {
-        id: 102,
-        title: "Yêu Em Thì Gật Đầu (Piano Lofi)",
-        artist: "Ngô Mạnh Thắng",
-        uploader: "Meme Media",
-        duration: "04:02",
-        image:
-          "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=80&h=80&fit=crop",
-      },
-      {
-        id: 103,
-        title: "Yêu Em Thì Gật Đầu (Chill Mix)",
-        artist: "Meme Media",
-        uploader: "Meme Media",
-        duration: "03:58",
-        image:
-          "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=80&h=80&fit=crop",
-      },
-    ],
-  },
-  2: {
-    id: 2,
-    title: "Yêu Em Thì Gật Đầu",
-    type: "Single",
-    year: "2024",
-    artistName: "Lê Bảo Hân",
-    artistId: 7,
-    uploader: "Bảo Hân Music",
-    uploadDate: "March 8, 2024",
-    image:
-      "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=400&h=400&fit=crop",
-    songs: [
-      {
-        id: 201,
-        title: "Yêu Em Thì Gật Đầu",
-        artist: "Lê Bảo Hân",
-        uploader: "Bảo Hân Music",
-        duration: "04:15",
-        image:
-          "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=80&h=80&fit=crop",
-      },
-    ],
-  },
-  3: {
-    id: 3,
-    title: "Nếu Yêu Em Thì Gật Đầu",
-    type: "Single",
-    year: "2024",
-    artistName: "Thanh Thơ",
-    artistId: 3,
-    uploader: "VietStar",
-    uploadDate: "February 20, 2024",
-    image:
-      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=400&fit=crop",
-    songs: [
-      {
-        id: 301,
-        title: "Nếu Yêu Em Thì Gật Đầu",
-        artist: "Thanh Thơ",
-        uploader: "VietStar",
-        duration: "04:20",
-        image:
-          "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=80&h=80&fit=crop",
-      },
-    ],
-  },
-  4: {
-    id: 4,
-    title: "Yêu Em Thì Gật Đầu (Tú Remix)",
-    type: "Single",
-    year: "2024",
-    artistName: "Ngô Mạnh Thắng, Meme Media",
-    artistId: 1,
-    uploader: "Meme Media",
-    uploadDate: "April 5, 2024",
-    image:
-      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop",
-    songs: [
-      {
-        id: 401,
-        title: "Yêu Em Thì Gật Đầu (Tú Remix)",
-        artist: "Ngô Mạnh Thắng",
-        uploader: "Meme Media",
-        duration: "03:58",
-        image:
-          "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=80&h=80&fit=crop",
-      },
-    ],
-  },
-  5: {
-    id: 5,
-    title: "Yêu Em Thì Gật Đầu (ZoneH Remix)",
-    type: "Single",
-    year: "2024",
-    artistName: "Ngô Mạnh Thắng, Meme Media",
-    artistId: 1,
-    uploader: "Meme Media",
-    uploadDate: "May 1, 2024",
-    image:
-      "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&h=400&fit=crop",
-    songs: [
-      {
-        id: 501,
-        title: "Yêu Em Thì Gật Đầu (ZoneH Remix)",
-        artist: "Ngô Mạnh Thắng",
-        uploader: "Meme Media",
-        duration: "04:15",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop",
-      },
-    ],
-  },
-};
+import { albumService, songService } from "../../api/services";
 
-const FALLBACK = {
-  id: 99,
-  title: "Album không tìm thấy",
-  type: "Album",
-  year: "2024",
-  artistName: "Unknown Artist",
-  artistId: 1,
-  uploader: "NCT Music",
-  uploadDate: "January 1, 2024",
-  image:
-    "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=400&h=400&fit=crop",
-  songs: [],
-};
+
 
 export default function AlbumDetail() {
   const { id } = useParams();
-  const album = ALBUMS_DATA[parseInt(id)] || FALLBACK;
+  const [album, setAlbum] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { playSong, playAll, currentSong, isPlaying, toggleFavorite, favorites } = useMusic();
   const navigate = useNavigate();
 
@@ -171,6 +25,48 @@ export default function AlbumDetail() {
   const [activeSongMenu, setActiveSongMenu] = useState(null);
   const albumMenuRef = useRef(null);
   const songMenuRef = useRef(null);
+
+  useEffect(() => {
+    const fetchAlbumData = async () => {
+      setLoading(true);
+      try {
+        const albumData = await albumService.getById(id);
+        const songsData = await songService.getAll({ id_album: id });
+        const songsRes = songsData.results || songsData;
+        
+        const mappedSongs = songsRes.map((s) => ({
+          id: s.id,
+          title: s.tieu_de,
+          artist: s.id_nghe_si?.ten_nghe_si || albumData.ten_nghe_si || "Không rõ",
+          duration: s.thoi_luong || "04:00",
+          image: s.duong_dan_hinh_anh || albumData.anh_bia || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop",
+          audioUrl: s.duong_dan_am_thanh,
+          lyrics: s.loi_bai_hat,
+          uploader: "Admin",
+          uploadDate: albumData.ngay_phat_hanh ? new Date(albumData.ngay_phat_hanh).toLocaleDateString("vi-VN") : "18/05/2026"
+        }));
+
+        setAlbum({
+          id: albumData.id,
+          title: albumData.tieu_de,
+          type: "Album",
+          year: albumData.ngay_phat_hanh ? new Date(albumData.ngay_phat_hanh).getFullYear() : "2026",
+          artistName: albumData.ten_nghe_si || "Nghệ sĩ",
+          artistId: albumData.id_nghe_si,
+          uploader: "Admin",
+          uploadDate: albumData.ngay_phat_hanh ? new Date(albumData.ngay_phat_hanh).toLocaleDateString("vi-VN") : "18/05/2026",
+          image: albumData.anh_bia || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop",
+          songs: mappedSongs
+        });
+      } catch (error) {
+        console.error("Lỗi lấy thông tin album thật:", error);
+        setAlbum(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAlbumData();
+  }, [id]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -185,7 +81,23 @@ export default function AlbumDetail() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handlePlayAll = () => playAll(album.songs);
+  const handlePlayAll = () => album && playAll(album.songs);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-48 bg-transparent">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-nct-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!album) {
+    return (
+      <div className="flex flex-col items-center justify-center py-48 text-nct-text-dim">
+        <p className="text-lg font-medium">Không tìm thấy album</p>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-24 space-y-8">

@@ -31,17 +31,17 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
       {/* Lưới 4 cột */}
       <div className="grid grid-cols-4 gap-x-4 gap-y-3">
         {danhSachBaiHat.map((item, index) => (
-          <Link 
+          <Link
             to={`/song/${index + 1}`}
-            key={index} 
+            key={index}
             className="flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 group transition-colors"
           >
             {/* Ảnh bìa */}
             <div className="w-14 h-14 flex-shrink-0 relative">
-              <img 
-                src={item.anh} 
-                alt={item.ten} 
-                className="w-full h-full object-cover rounded-md" 
+              <img
+                src={item.anh}
+                alt={item.ten}
+                className="w-full h-full object-cover rounded-md"
               />
               {/* Lớp phủ mờ khi hover (Tùy chọn cho đẹp) */}
               <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-md">
@@ -57,7 +57,7 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
               <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
                 {item.caSi}
               </p>
-              
+
               {/* Mô phỏng icon Hãng đĩa (Label) như trong ảnh */}
               <div className="flex items-center gap-1 mt-1">
                 <div className="w-3 h-3 rounded-full bg-black/10 dark:bg-white/20 flex items-center justify-center flex-shrink-0">

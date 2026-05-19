@@ -1,35 +1,77 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
+import { playlistService } from "../api/services";
+
+
 
 export default function PlaylistDetail() {
   const { id } = useParams();
   const { playAll, playSong, currentSong, isPlaying, openAddToPlaylistModal } = useMusic();
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [playlist, setPlaylist] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const toggleDropdown = (id) => {
     setOpenDropdown(openDropdown === id ? null : id);
   };
 
-  const playlist = {
-    id: parseInt(id) || 1,
-    title: "Hit Việt Quốc Dân",
-    artist: "HIEUTHUHAI, Trọng Nhân, RPT MCK, tlinh",
-    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=400&fit=crop",
-    likes: "125K",
-    songs: [
-      { id: 1, title: "Chúng Ta Của Tương Lai", artist: "Sơn Tùng M-TP", duration: "03:45", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop" },
-      { id: 2, title: "Nâng Chén Tiêu Sầu", artist: "Bích Phương", duration: "03:22", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=100&h=100&fit=crop" },
-      { id: 3, title: "Thiên Lý Ơi", artist: "Jack - J97", duration: "04:10", image: "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=100&h=100&fit=crop" },
-      { id: 4, title: "Sau Lời Từ Khước", artist: "Phan Mạnh Quỳnh", duration: "05:01", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop" },
-    ]
-  };
+  useEffect(() => {
+    const fetchPlaylistDetail = async () => {
+      setLoading(true);
+      try {
+        const data = await playlistService.getById(id);
+        const songsDetail = data.bai_hats_detail || [];
+        const mappedSongs = songsDetail.map(s => ({
+          id: s.id,
+          title: s.tieu_de,
+          artist: s.id_nghe_si?.ten_nghe_si || "Không rõ",
+          image: s.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&h=100&fit=crop",
+          duration: s.thoi_luong || "04:00",
+          audioUrl: s.duong_dan_am_thanh,
+          lyrics: s.loi_bai_hat
+        }));
+        
+        setPlaylist({
+          id: data.id,
+          title: data.tieu_de,
+          creator: data.ten_chu_so_huu || "User",
+          image: songsDetail[0]?.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&h=400&fit=crop",
+          songs: mappedSongs
+        });
+      } catch (error) {
+        console.error("Lỗi lấy chi tiết playlist thật:", error);
+        setPlaylist(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlaylistDetail();
+  }, [id]);
 
   const handlePlayAll = () => {
-    playAll(playlist.songs);
+    if (playlist && playlist.songs.length > 0) {
+      playAll(playlist.songs);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-48 bg-transparent">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-nct-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!playlist) {
+    return (
+      <div className="flex flex-col items-center justify-center py-48 text-nct-text-dim">
+        <p className="text-lg font-medium">Không tìm thấy playlist</p>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-20">

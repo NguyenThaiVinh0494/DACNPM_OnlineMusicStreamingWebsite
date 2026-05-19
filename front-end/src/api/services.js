@@ -64,6 +64,10 @@ export const artistService = {
     const response = await api.get('artists/', { params });
     return response.data;
   },
+  getById: async (id) => {
+    const response = await api.get(`artists/${id}/`);
+    return response.data;
+  },
   create: async (data) => {
     const response = await api.post('artists/', data);
     return response.data;
@@ -81,6 +85,10 @@ export const artistService = {
 export const albumService = {
   getAll: async (params = {}) => {
     const response = await api.get('albums/', { params });
+    return response.data;
+  },
+  getById: async (id) => {
+    const response = await api.get(`albums/${id}/`);
     return response.data;
   },
   create: async (data) => {
