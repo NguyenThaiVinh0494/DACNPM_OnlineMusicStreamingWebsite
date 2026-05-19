@@ -41,7 +41,7 @@ class BaiHat(models.Model):
     trang_thai = models.CharField(max_length=10, choices=[('PENDING', 'Pending'), ('PUBLIC', 'Public')], default='PENDING')
     cac_nghe_si = models.ManyToManyField(NgheSi, related_name='bai_hats', db_table='tbl_bai_hat_nghe_si')
     id_album = models.ForeignKey(Album, on_delete=models.SET_NULL, null=True, blank=True, related_name='bai_hats')
-    id_the_loai = models.ForeignKey(TheLoai, on_delete=models.SET_NULL, null=True, blank=True, related_name='bai_hats')
+    the_loais = models.ManyToManyField(TheLoai, related_name='bai_hats', db_table='tbl_bai_hat_the_loai', blank=True)
     id_nguoi_dang = models.ForeignKey(NguoiDung, on_delete=models.CASCADE, related_name='bai_hats_da_dang')
     class Meta:
         db_table = 'tbl_bai_hat'

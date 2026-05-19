@@ -105,7 +105,7 @@ function getSongsForAlbum(catalog, albumId) {
 }
 
 function getSongCountForGenre(catalog, genreId) {
-  return catalog.songs.filter((song) => song.id_the_loai?.id === genreId).length;
+  return catalog.songs.filter((song) => song.the_loais?.some(g => g.id === genreId)).length;
 }
 
 function getEntityTitle(item) {
@@ -276,7 +276,7 @@ function getEmptyForm(entity) {
       trang_thai: 'PUBLIC',
       id_nghe_si_ids: [],
       id_album_id: '',
-      id_the_loai_id: '',
+      the_loai_ids: [],
       image_file: null,
       audio_file: null,
     };
@@ -322,7 +322,7 @@ function getInitialForm(entity, item, catalog) {
       trang_thai: item.trang_thai || 'PUBLIC',
       id_nghe_si_ids: getSongArtists(item).map((artist) => artist.id.toString()),
       id_album_id: item.id_album?.id?.toString() || '',
-      id_the_loai_id: item.id_the_loai?.id?.toString() || '',
+      the_loai_ids: (item.the_loais || []).map(g => g.id.toString()),
     };
   }
 
@@ -416,7 +416,7 @@ function buildFormData(entity, values) {
     formData.append('tieu_de', values.tieu_de);
     formData.append('trang_thai', values.trang_thai);
     formData.append('id_album_id', values.id_album_id || '');
-    formData.append('id_the_loai_id', values.id_the_loai_id || '');
+    values.the_loai_ids.forEach((genreId) => formData.append('the_loai_ids', genreId));
     values.id_nghe_si_ids.forEach((artistId) => formData.append('id_nghe_si_ids', artistId));
 
     if (values.quoc_gia) formData.append('quoc_gia', values.quoc_gia);
@@ -739,6 +739,69 @@ function SongTagPicker({ label, songs, values, onChange, artistId }) {
   );
 }
 
+function MultiSelectDropdown({ label, options, values, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggleOption = (value) => {
+    if (values.includes(value)) {
+      onChange(values.filter(v => v !== value));
+    } else {
+      onChange([...values, value]);
+    }
+  };
+
+  const selectedLabels = options
+    .filter(opt => values.includes(opt.value))
+    .map(opt => opt.label)
+    .join(', ');
+
+  return (
+    <div className="block space-y-2 relative" ref={containerRef}>
+      <span className="text-sm font-semibold text-slate-700">{label}</span>
+      <div 
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus-within:border-cyan-400 focus-within:ring-4 focus-within:ring-cyan-50 cursor-pointer flex justify-between items-center"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="truncate">{selectedLabels || 'Không gán chủ đề'}</span>
+        <svg className="h-4 w-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-60 overflow-y-auto">
+          {options.map((opt) => (
+            <div 
+              key={opt.value}
+              className="flex items-center px-4 py-2 hover:bg-slate-50 cursor-pointer"
+              onClick={() => toggleOption(opt.value)}
+            >
+              <input 
+                type="checkbox" 
+                className="mr-3 h-4 w-4 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500"
+                checked={values.includes(opt.value)}
+                onChange={() => {}} 
+              />
+              <span className="text-sm text-slate-700">{opt.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TextareaField({ label, required, ...props }) {
   return (
     <label className="block space-y-2">
@@ -911,30 +974,28 @@ function EntityModal({
                     </SelectField>
                   </div>
 
-                  <div className="grid gap-5 md:grid-cols-3">
-                    <SelectField
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <MultiSelectDropdown
                       label="Chủ đề"
-                      value={formValues.id_the_loai_id}
-                      onChange={(event) => onValueChange('id_the_loai_id', event.target.value)}
-                    >
-                      <option value="">Không gán chủ đề</option>
-                      {catalog.genres.map((genre) => (
-                        <option key={genre.id} value={genre.id}>{genre.ten_the_loai}</option>
-                      ))}
-                    </SelectField>
-                    <InputField
-                      label="Quốc gia"
-                      value={formValues.quoc_gia}
-                      onChange={(event) => onValueChange('quoc_gia', event.target.value)}
-                      placeholder="Việt Nam"
+                      options={catalog.genres.map(g => ({ value: g.id.toString(), label: g.ten_the_loai }))}
+                      values={formValues.the_loai_ids}
+                      onChange={(selectedValues) => onValueChange('the_loai_ids', selectedValues)}
                     />
-                    <InputField
-                      label="Năm phát hành"
-                      type="number"
-                      value={formValues.nam_phat_hanh}
-                      onChange={(event) => onValueChange('nam_phat_hanh', event.target.value)}
-                      placeholder="2026"
-                    />
+                    <div className="space-y-5">
+                      <InputField
+                        label="Quốc gia"
+                        value={formValues.quoc_gia}
+                        onChange={(event) => onValueChange('quoc_gia', event.target.value)}
+                        placeholder="Việt Nam"
+                      />
+                      <InputField
+                        label="Năm phát hành"
+                        type="number"
+                        value={formValues.nam_phat_hanh}
+                        onChange={(event) => onValueChange('nam_phat_hanh', event.target.value)}
+                        placeholder="2026"
+                      />
+                    </div>
                   </div>
 
                   <TextareaField
@@ -1177,7 +1238,9 @@ function SongsTable({ items, onEdit, onDelete }) {
                 </td>
                 <td className="px-6 py-4 text-slate-600">{getSongArtistNames(song, '—')}</td>
                 <td className="px-6 py-4 text-slate-500">{song.id_album?.tieu_de || 'Chưa gán'}</td>
-                <td className="px-6 py-4 text-slate-500">{song.id_the_loai?.ten_the_loai || 'Chưa gán'}</td>
+                <td className="px-6 py-4 text-slate-500">
+                  {song.the_loais?.length ? song.the_loais.map(g => g.ten_the_loai).join(', ') : 'Chưa gán'}
+                </td>
                 <td className="px-6 py-4">
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(song.trang_thai)}`}>
                     {song.trang_thai === 'PUBLIC' ? 'Công khai' : 'Chờ duyệt'}
@@ -1470,7 +1533,7 @@ export default function ManageMusic({
         item.tieu_de,
         getSongArtistNames(item, ''),
         item.id_album?.tieu_de,
-        item.id_the_loai?.ten_the_loai,
+        item.the_loais?.map(g => g.ten_the_loai).join(', '),
       ].some((value) => value?.toLowerCase().includes(keyword));
     }
 

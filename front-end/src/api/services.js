@@ -110,6 +110,10 @@ export const genreService = {
     const response = await api.get('genres/', { params });
     return response.data;
   },
+  getById: async (id) => {
+    const response = await api.get(`genres/${id}/`);
+    return response.data;
+  },
   create: async (data) => {
     const response = await api.post('genres/', data);
     return response.data;

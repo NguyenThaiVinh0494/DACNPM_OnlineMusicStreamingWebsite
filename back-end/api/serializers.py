@@ -249,13 +249,13 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
         required=False,
         allow_null=True,
     )
-    id_the_loai = TheLoaiSummarySerializer(read_only=True)
-    id_the_loai_id = NullablePrimaryKeyRelatedField(
+    the_loais = TheLoaiSummarySerializer(many=True, read_only=True)
+    the_loai_ids = serializers.PrimaryKeyRelatedField(
         queryset=TheLoai.objects.all(),
-        source='id_the_loai',
+        source='the_loais',
+        many=True,
         write_only=True,
         required=False,
-        allow_null=True,
     )
     id_nguoi_dang = NguoiDungSummarySerializer(read_only=True)
     image_file = serializers.FileField(write_only=True, required=False, allow_null=True)
@@ -278,8 +278,8 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
             'id_nghe_si_ids',
             'id_album',
             'id_album_id',
-            'id_the_loai',
-            'id_the_loai_id',
+            'the_loais',
+            'the_loai_ids',
             'id_nguoi_dang',
             'image_file',
             'audio_file',

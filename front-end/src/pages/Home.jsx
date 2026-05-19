@@ -5,18 +5,63 @@ import Footer from "../components/layout/Footer";
 import ListGrid from "../components/home/ListGrid";
 import MusicChart from "../components/home/MusicChart";
 import DanhSachPhatNgang from "../components/home/HorizontalPlaylist";
-import { songService } from "../api/services";
+import { songService, genreService } from "../api/services";
 import { getSongArtistNames } from "../utils/songArtists";
+
+// Gradient colors for topic cards
+const GRADIENT_COLORS = [
+  "from-teal-400 to-emerald-500",
+  "from-purple-500 to-indigo-600",
+  "from-rose-400 to-pink-500",
+  "from-blue-500 to-cyan-500",
+  "from-amber-500 to-orange-500",
+  "from-fuchsia-500 to-purple-600",
+  "from-emerald-500 to-green-600",
+  "from-red-500 to-rose-600",
+  "from-sky-500 to-blue-600",
+  "from-violet-500 to-purple-600",
+  "from-orange-400 to-red-500",
+  "from-cyan-400 to-blue-500",
+  "from-indigo-500 to-purple-600",
+  "from-lime-400 to-green-500",
+  "from-pink-400 to-rose-500",
+];
+
+const FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=200&h=200&fit=crop",
+];
+
+
+
+// Fisher-Yates shuffle
+function shuffleArray(arr) {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export default function Home() {
   const { t } = useTranslation();
   const [newSongs, setNewSongs] = useState([]);
+  const [topics, setTopics] = useState([]);
+  const [loadingTopics, setLoadingTopics] = useState(true);
 
   useEffect(() => {
+    let active = true;
     const fetchNewSongs = async () => {
       try {
         const data = await songService.getAll({ ordering: '-ngay_tao', limit: 5 });
-        // Map data để khớp với props của ListGrid
+        if (!active) return;
         const songs = data.results || data;
         const mappedSongs = songs.slice(0, 5).map(song => ({
           ten: song.tieu_de,
@@ -29,20 +74,38 @@ export default function Home() {
       }
     };
     fetchNewSongs();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const topics = [
-    { name: "Pop", color: "from-purple-500 to-indigo-500", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=200&h=200&fit=crop" },
-    { name: "Buồn", color: "from-orange-700 to-orange-900", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop" },
-    { name: "Pop Ballad", color: "from-rose-400 to-orange-300", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=200&h=200&fit=crop" },
-    { name: "Nhạc Trẻ", color: "from-teal-400 to-teal-600", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=200&h=200&fit=crop" },
-    { name: "Bolero", color: "from-indigo-800 to-purple-800", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&h=200&fit=crop" },
-    { name: "Rap Việt", color: "from-violet-600 to-purple-900", image: "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=200&h=200&fit=crop" },
-    { name: "Nhạc Hàn", color: "from-slate-700 to-slate-900", image: "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=200&h=200&fit=crop" },
-    { name: "TikTok", color: "from-black to-gray-900", image: "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=200&h=200&fit=crop" },
-    { name: "Remix", color: "from-blue-600 to-purple-600", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=200&fit=crop" },
-    { name: "Nhạc Hoa", color: "from-amber-600 to-orange-800", image: "https://images.unsplash.com/photo-1543840950-5917415d18d0?w=200&h=200&fit=crop" },
-  ];
+  useEffect(() => {
+    let active = true;
+    const fetchGenres = async () => {
+      setLoadingTopics(true);
+      try {
+        const data = await genreService.getAll();
+        if (!active) return;
+        const genreList = data.results || data;
+        const mapped = genreList.map((genre, index) => ({
+          id: genre.id,
+          name: genre.ten_the_loai,
+          color: GRADIENT_COLORS[index % GRADIENT_COLORS.length],
+          image: genre.anh_the_loai || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length],
+        }));
+        const randomTopics = shuffleArray(mapped).slice(0, 10);
+        setTopics(randomTopics);
+      } catch (error) {
+        console.error("Lỗi khi tải thể loại:", error);
+      } finally {
+        if (active) setLoadingTopics(false);
+      }
+    };
+    fetchGenres();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // 1. Tạo hàm lấy lời chào dựa vào giờ hệ thống
   const layLoiChao = () => {
@@ -87,23 +150,30 @@ export default function Home() {
       {/* Categories / Topics */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-black dark:text-white">{t('topics')}</h3>
-          <Link to="/discover/topics" className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">{t('more')}</Link>
+          <h3 className="text-xl font-bold text-black dark:text-white">{t('topics', 'Chủ đề')}</h3>
+          <Link to="/discover/topics" className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">{t('more', 'Thêm')}</Link>
         </div>
         <div className="grid grid-cols-5 gap-4">
-          {topics.map((topic, index) => (
-            <div
-              key={index}
-              className={`h-24 rounded-lg bg-gradient-to-br ${topic.color} relative overflow-hidden group cursor-pointer`}
-            >
-              <h4 className="absolute top-3 left-3 text-white font-bold text-lg z-10">{topic.name}</h4>
-              <img
-                src={topic.image}
-                alt={topic.name}
-                className="absolute -right-4 -bottom-2 w-16 h-16 object-cover rounded-md rotate-[25deg] group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 shadow-lg"
-              />
-            </div>
-          ))}
+          {loadingTopics ? (
+            Array(10).fill(0).map((_, index) => (
+              <div key={`skeleton-${index}`} className="h-24 rounded-lg bg-gray-200 dark:bg-white/5 animate-pulse" />
+            ))
+          ) : topics.length > 0 ? (
+            topics.map((topic) => (
+              <Link
+                to={`/genre/${topic.id}`}
+                key={topic.id}
+                className={`h-24 rounded-lg bg-gradient-to-br ${topic.color} relative overflow-hidden group cursor-pointer hover:scale-[1.03] transition-all shadow-sm hover:shadow-md`}
+              >
+                <h4 className="absolute top-3 left-3 text-white font-bold text-lg z-10 drop-shadow-md">{topic.name}</h4>
+                <img
+                  src={topic.image}
+                  alt={topic.name}
+                  className="absolute -right-4 -bottom-2 w-16 h-16 object-cover rounded-md rotate-[25deg] group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 shadow-lg"
+                />
+              </Link>
+            ))
+          ) : null}
         </div>
       </div>
       {/* Ráp các component mới vào đây */}
