@@ -7,6 +7,7 @@ import { useMusic } from "../../context/MusicContext";
 import SongActionMenu from "../../components/common/SongActionMenu";
 import LazyImage from "../../components/common/LazyImage";
 import { artistService, songService, albumService } from "../../api/services";
+import { enrichSongsWithDuration } from "../../utils/duration";
 
 
 
@@ -153,15 +154,15 @@ export default function ArtistDetail() {
         ]);
         
         const songsRes = songsData.results || songsData;
-        const mappedSongs = songsRes.map((s) => ({
+        const mappedSongs = await enrichSongsWithDuration(songsRes, (s) => ({
           id: s.id,
           title: s.tieu_de,
           artist: artistData.ten_nghe_si,
-          duration: s.thoi_luong || "04:00",
+          duration: s.thoi_luong || null,
           image: s.duong_dan_hinh_anh || artistData.anh_nghe_si || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop",
           audioUrl: s.duong_dan_am_thanh,
           lyrics: s.loi_bai_hat,
-          uploader: "Admin"
+          uploader: s.id_nguoi_dang?.username || "Admin"
         }));
 
         const albumsRes = albumsData.results || albumsData;

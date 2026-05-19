@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { FiPlay, FiChevronRight } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
 import LazyImage from "../components/common/LazyImage";
 import EmptyState from "../components/common/EmptyState";
 import { songService, artistService, albumService, playlistService } from "../api/services";
+import { enrichSongsWithDuration } from "../utils/duration";
 import { getSongArtistNames } from "../utils/songArtists";
 
 // ── Mock Data ──────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ function ArtistCard({ artist }) {
 }
 
 function AlbumCard({ album }) {
-  const { playSong } = useMusic();
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
   return (
     <div className="group" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
@@ -49,7 +50,11 @@ function AlbumCard({ album }) {
         <LazyImage src={album.image} alt={album.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
         <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 z-20 ${hovered ? "opacity-100" : "opacity-0"}`}>
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); playSong({ ...album, artist: album.artists }); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/album/${album.id}`);
+            }}
             className="w-12 h-12 rounded-full bg-nct-primary hover:bg-[#2591c4] flex items-center justify-center shadow-lg transform scale-90 hover:scale-105 transition-all"
           >
             <FiPlay className="w-5 h-5 text-white fill-current ml-0.5" />
@@ -201,14 +206,14 @@ export default function SearchResults() {
         ]);
 
         const songsRes = songsData.results || songsData;
-        const mappedSongs = songsRes.map(s => ({
+        const mappedSongs = await enrichSongsWithDuration(songsRes, (s) => ({
           id: s.id,
           title: s.tieu_de,
           artist: getSongArtistNames(s, "Không rõ"),
           image: s.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop",
           audioUrl: s.duong_dan_am_thanh,
           lyrics: s.loi_bai_hat,
-          duration: s.thoi_luong || "04:00"
+          duration: s.thoi_luong || null
         }));
         setRealSongs(mappedSongs);
 
@@ -225,7 +230,7 @@ export default function SearchResults() {
         const mappedAlbums = albumsRes.map(a => ({
           id: a.id,
           title: a.tieu_de,
-          artists: a.ten_nghe_si || "Nghệ sĩ",
+          artists: a.id_nghe_si_detail?.ten_nghe_si || "Nghệ sĩ",
           image: a.anh_bia || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop"
         }));
         setRealAlbums(mappedAlbums);

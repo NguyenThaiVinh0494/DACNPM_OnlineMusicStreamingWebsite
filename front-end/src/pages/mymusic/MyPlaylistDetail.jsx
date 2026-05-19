@@ -283,11 +283,12 @@ export default function MyPlaylistDetail() {
                 </div>
               </div>
             ) : (
-              <div className="flex text-gray-500 dark:text-[#b3b3b3] text-xs font-bold uppercase tracking-wider px-4 py-0 items-center border-b border-gray-200 dark:border-white/5 h-[56px]">
-                <div className="w-12 flex justify-center text-sm font-medium">#</div>
-                <div className="flex-1">Bài hát</div>
-                <div className="w-1/4">Nghệ sĩ</div>
-                <div className="w-24 flex justify-center"><FiClock className="w-4 h-4" /></div>
+              <div className="grid h-[56px] grid-cols-[40px_40px_minmax(0,1fr)_96px] items-center gap-x-4 border-b border-gray-200 px-3 pr-24 text-xs font-bold uppercase tracking-wider text-gray-500 dark:border-white/5 dark:text-[#b3b3b3] md:grid-cols-[40px_40px_minmax(0,1fr)_minmax(180px,28%)_96px]">
+                <div className="text-center text-sm font-medium">#</div>
+                <div />
+                <div>Bài hát</div>
+                <div className="hidden md:block">Nghệ sĩ</div>
+                <div className="flex justify-center"><FiClock className="w-4 h-4" /></div>
               </div>
             )}
 
@@ -307,6 +308,9 @@ export default function MyPlaylistDetail() {
                   onToggleSelect={toggleSelectSong}
                   onMore={toggleDropdown}
                   openDropdown={openDropdown}
+                  layout="table"
+                  artistColumnClass=""
+                  durationColumnClass="w-24"
                   dropdownContent={
                     <SongActionMenu 
                       song={song}

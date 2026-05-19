@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import LazyImage from "../../components/common/LazyImage";
 import { FiHeart, FiShare2, FiMoreHorizontal, FiPlay, FiDownload, FiChevronDown, FiChevronUp, FiPlus, FiFlag, FiFacebook, FiLink, FiMusic } from 'react-icons/fi';
 import { useMusic } from '../../context/MusicContext';
-import { songService } from '../../api/services';
+import { albumService, songService } from '../../api/services';
+import { enrichSongsWithDuration } from '../../utils/duration';
 import { getSongArtistNames, getSongPrimaryArtist } from '../../utils/songArtists';
 
 export default function SongDetail() {
@@ -24,10 +25,44 @@ export default function SongDetail() {
       try {
         const raw = await songService.getById(id);
         const primaryArtist = getSongPrimaryArtist(raw);
+        const primaryArtistId = primaryArtist?.id;
+        const [featuredSongsData, featuredAlbumsData] = primaryArtistId
+          ? await Promise.all([
+              songService.getAll({ id_nghe_si: primaryArtistId, ordering: '-luot_nghe', limit: 6 }),
+              albumService.getAll({ id_nghe_si: primaryArtistId, ordering: '-ngay_phat_hanh', limit: 5 }),
+            ])
+          : [[], []];
+
+        const featuredSongsRes = featuredSongsData.results || featuredSongsData || [];
+        const featuredAlbumsRes = featuredAlbumsData.results || featuredAlbumsData || [];
+
+        const featuredSongs = await enrichSongsWithDuration(
+          featuredSongsRes.filter((song) => song.id !== raw.id).slice(0, 5),
+          (song) => ({
+            id: song.id,
+            title: song.tieu_de,
+            cover: song.duong_dan_hinh_anh || primaryArtist?.anh_nghe_si || raw.duong_dan_hinh_anh || 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=400&h=400&fit=crop',
+            uploader: song.id_nguoi_dang?.username || 'Hệ thống',
+            duration: song.thoi_luong || null,
+            isActive: false,
+            artist: getSongArtistNames(song, primaryArtist?.ten_nghe_si || 'Không rõ'),
+            audioUrl: song.duong_dan_am_thanh,
+            lyrics: song.loi_bai_hat || 'Chưa có lời bài hát.',
+          }),
+        );
+
+        const featuredAlbums = featuredAlbumsRes.slice(0, 5).map((album) => ({
+          id: album.id,
+          title: album.tieu_de,
+          cover: album.anh_bia || raw.duong_dan_hinh_anh || 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=400&h=400&fit=crop',
+          artist: album.id_nghe_si_detail?.ten_nghe_si || primaryArtist?.ten_nghe_si || 'Không rõ',
+        }));
+
         setData({
           id: raw.id,
           title: raw.tieu_de,
           artist: getSongArtistNames(raw, 'Không rõ'),
+          artistId: primaryArtist?.id || null,
           artistAvatar: primaryArtist?.anh_nghe_si || null,
           artistFollowers: 0,
           cover: raw.duong_dan_hinh_anh || 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=400&h=400&fit=crop',
@@ -35,9 +70,9 @@ export default function SongDetail() {
           lyrics: raw.loi_bai_hat || 'Chưa có lời bài hát.',
           likes: raw.luot_nghe?.toLocaleString() || '0',
           shares: '0',
-          contributor: 'Hệ thống',
-          featuredSongs: [],
-          featuredAlbums: [],
+          contributor: raw.id_nguoi_dang?.username || 'Hệ thống',
+          featuredSongs,
+          featuredAlbums,
         });
       } catch (err) {
         console.error('Không thể tải bài hát:', err);
@@ -105,9 +140,18 @@ export default function SongDetail() {
           {/* Artist Row */}
           <div className="flex items-center gap-3 mb-8">
             <LazyImage src={data.artistAvatar} alt={data.artist} className="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-200 dark:border-white/10" />
-            <span className="text-[17px] font-bold text-gray-800 dark:text-gray-200 cursor-pointer hover:text-nct-primary dark:hover:text-nct-primary transition-colors">
-              {data.artist}
-            </span>
+            {data.artistId ? (
+              <Link
+                to={`/artist/${data.artistId}`}
+                className="text-[17px] font-bold text-gray-800 dark:text-gray-200 cursor-pointer hover:text-nct-primary dark:hover:text-nct-primary transition-colors"
+              >
+                {data.artist}
+              </Link>
+            ) : (
+              <span className="text-[17px] font-bold text-gray-800 dark:text-gray-200">
+                {data.artist}
+              </span>
+            )}
           </div>
           
           {/* Interaction Stats */}
@@ -234,9 +278,18 @@ export default function SongDetail() {
             <LazyImage src={data.artistAvatar} alt={data.artist} className="w-[72px] h-[72px] rounded-full object-cover shadow-md border-2 border-transparent dark:border-white/5" />
             
             <div className="flex flex-col gap-1">
-              <h3 className="text-[17px] font-bold text-gray-900 dark:text-white cursor-pointer hover:text-nct-primary transition-colors">
-                {data.artist}
-              </h3>
+              {data.artistId ? (
+                <Link
+                  to={`/artist/${data.artistId}`}
+                  className="text-[17px] font-bold text-gray-900 dark:text-white cursor-pointer hover:text-nct-primary transition-colors"
+                >
+                  {data.artist}
+                </Link>
+              ) : (
+                <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">
+                  {data.artist}
+                </h3>
+              )}
               <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
                 {data.artistFollowers.toLocaleString()} người theo dõi
               </span>
@@ -260,6 +313,7 @@ export default function SongDetail() {
           {data.featuredSongs.map((song) => (
             <div 
               key={song.id} 
+              onClick={() => playSong({ id: song.id, title: song.title, artist: song.artist, image: song.cover, audioUrl: song.audioUrl, lyrics: song.lyrics })}
               className="group flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer border-b border-gray-100 dark:border-transparent"
             >
               <div className="flex items-center gap-5">
@@ -372,7 +426,7 @@ export default function SongDetail() {
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-6">
           {data.featuredAlbums.map(album => (
-            <div key={album.id} className="flex flex-col gap-3 group cursor-pointer">
+            <Link to={`/album/${album.id}`} key={album.id} className="flex flex-col gap-3 group cursor-pointer">
               <div className="w-full aspect-square rounded-2xl overflow-hidden shadow-sm relative">
                 <LazyImage src={album.cover} alt={album.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -387,7 +441,7 @@ export default function SongDetail() {
                 </h4>
                 <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium line-clamp-1">{album.artist}</span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

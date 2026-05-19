@@ -17,7 +17,7 @@ export default function MainLayout() {
         
         <div className="flex flex-col flex-1">
           <Topbar />
-          <main className="flex-1 overflow-y-auto px-8 py-6 relative">
+          <main className="flex-1 overflow-y-auto hide-scrollbar px-8 py-6 relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}

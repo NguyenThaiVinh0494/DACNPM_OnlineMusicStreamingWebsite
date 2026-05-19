@@ -4,6 +4,7 @@ import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal } from "react-i
 import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
 import { playlistService } from "../api/services";
+import { enrichSongsWithDuration } from "../utils/duration";
 
 
 
@@ -24,12 +25,12 @@ export default function PlaylistDetail() {
       try {
         const data = await playlistService.getById(id);
         const songsDetail = data.bai_hats_detail || [];
-        const mappedSongs = songsDetail.map(s => ({
+        const mappedSongs = await enrichSongsWithDuration(songsDetail, (s) => ({
           id: s.id,
           title: s.tieu_de,
           artist: s.id_nghe_si?.ten_nghe_si || "Không rõ",
           image: s.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&h=100&fit=crop",
-          duration: s.thoi_luong || "04:00",
+          duration: s.thoi_luong || null,
           audioUrl: s.duong_dan_am_thanh,
           lyrics: s.loi_bai_hat
         }));
@@ -126,11 +127,12 @@ export default function PlaylistDetail() {
 
       <div>
         <div className="bg-transparent">
-          <div className="flex text-gray-500 dark:text-nct-text-dim text-sm font-medium px-6 py-4 border-b border-gray-200 dark:border-white/5">
-            <div className="w-12">#</div>
-            <div className="flex-1">Title</div>
-            <div className="w-1/4 hidden md:block">Artist</div>
-            <div className="w-32 text-center">Duration</div>
+          <div className="grid grid-cols-[40px_40px_minmax(0,1fr)_96px] md:grid-cols-[40px_40px_minmax(0,1fr)_minmax(180px,28%)_96px] items-center gap-x-4 px-3 py-4 pr-24 text-sm font-medium text-gray-500 dark:text-nct-text-dim border-b border-gray-200 dark:border-white/5">
+            <div className="text-center">#</div>
+            <div />
+            <div>Title</div>
+            <div className="hidden md:block">Artist</div>
+            <div className="text-center">Duration</div>
           </div>
 
           <div className="flex flex-col mt-2">
@@ -146,6 +148,9 @@ export default function PlaylistDetail() {
                 onToggleFavorite={() => {}} // Handle favorite toggle
                 onMore={toggleDropdown}
                 openDropdown={openDropdown}
+                layout="table"
+                artistColumnClass=""
+                durationColumnClass="w-24"
                 dropdownContent={
                   <div className="absolute top-10 right-0 w-48 bg-white dark:bg-[#2d2f32] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl z-50 overflow-hidden text-left">
                     <button 

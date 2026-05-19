@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fi';
 
 import { albumService, artistService, genreService, songService } from '../../api/services';
+import { enrichSongsWithDuration } from '../../utils/duration';
 import { getSongArtistNames, getSongArtists } from '../../utils/songArtists';
 
 const TAB_CONFIG = [
@@ -97,6 +98,10 @@ function getSongCountForArtist(catalog, artistId) {
 
 function getAlbumCountForArtist(catalog, artistId) {
   return catalog.albums.filter((album) => album.id_nghe_si === artistId).length;
+}
+
+function getSongsForAlbum(catalog, albumId) {
+  return catalog.songs.filter((song) => song.id_album?.id === albumId);
 }
 
 function getSongCountForGenre(catalog, genreId) {
@@ -283,6 +288,7 @@ function getEmptyForm(entity) {
       id_nghe_si: '',
       ngay_phat_hanh: '',
       trang_thai: 'PUBLIC',
+      song_ids: [],
       cover_file: null,
     };
   }
@@ -302,7 +308,7 @@ function getEmptyForm(entity) {
   };
 }
 
-function getInitialForm(entity, item) {
+function getInitialForm(entity, item, catalog) {
   const empty = getEmptyForm(entity);
   if (!item) return empty;
 
@@ -321,12 +327,15 @@ function getInitialForm(entity, item) {
   }
 
   if (entity === 'albums') {
+    const selectedSongs = catalog ? getSongsForAlbum(catalog, item.id) : [];
+
     return {
       ...empty,
       tieu_de: item.tieu_de || '',
       id_nghe_si: item.id_nghe_si?.toString() || '',
       ngay_phat_hanh: item.ngay_phat_hanh || '',
       trang_thai: item.trang_thai || 'PUBLIC',
+      song_ids: selectedSongs.map((song) => song.id.toString()),
     };
   }
 
@@ -422,6 +431,7 @@ function buildFormData(entity, values) {
     formData.append('tieu_de', values.tieu_de);
     formData.append('id_nghe_si', values.id_nghe_si);
     formData.append('trang_thai', values.trang_thai);
+    values.song_ids.forEach((songId) => formData.append('song_ids', songId));
     if (values.ngay_phat_hanh) formData.append('ngay_phat_hanh', values.ngay_phat_hanh);
     if (values.cover_file) formData.append('cover_file', values.cover_file);
     return formData;
@@ -623,6 +633,106 @@ function ArtistTagPicker({ label, required, artists, values, onChange }) {
               </div>
             )}
           </div>
+        </div>
+      </div>
+    </label>
+  );
+}
+
+function SongTagPicker({ label, songs, values, onChange, artistId }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm.trim().toLowerCase());
+  const selectedSongIds = new Set(values);
+  const filteredSongs = songs.filter((song) => {
+    if (artistId && song.id_nghe_si?.id?.toString() !== artistId && !getSongArtists(song).some((artist) => artist.id.toString() === artistId)) {
+      return false;
+    }
+    if (selectedSongIds.has(song.id.toString())) return false;
+    if (!deferredSearchTerm) return true;
+    return [song.tieu_de, getSongArtistNames(song, '')].some((value) => value?.toLowerCase().includes(deferredSearchTerm));
+  });
+  const selectedSongs = songs.filter((song) => selectedSongIds.has(song.id.toString()));
+
+  const addSong = (songId) => {
+    if (selectedSongIds.has(songId)) return;
+    onChange([...values, songId]);
+    setSearchTerm('');
+  };
+
+  const removeSong = (songId) => {
+    onChange(values.filter((value) => value !== songId));
+  };
+
+  return (
+    <label className="block space-y-2">
+      <span className="text-sm font-semibold text-slate-700">{label}</span>
+      <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 transition focus-within:border-cyan-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-cyan-50">
+          <FiSearch className="h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder={songs.length ? 'Tìm bài hát để thêm vào album' : 'Chưa có bài hát nào trong hệ thống'}
+            disabled={!songs.length}
+            className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-slate-50/80 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <FiMusic className="h-4 w-4 text-cyan-500" />
+              <span>Bài hát đã chọn</span>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow-sm">
+              {selectedSongs.length} bài
+            </span>
+          </div>
+
+          <div className="mt-3 flex min-h-[44px] flex-wrap gap-2">
+            {selectedSongs.length ? (
+              selectedSongs.map((song) => (
+                <button
+                  key={song.id}
+                  type="button"
+                  onClick={() => removeSong(song.id.toString())}
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+                >
+                  <span>{song.tieu_de}</span>
+                  <FiX className="h-3.5 w-3.5" />
+                </button>
+              ))
+            ) : (
+              <p className="text-sm text-slate-400">Chưa chọn bài hát nào cho album.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 max-h-56 space-y-2 overflow-y-auto pr-1">
+          {filteredSongs.length ? (
+            filteredSongs.slice(0, 20).map((song) => (
+              <button
+                key={song.id}
+                type="button"
+                onClick={() => addSong(song.id.toString())}
+                className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-left transition hover:border-cyan-300 hover:bg-cyan-50"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-700">{song.tieu_de}</p>
+                  <p className="truncate text-xs text-slate-400">{getSongArtistNames(song, 'Không rõ nghệ sĩ')}</p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-cyan-600 shadow-sm">
+                  Thêm
+                </span>
+              </button>
+            ))
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-slate-600">Không có bài hát phù hợp</p>
+              <p className="mt-1 text-xs text-slate-400">Hãy thêm bài hát trước hoặc đổi nghệ sĩ/từ khóa tìm kiếm.</p>
+            </div>
+          )}
         </div>
       </div>
     </label>
@@ -858,6 +968,13 @@ function EntityModal({
                       ))}
                     </SelectField>
                   </div>
+                  <SongTagPicker
+                    label="Bài hát trong album"
+                    songs={catalog.songs}
+                    values={formValues.song_ids}
+                    onChange={(selectedValues) => onValueChange('song_ids', selectedValues)}
+                    artistId={formValues.id_nghe_si}
+                  />
                   <div className="grid gap-5 md:grid-cols-2">
                     <InputField
                       label="Ngày phát hành"
@@ -1199,7 +1316,7 @@ export default function ManageMusic({
 
   function openModal(entity, mode, item = null) {
     setModalState({ open: true, entity, mode, item });
-    setFormValues(getInitialForm(entity, item));
+    setFormValues(getInitialForm(entity, item, catalog));
     setFormAlert('');
     replacePreview(getInitialPreview(entity, item));
   }
@@ -1556,12 +1673,13 @@ export default function ManageMusic({
                   </span>
                 </div>
               </div>
-              <div className="space-y-4 p-5">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">{album.tieu_de}</h3>
-                  <p className="mt-1 text-sm text-slate-500">{album.id_nghe_si_detail?.ten_nghe_si || 'Chưa gán nghệ sĩ'}</p>
-                  <p className="mt-1 text-xs text-slate-400">{album.ngay_phat_hanh || 'Chưa có ngày phát hành'}</p>
-                </div>
+                <div className="space-y-4 p-5">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">{album.tieu_de}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{album.id_nghe_si_detail?.ten_nghe_si || 'Chưa gán nghệ sĩ'}</p>
+                    <p className="mt-1 text-xs text-slate-400">{album.ngay_phat_hanh || 'Chưa có ngày phát hành'}</p>
+                    <p className="mt-2 text-xs font-semibold text-slate-500">{album.song_count ?? getSongsForAlbum(catalog, album.id).length} bài hát</p>
+                  </div>
                 <div className="flex items-center justify-end gap-2">
                   <button type="button" onClick={() => onEdit(album)} className="rounded-xl bg-cyan-50 p-2 text-cyan-600 transition hover:bg-cyan-100">
                     <FiEdit2 className="h-4 w-4" />

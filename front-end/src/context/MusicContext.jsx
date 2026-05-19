@@ -2,6 +2,7 @@
 import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { playlistService, songService, favoriteService } from '../api/services';
+import { enrichSongsWithDuration } from '../utils/duration';
 import { AuthContext } from './AuthContext';
 import { getSongArtistNames } from '../utils/songArtists';
 
@@ -15,7 +16,7 @@ const mapSong = (s) => ({
   artist: getSongArtistNames(s, "Unknown Artist"),
   image: s.duong_dan_hinh_anh,
   audioUrl: s.duong_dan_am_thanh,
-  duration: "04:00",
+  duration: s.thoi_luong || null,
   lyrics: s.loi_bai_hat,
   plays: s.luot_nghe
 });
@@ -27,6 +28,11 @@ const mapPlaylist = (p) => ({
   songs: (p.bai_hats_detail || []).map(mapSong),
   image: p.bai_hats_detail?.[0]?.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop",
   songCount: p.so_luong_bai_hat || 0
+});
+
+const enrichPlaylist = async (playlist) => ({
+  ...mapPlaylist(playlist),
+  songs: await enrichSongsWithDuration(playlist.bai_hats_detail || [], mapSong),
 });
 
 export const MusicProvider = ({ children }) => {
@@ -59,7 +65,8 @@ export const MusicProvider = ({ children }) => {
     const fetchSongs = async () => {
       try {
         const data = await songService.getAll();
-        setAllSongs(data.results ? data.results.map(mapSong) : data.map(mapSong));
+        const songList = data.results || data;
+        setAllSongs(await enrichSongsWithDuration(songList, mapSong));
       } catch (error) {
         console.error("Failed to fetch songs:", error);
       }
@@ -73,12 +80,19 @@ export const MusicProvider = ({ children }) => {
       if (user) {
         setLoadingUserMusic(true);
         try {
-          const [playlistsData, favoritesData] = await Promise.all([
-            playlistService.getAll(),
-            favoriteService.getAll()
-          ]);
-          setMyPlaylists(Array.isArray(playlistsData) ? playlistsData.map(mapPlaylist) : []);
-          setFavorites(Array.isArray(favoritesData) ? favoritesData.map(f => f.song_detail ? mapSong(f.song_detail) : null).filter(Boolean) : []);
+            const [playlistsData, favoritesData] = await Promise.all([
+              playlistService.getMine(),
+              favoriteService.getAll()
+            ]);
+          const normalizedPlaylists = Array.isArray(playlistsData) ? playlistsData : playlistsData?.results || [];
+          const normalizedFavorites = Array.isArray(favoritesData) ? favoritesData : favoritesData?.results || [];
+          setMyPlaylists(await Promise.all(normalizedPlaylists.map(enrichPlaylist)));
+          setFavorites(
+            await enrichSongsWithDuration(
+              normalizedFavorites.map((favorite) => favorite.song_detail).filter(Boolean),
+              mapSong,
+            ),
+          );
         } catch (error) {
           console.error("Failed to fetch user data:", error);
         } finally {
@@ -96,7 +110,8 @@ export const MusicProvider = ({ children }) => {
   const createNewPlaylist = async (name) => {
     try {
       const data = await playlistService.create({ tieu_de: name });
-      setMyPlaylists([mapPlaylist(data), ...myPlaylists]);
+      const enrichedPlaylist = await enrichPlaylist(data);
+      setMyPlaylists((prev) => [enrichedPlaylist, ...prev]);
       toast.success(`Đã tạo playlist "${name}"`);
     } catch {
       toast.error("Không thể tạo playlist");
@@ -107,9 +122,8 @@ export const MusicProvider = ({ children }) => {
     try {
       await playlistService.addSong(playlistId, song.id);
       const updatedPlaylistData = await playlistService.getById(playlistId);
-      setMyPlaylists(myPlaylists.map(pl => 
-        pl.id === playlistId ? mapPlaylist(updatedPlaylistData) : pl
-      ));
+      const enrichedPlaylist = await enrichPlaylist(updatedPlaylistData);
+      setMyPlaylists((prev) => prev.map((pl) => (pl.id === playlistId ? enrichedPlaylist : pl)));
       toast.success(`Đã thêm "${song.title}" vào playlist`);
     } catch {
       toast.error("Không thể thêm bài hát vào playlist");
@@ -135,7 +149,7 @@ export const MusicProvider = ({ children }) => {
   const deleteMyPlaylist = async (playlistId) => {
     try {
       await playlistService.delete(playlistId);
-      setMyPlaylists(myPlaylists.filter(pl => pl.id !== playlistId));
+      setMyPlaylists((prev) => prev.filter((pl) => pl.id !== playlistId));
       toast.success('Đã xóa playlist');
     } catch {
       toast.error("Không thể xóa playlist");
@@ -145,9 +159,8 @@ export const MusicProvider = ({ children }) => {
   const updateMyPlaylist = async (playlistId, updates) => {
     try {
       const data = await playlistService.update(playlistId, { tieu_de: updates.title });
-      setMyPlaylists(myPlaylists.map(pl => 
-        pl.id === playlistId ? mapPlaylist(data) : pl
-      ));
+      const enrichedPlaylist = await enrichPlaylist(data);
+      setMyPlaylists((prev) => prev.map((pl) => (pl.id === playlistId ? enrichedPlaylist : pl)));
       toast.success("Đã cập nhật playlist");
     } catch {
       toast.error("Không thể cập nhật playlist");
