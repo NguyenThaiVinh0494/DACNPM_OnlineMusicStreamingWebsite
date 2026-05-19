@@ -14,7 +14,7 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
     { title: "Gen Gì Gen Z", artist: "HIEUTHUHAI, Ogenus...", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=200&h=200&fit=crop" },
     { title: "Ballad Việt", artist: "Lyly, Đỗ Hoàng Long...", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=200&h=200&fit=crop" }
   ];
-  
+
   const danhSach = items && items.length > 0 ? items : danhSachFallback;
 
   const handleItemClick = (e, item) => {
@@ -44,18 +44,18 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
       {/* Lưới thẻ (5 thẻ trên 1 hàng) */}
       <div className="grid grid-cols-5 gap-5">
         {danhSach.map((item, index) => (
-          <Link 
-            to={item.audioUrl ? `/song/${item.id}` : `/playlist/${index + 1}`} 
-            key={index} 
+          <Link
+            to={item.audioUrl ? `/song/${item.id}` : `/playlist/${index + 1}`}
+            key={index}
             className="group cursor-pointer"
             onClick={(e) => handleItemClick(e, item)}
           >
             {/* Khung ảnh */}
             <div className="w-full aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-              <img 
-                src={item.image || item.anh} 
-                alt={item.title || item.ten} 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+              <img
+                src={item.image || item.anh}
+                alt={item.title || item.ten}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             </div>
             {/* Thông tin */}
@@ -66,4 +66,4 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
       </div>
     </div>
   );
-}
+}

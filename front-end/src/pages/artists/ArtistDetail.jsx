@@ -6,273 +6,9 @@ import {
 import { useMusic } from "../../context/MusicContext";
 import SongActionMenu from "../../components/common/SongActionMenu";
 import LazyImage from "../../components/common/LazyImage";
+import { artistService, songService, albumService } from "../../api/services";
 
-// ── Mock artist data keyed by id ───────────────────────────────────────────
-const ARTISTS_DATA = {
-  1: {
-    id: 1,
-    name: "Ngô Mạnh Thắng",
-    followers: 97,
-    banner:
-      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&h=400&fit=crop",
-    image: null,
-    songs: [
-      {
-        id: 101,
-        title: "Yêu Em Thì Gật Đầu (Lofi Ver)",
-        artist: "Ngô Mạnh Thắng",
-        uploader: "Meme Media",
-        duration: "03:45",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop",
-      },
-      {
-        id: 102,
-        title: "Yêu Em Thì Gật Đầu (Piano Lofi)",
-        artist: "Ngô Mạnh Thắng",
-        uploader: "Meme Media",
-        duration: "04:02",
-        image:
-          "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=80&h=80&fit=crop",
-      },
-      {
-        id: 103,
-        title: "Yêu Em Thì Gật Đầu (Tú Remix)",
-        artist: "Ngô Mạnh Thắng",
-        uploader: "Meme Media",
-        duration: "03:58",
-        image:
-          "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=80&h=80&fit=crop",
-      },
-      {
-        id: 104,
-        title: "Yêu Em Thì Gật Đầu (ZoneH Remix)",
-        artist: "Ngô Mạnh Thắng",
-        uploader: "Meme Media",
-        duration: "04:15",
-        image:
-          "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=80&h=80&fit=crop",
-      },
-    ],
-    albums: [
-      {
-        id: 1,
-        title: "Yêu Em Thì Gật Đầu (Lofi Mem...)",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop",
-      },
-      {
-        id: 4,
-        title: "Yêu Em Thì Gật Đầu (Tú Remix)",
-        image:
-          "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop",
-      },
-      {
-        id: 5,
-        title: "Yêu Em Thì Gật Đầu (ZoneH R...)",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop",
-      },
-    ],
-  },
-  4: {
-    id: 4,
-    name: 'EM XINH "SAY HI"',
-    followers: 19372,
-    banner:
-      "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=1200&h=400&fit=crop",
-    image:
-      "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=300&h=300&fit=crop",
-    songs: [
-      {
-        id: 401,
-        title: "Say Hi",
-        artist: 'EM XINH "SAY HI"',
-        uploader: "Say Hi Music",
-        duration: "03:22",
-        image:
-          "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=80&h=80&fit=crop",
-      },
-      {
-        id: 402,
-        title: "Yêu Thì Yêu Thôi",
-        artist: 'EM XINH "SAY HI"',
-        uploader: "Say Hi Music",
-        duration: "04:05",
-        image:
-          "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=80&h=80&fit=crop",
-      },
-    ],
-    albums: [
-      {
-        id: 10,
-        title: "Say Hi - EP",
-        image:
-          "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=300&h=300&fit=crop",
-      },
-    ],
-  },
-  5: {
-    id: 5,
-    name: "Đặng Thập Yêu Quân",
-    followers: 6357,
-    banner:
-      "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=1200&h=400&fit=crop",
-    image:
-      "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=300&h=300&fit=crop",
-    songs: [
-      {
-        id: 501,
-        title: "Bài Hát Đầu Tiên",
-        artist: "Đặng Thập Yêu Quân",
-        uploader: "VietStar",
-        duration: "04:30",
-        image:
-          "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=80&h=80&fit=crop",
-      },
-    ],
-    albums: [],
-  },
-  6: {
-    id: 6,
-    name: "Sơn Tùng M-TP",
-    followers: 245000,
-    banner:
-      "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=1200&h=400&fit=crop",
-    image:
-      "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=300&h=300&fit=crop",
-    songs: [
-      {
-        id: 601,
-        title: "Nơi Này Có Anh",
-        artist: "Sơn Tùng M-TP",
-        uploader: "SkyMusic",
-        duration: "04:20",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop",
-      },
-      {
-        id: 602,
-        title: "Lạc Trôi",
-        artist: "Sơn Tùng M-TP",
-        uploader: "SkyMusic",
-        duration: "03:52",
-        image:
-          "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=80&h=80&fit=crop",
-      },
-      {
-        id: 603,
-        title: "Chúng Ta Của Hiện Tại",
-        artist: "Sơn Tùng M-TP",
-        uploader: "SkyMusic",
-        duration: "05:01",
-        image:
-          "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=80&h=80&fit=crop",
-      },
-      {
-        id: 604,
-        title: "Muộn Rồi Mà Sao Còn",
-        artist: "Sơn Tùng M-TP",
-        uploader: "SkyMusic",
-        duration: "04:45",
-        image:
-          "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=80&h=80&fit=crop",
-      },
-    ],
-    albums: [
-      {
-        id: 20,
-        title: "Sky Tour",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop",
-      },
-      {
-        id: 21,
-        title: "M-TP Hits",
-        image:
-          "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=300&h=300&fit=crop",
-      },
-    ],
-  },
-  7: {
-    id: 7,
-    name: "Bích Phương",
-    followers: 180000,
-    banner:
-      "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=1200&h=400&fit=crop",
-    image:
-      "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop",
-    songs: [
-      {
-        id: 701,
-        title: "Nâng Chén Tiêu Sầu",
-        artist: "Bích Phương",
-        uploader: "YIN YANG MEDIA",
-        duration: "03:22",
-        image:
-          "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=80&h=80&fit=crop",
-      },
-      {
-        id: 702,
-        title: "Đi Đu Đưa Đi",
-        artist: "Bích Phương",
-        uploader: "YIN YANG MEDIA",
-        duration: "03:55",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop",
-      },
-    ],
-    albums: [
-      {
-        id: 30,
-        title: "Bích Phương Collection",
-        image:
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop",
-      },
-    ],
-  },
-  8: {
-    id: 8,
-    name: "Jack - J97",
-    followers: 310000,
-    banner:
-      "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=1200&h=400&fit=crop",
-    image:
-      "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=300&h=300&fit=crop",
-    songs: [
-      {
-        id: 801,
-        title: "Thiên Lý Ơi",
-        artist: "Jack - J97",
-        uploader: "J97 Music",
-        duration: "04:10",
-        image:
-          "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=80&h=80&fit=crop",
-      },
-      {
-        id: 802,
-        title: "Hoa Hải Đường",
-        artist: "Jack - J97",
-        uploader: "J97 Music",
-        duration: "03:48",
-        image:
-          "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=80&h=80&fit=crop",
-      },
-    ],
-    albums: [],
-  },
-};
 
-const FALLBACK_ARTIST = {
-  id: 99,
-  name: "Nghệ sĩ không tồn tại",
-  followers: 0,
-  banner:
-    "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&h=400&fit=crop",
-  image: null,
-  songs: [],
-  albums: [],
-};
 
 // ── Song Row ───────────────────────────────────────────────────────────────
 function SongRow({ song, index, songList }) {
@@ -400,18 +136,83 @@ function AlbumMiniCard({ album }) {
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function ArtistDetail() {
   const { id } = useParams();
-  const artist = ARTISTS_DATA[parseInt(id)] || FALLBACK_ARTIST;
+  const [artist, setArtist] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { playAll } = useMusic();
 
   const [followed, setFollowed] = useState(false);
 
-  const handlePlayAll = () => playAll(artist.songs);
+  useEffect(() => {
+    const fetchArtistDetail = async () => {
+      setLoading(true);
+      try {
+        const artistData = await artistService.getById(id);
+        const [songsData, albumsData] = await Promise.all([
+          songService.getAll({ id_nghe_si: id }),
+          albumService.getAll({ id_nghe_si: id })
+        ]);
+        
+        const songsRes = songsData.results || songsData;
+        const mappedSongs = songsRes.map((s) => ({
+          id: s.id,
+          title: s.tieu_de,
+          artist: artistData.ten_nghe_si,
+          duration: s.thoi_luong || "04:00",
+          image: s.duong_dan_hinh_anh || artistData.anh_nghe_si || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop",
+          audioUrl: s.duong_dan_am_thanh,
+          lyrics: s.loi_bai_hat,
+          uploader: "Admin"
+        }));
+
+        const albumsRes = albumsData.results || albumsData;
+        const mappedAlbums = albumsRes.map(a => ({
+          id: a.id,
+          title: a.tieu_de,
+          image: a.anh_bia || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop"
+        }));
+
+        setArtist({
+          id: artistData.id,
+          name: artistData.ten_nghe_si,
+          followers: 12500,
+          banner: artistData.anh_nghe_si || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&h=400&fit=crop",
+          image: artistData.anh_nghe_si || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop",
+          songs: mappedSongs,
+          albums: mappedAlbums
+        });
+      } catch (error) {
+        console.error("Lỗi lấy thông tin ca sĩ thật:", error);
+        setArtist(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchArtistDetail();
+  }, [id]);
+
+  const handlePlayAll = () => artist && playAll(artist.songs);
 
   const formatFollowers = (n) => {
     if (n >= 1000)
       return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 3).replace(/\.?0+$/, "")} nghìn`;
     return n.toString();
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-48 bg-transparent">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-nct-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!artist) {
+    return (
+      <div className="flex flex-col items-center justify-center py-48 text-nct-text-dim">
+        <p className="text-lg font-medium">Không tìm thấy ca sĩ</p>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-24 -mx-8 -mt-6">
