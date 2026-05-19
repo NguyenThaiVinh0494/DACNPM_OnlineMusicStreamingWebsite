@@ -17,6 +17,7 @@ class NgheSi(models.Model):
 class TheLoai(models.Model):
     ten_the_loai = models.CharField(max_length=100)
     mo_ta_the_loai = models.TextField(blank=True, null=True)
+    anh_the_loai = models.URLField(max_length=500, blank=True, null=True)
     class Meta:
         db_table = 'tbl_the_loai'
 # 3. Bảng tbl_album
@@ -38,7 +39,7 @@ class BaiHat(models.Model):
     quoc_gia = models.CharField(max_length=50, blank=True, null=True)
     nam_phat_hanh = models.IntegerField(blank=True, null=True)
     trang_thai = models.CharField(max_length=10, choices=[('PENDING', 'Pending'), ('PUBLIC', 'Public')], default='PENDING')
-    id_nghe_si = models.ForeignKey(NgheSi, on_delete=models.CASCADE, related_name='bai_hats')
+    cac_nghe_si = models.ManyToManyField(NgheSi, related_name='bai_hats', db_table='tbl_bai_hat_nghe_si')
     id_album = models.ForeignKey(Album, on_delete=models.SET_NULL, null=True, blank=True, related_name='bai_hats')
     id_the_loai = models.ForeignKey(TheLoai, on_delete=models.SET_NULL, null=True, blank=True, related_name='bai_hats')
     id_nguoi_dang = models.ForeignKey(NguoiDung, on_delete=models.CASCADE, related_name='bai_hats_da_dang')

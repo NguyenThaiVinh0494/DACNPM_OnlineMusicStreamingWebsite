@@ -4,10 +4,11 @@ import LazyImage from "../../components/common/LazyImage";
 import { FiHeart, FiShare2, FiMoreHorizontal, FiPlay, FiDownload, FiChevronDown, FiChevronUp, FiPlus, FiFlag, FiFacebook, FiLink, FiMusic } from 'react-icons/fi';
 import { useMusic } from '../../context/MusicContext';
 import { songService } from '../../api/services';
+import { getSongArtistNames, getSongPrimaryArtist } from '../../utils/songArtists';
 
 export default function SongDetail() {
   const { id } = useParams();
-  const { playSong, currentSong, isPlaying } = useMusic();
+  const { playSong } = useMusic();
   const [showFullLyrics, setShowFullLyrics] = useState(false);
   const [activePopup, setActivePopup] = useState(null);
   const [isHeaderPopupOpen, setIsHeaderPopupOpen] = useState(false);
@@ -22,11 +23,12 @@ export default function SongDetail() {
       setLoading(true);
       try {
         const raw = await songService.getById(id);
+        const primaryArtist = getSongPrimaryArtist(raw);
         setData({
           id: raw.id,
           title: raw.tieu_de,
-          artist: raw.id_nghe_si?.ten_nghe_si || 'Không rõ',
-          artistAvatar: raw.id_nghe_si?.anh_nghe_si || null,
+          artist: getSongArtistNames(raw, 'Không rõ'),
+          artistAvatar: primaryArtist?.anh_nghe_si || null,
           artistFollowers: 0,
           cover: raw.duong_dan_hinh_anh || 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=400&h=400&fit=crop',
           audioUrl: raw.duong_dan_am_thanh,

@@ -14,7 +14,10 @@ import AdminRoute from "./components/auth/AdminRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageUsers from "./pages/admin/ManageUsers";
-import ManageMusic from "./pages/admin/ManageMusic";
+import ManageSongs from "./pages/admin/ManageSongs";
+import ManageAlbums from "./pages/admin/ManageAlbums";
+import ManageArtists from "./pages/admin/ManageArtists";
+import ManageTopics from "./pages/admin/ManageTopics";
 import PendingUploads from "./pages/admin/PendingUploads";
 import AdminStats from "./pages/admin/AdminStats";
 
@@ -78,7 +81,10 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<ManageUsers />} />
-          <Route path="music" element={<ManageMusic />} />
+          <Route path="songs" element={<ManageSongs />} />
+          <Route path="albums" element={<ManageAlbums />} />
+          <Route path="artists" element={<ManageArtists />} />
+          <Route path="topics" element={<ManageTopics />} />
           <Route path="pending" element={<PendingUploads />} />
           <Route path="stats" element={<AdminStats />} />
         </Route>

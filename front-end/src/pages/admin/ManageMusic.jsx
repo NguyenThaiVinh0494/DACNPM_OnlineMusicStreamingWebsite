@@ -1,111 +1,1680 @@
-import { useState, useEffect } from 'react';
-import axios from '../../api/axios';
-import { FiSearch, FiEdit2, FiTrash2, FiMusic } from 'react-icons/fi';
+import { startTransition, useDeferredValue, useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+import {
+  FiAlertCircle,
+  FiCheckCircle,
+  FiDisc,
+  FiEdit2,
+  FiFilter,
+  FiFolderPlus,
+  FiImage,
+  FiMic,
+  FiMusic,
+  FiPlus,
+  FiSearch,
+  FiTag,
+  FiTrash2,
+  FiUploadCloud,
+  FiUser,
+  FiUsers,
+  FiX,
+} from 'react-icons/fi';
 
-export default function ManageMusic() {
-  const [songs, setSongs] = useState([]);
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+import { albumService, artistService, genreService, songService } from '../../api/services';
+import { getSongArtistNames, getSongArtists } from '../../utils/songArtists';
 
-  useEffect(() => {
-    axios.get('/songs/')
-      .then(res => setSongs(Array.isArray(res.data) ? res.data : res.data.results ?? []))
-      .catch(() => setSongs([]))
-      .finally(() => setLoading(false));
-  }, []);
+const TAB_CONFIG = [
+  { key: 'songs', label: 'Bài hát', icon: FiMusic, accent: 'from-cyan-500 to-blue-500' },
+  { key: 'albums', label: 'Album', icon: FiDisc, accent: 'from-emerald-500 to-teal-500' },
+  { key: 'artists', label: 'Nghệ sĩ', icon: FiUsers, accent: 'from-amber-500 to-orange-500' },
+  { key: 'genres', label: 'Chủ đề', icon: FiTag, accent: 'from-fuchsia-500 to-pink-500' },
+];
 
-  const filtered = songs.filter(s =>
-    s.tieu_de?.toLowerCase().includes(search.toLowerCase())
-  );
+const STATUS_OPTIONS = [
+  { value: 'PUBLIC', label: 'Công khai' },
+  { value: 'PENDING', label: 'Chờ duyệt' },
+];
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Xóa bài hát này?')) return;
-    try {
-      await axios.delete(`/songs/${id}/`);
-      setSongs(prev => prev.filter(s => s.id !== id));
-    } catch {
-      // Handle error
+const TAB_DEFAULT_SORT = {
+  songs: 'newest',
+  albums: 'release_desc',
+  artists: 'name_asc',
+  genres: 'name_asc',
+};
+
+const SORT_OPTIONS = {
+  songs: [
+    { value: 'newest', label: 'Mới nhất' },
+    { value: 'title_asc', label: 'Tên A-Z' },
+    { value: 'title_desc', label: 'Tên Z-A' },
+    { value: 'listens_desc', label: 'Lượt nghe cao nhất' },
+    { value: 'year_desc', label: 'Năm phát hành mới nhất' },
+  ],
+  albums: [
+    { value: 'release_desc', label: 'Ngày phát hành mới nhất' },
+    { value: 'title_asc', label: 'Tên A-Z' },
+    { value: 'title_desc', label: 'Tên Z-A' },
+  ],
+  artists: [
+    { value: 'name_asc', label: 'Tên A-Z' },
+    { value: 'name_desc', label: 'Tên Z-A' },
+    { value: 'song_count_desc', label: 'Nhiều bài hát nhất' },
+  ],
+  genres: [
+    { value: 'name_asc', label: 'Tên A-Z' },
+    { value: 'name_desc', label: 'Tên Z-A' },
+    { value: 'song_count_desc', label: 'Nhiều bài hát nhất' },
+  ],
+};
+
+const IMAGE_FIELDS = new Set(['image_file', 'cover_file', 'artist_image_file', 'topic_image_file']);
+const AUDIO_FIELDS = new Set(['audio_file']);
+const IMAGE_LIMIT_BYTES = 8 * 1024 * 1024;
+const AUDIO_LIMIT_BYTES = 25 * 1024 * 1024;
+
+function formatBytes(bytes) {
+  if (!bytes) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDuration(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return 'Không rõ thời lượng';
+  const totalSeconds = Math.round(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const remainingSeconds = totalSeconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function getTextValue(value) {
+  return (value || '').toString().trim().toLowerCase();
+}
+
+function getSongCountForArtist(catalog, artistId) {
+  return catalog.songs.filter((song) => getSongArtists(song).some((artist) => artist.id === artistId)).length;
+}
+
+function getAlbumCountForArtist(catalog, artistId) {
+  return catalog.albums.filter((album) => album.id_nghe_si === artistId).length;
+}
+
+function getSongCountForGenre(catalog, genreId) {
+  return catalog.songs.filter((song) => song.id_the_loai?.id === genreId).length;
+}
+
+function getEntityTitle(item) {
+  return item?.tieu_de || item?.ten_nghe_si || item?.ten_the_loai || 'bản ghi';
+}
+
+function validateSelectedFile(field, file) {
+  if (!file) return null;
+
+  if (IMAGE_FIELDS.has(field)) {
+    if (!file.type?.startsWith('image/')) {
+      return 'File ảnh không hợp lệ. Hãy chọn JPG, PNG, WEBP hoặc định dạng ảnh tương đương.';
     }
+    if (file.size > IMAGE_LIMIT_BYTES) {
+      return 'Ảnh vượt quá 8MB. Hãy nén ảnh trước khi tải lên.';
+    }
+  }
+
+  if (AUDIO_FIELDS.has(field)) {
+    const isAudioType = file.type?.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(file.name);
+    if (!isAudioType) {
+      return 'File audio không hợp lệ. Hãy chọn MP3, WAV, OGG, M4A, AAC hoặc FLAC.';
+    }
+    if (file.size > AUDIO_LIMIT_BYTES) {
+      return 'Audio vượt quá 25MB. Hãy giảm dung lượng trước khi tải lên.';
+    }
+  }
+
+  return null;
+}
+
+function readImageMetadata(objectUrl, fileSize) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(`${image.naturalWidth}x${image.naturalHeight} • ${formatBytes(fileSize)}`);
+    image.onerror = () => resolve(formatBytes(fileSize));
+    image.src = objectUrl;
+  });
+}
+
+function readAudioMetadata(objectUrl, fileSize) {
+  return new Promise((resolve) => {
+    const audio = document.createElement('audio');
+    const cleanup = () => {
+      audio.removeAttribute('src');
+      audio.load();
+    };
+
+    audio.preload = 'metadata';
+    audio.onloadedmetadata = () => {
+      resolve(`${formatDuration(audio.duration)} • ${formatBytes(fileSize)}`);
+      cleanup();
+    };
+    audio.onerror = () => {
+      resolve(formatBytes(fileSize));
+      cleanup();
+    };
+    audio.src = objectUrl;
+  });
+}
+
+function validateForm(entity, values, previews) {
+  const currentYear = new Date().getFullYear() + 1;
+
+  if (entity === 'songs') {
+    if (!values.tieu_de.trim()) return 'Tên bài hát là bắt buộc.';
+    if (!values.id_nghe_si_ids.length) return 'Bạn cần chọn ít nhất một nghệ sĩ cho bài hát.';
+    if (!previews.imageUrl) return 'Bài hát cần có ảnh đại diện.';
+    if (!previews.audioUrl) return 'Bài hát cần có file audio.';
+    if (values.nam_phat_hanh) {
+      const year = Number(values.nam_phat_hanh);
+      if (!Number.isInteger(year) || year < 1900 || year > currentYear) {
+        return `Năm phát hành phải nằm trong khoảng 1900 - ${currentYear}.`;
+      }
+    }
+  }
+
+  if (entity === 'albums') {
+    if (!values.tieu_de.trim()) return 'Tên album là bắt buộc.';
+    if (!values.id_nghe_si) return 'Bạn cần chọn nghệ sĩ cho album.';
+    if (!previews.imageUrl) return 'Album cần có ảnh bìa.';
+  }
+
+  if (entity === 'artists') {
+    if (!values.ten_nghe_si.trim()) return 'Tên nghệ sĩ là bắt buộc.';
+    if (!previews.imageUrl) return 'Nghệ sĩ cần có ảnh đại diện.';
+  }
+
+  if (entity === 'genres') {
+    if (!values.ten_the_loai.trim()) return 'Tên chủ đề là bắt buộc.';
+    if (!previews.imageUrl) return 'Chủ đề cần có ảnh đại diện.';
+  }
+
+  return null;
+}
+
+function sortItems(items, activeTab, sortOption, catalog) {
+  const sorted = [...items];
+
+  sorted.sort((a, b) => {
+    if (activeTab === 'songs') {
+      if (sortOption === 'title_asc') return getTextValue(a.tieu_de).localeCompare(getTextValue(b.tieu_de), 'vi');
+      if (sortOption === 'title_desc') return getTextValue(b.tieu_de).localeCompare(getTextValue(a.tieu_de), 'vi');
+      if (sortOption === 'listens_desc') return (b.luot_nghe ?? 0) - (a.luot_nghe ?? 0);
+      if (sortOption === 'year_desc') return (b.nam_phat_hanh ?? 0) - (a.nam_phat_hanh ?? 0);
+      return (b.id ?? 0) - (a.id ?? 0);
+    }
+
+    if (activeTab === 'albums') {
+      if (sortOption === 'title_asc') return getTextValue(a.tieu_de).localeCompare(getTextValue(b.tieu_de), 'vi');
+      if (sortOption === 'title_desc') return getTextValue(b.tieu_de).localeCompare(getTextValue(a.tieu_de), 'vi');
+      return (b.ngay_phat_hanh || '').localeCompare(a.ngay_phat_hanh || '') || (b.id ?? 0) - (a.id ?? 0);
+    }
+
+    if (activeTab === 'artists') {
+      if (sortOption === 'song_count_desc') {
+        return getSongCountForArtist(catalog, b.id) - getSongCountForArtist(catalog, a.id);
+      }
+      if (sortOption === 'name_desc') return getTextValue(b.ten_nghe_si).localeCompare(getTextValue(a.ten_nghe_si), 'vi');
+      return getTextValue(a.ten_nghe_si).localeCompare(getTextValue(b.ten_nghe_si), 'vi');
+    }
+
+    if (sortOption === 'song_count_desc') {
+      return getSongCountForGenre(catalog, b.id) - getSongCountForGenre(catalog, a.id);
+    }
+    if (sortOption === 'name_desc') return getTextValue(b.ten_the_loai).localeCompare(getTextValue(a.ten_the_loai), 'vi');
+    return getTextValue(a.ten_the_loai).localeCompare(getTextValue(b.ten_the_loai), 'vi');
+  });
+
+  return sorted;
+}
+
+function normalizeList(response) {
+  return Array.isArray(response) ? response : response?.results ?? [];
+}
+
+function getFileNameFromUrl(url) {
+  if (!url) return '';
+
+  try {
+    const path = url.split('?')[0].split('/');
+    return decodeURIComponent(path[path.length - 1] || '');
+  } catch {
+    return url;
+  }
+}
+
+function extractErrorMessage(error) {
+  const payload = error?.response?.data;
+  if (!payload) return 'Có lỗi xảy ra. Vui lòng thử lại.';
+  if (typeof payload === 'string') return payload;
+  if (payload.detail) return payload.detail;
+  if (payload.error) return payload.error;
+
+  const firstEntry = Object.values(payload)[0];
+  if (Array.isArray(firstEntry)) return firstEntry[0];
+  if (typeof firstEntry === 'string') return firstEntry;
+  return 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại biểu mẫu.';
+}
+
+function getEmptyForm(entity) {
+  if (entity === 'songs') {
+    return {
+      tieu_de: '',
+      quoc_gia: '',
+      nam_phat_hanh: '',
+      loi_bai_hat: '',
+      trang_thai: 'PUBLIC',
+      id_nghe_si_ids: [],
+      id_album_id: '',
+      id_the_loai_id: '',
+      image_file: null,
+      audio_file: null,
+    };
+  }
+
+  if (entity === 'albums') {
+    return {
+      tieu_de: '',
+      id_nghe_si: '',
+      ngay_phat_hanh: '',
+      trang_thai: 'PUBLIC',
+      cover_file: null,
+    };
+  }
+
+  if (entity === 'artists') {
+    return {
+      ten_nghe_si: '',
+      tieu_su: '',
+      artist_image_file: null,
+    };
+  }
+
+  return {
+    ten_the_loai: '',
+    mo_ta_the_loai: '',
+    topic_image_file: null,
+  };
+}
+
+function getInitialForm(entity, item) {
+  const empty = getEmptyForm(entity);
+  if (!item) return empty;
+
+  if (entity === 'songs') {
+    return {
+      ...empty,
+      tieu_de: item.tieu_de || '',
+      quoc_gia: item.quoc_gia || '',
+      nam_phat_hanh: item.nam_phat_hanh?.toString() || '',
+      loi_bai_hat: item.loi_bai_hat || '',
+      trang_thai: item.trang_thai || 'PUBLIC',
+      id_nghe_si_ids: getSongArtists(item).map((artist) => artist.id.toString()),
+      id_album_id: item.id_album?.id?.toString() || '',
+      id_the_loai_id: item.id_the_loai?.id?.toString() || '',
+    };
+  }
+
+  if (entity === 'albums') {
+    return {
+      ...empty,
+      tieu_de: item.tieu_de || '',
+      id_nghe_si: item.id_nghe_si?.toString() || '',
+      ngay_phat_hanh: item.ngay_phat_hanh || '',
+      trang_thai: item.trang_thai || 'PUBLIC',
+    };
+  }
+
+  if (entity === 'artists') {
+    return {
+      ...empty,
+      ten_nghe_si: item.ten_nghe_si || '',
+      tieu_su: item.tieu_su || '',
+    };
+  }
+
+  return {
+    ...empty,
+    ten_the_loai: item.ten_the_loai || '',
+    mo_ta_the_loai: item.mo_ta_the_loai || '',
+  };
+}
+
+function getInitialPreview(entity, item) {
+  if (!item) {
+    return {
+      imageUrl: '',
+      imageLabel: '',
+      imageMeta: '',
+      audioUrl: '',
+      audioLabel: '',
+      audioMeta: '',
+    };
+  }
+
+  if (entity === 'songs') {
+    return {
+      imageUrl: item.duong_dan_hinh_anh || '',
+      imageLabel: getFileNameFromUrl(item.duong_dan_hinh_anh),
+      imageMeta: item.duong_dan_hinh_anh ? 'Ảnh hiện tại trên Cloudinary' : '',
+      audioUrl: item.duong_dan_am_thanh || '',
+      audioLabel: getFileNameFromUrl(item.duong_dan_am_thanh),
+      audioMeta: item.duong_dan_am_thanh ? 'Audio hiện tại trên Cloudinary' : '',
+    };
+  }
+
+  if (entity === 'albums') {
+    return {
+      imageUrl: item.anh_bia || '',
+      imageLabel: getFileNameFromUrl(item.anh_bia),
+      imageMeta: item.anh_bia ? 'Ảnh hiện tại trên Cloudinary' : '',
+      audioUrl: '',
+      audioLabel: '',
+      audioMeta: '',
+    };
+  }
+
+  if (entity === 'artists') {
+    return {
+      imageUrl: item.anh_nghe_si || '',
+      imageLabel: getFileNameFromUrl(item.anh_nghe_si),
+      imageMeta: item.anh_nghe_si ? 'Ảnh hiện tại trên Cloudinary' : '',
+      audioUrl: '',
+      audioLabel: '',
+      audioMeta: '',
+    };
+  }
+
+  return {
+    imageUrl: item.anh_the_loai || '',
+    imageLabel: getFileNameFromUrl(item.anh_the_loai),
+    imageMeta: item.anh_the_loai ? 'Ảnh hiện tại trên Cloudinary' : '',
+    audioUrl: '',
+    audioLabel: '',
+    audioMeta: '',
+  };
+}
+
+function buildFormData(entity, values) {
+  const formData = new FormData();
+
+  if (entity === 'songs') {
+    formData.append('tieu_de', values.tieu_de);
+    formData.append('trang_thai', values.trang_thai);
+    formData.append('id_album_id', values.id_album_id || '');
+    formData.append('id_the_loai_id', values.id_the_loai_id || '');
+    values.id_nghe_si_ids.forEach((artistId) => formData.append('id_nghe_si_ids', artistId));
+
+    if (values.quoc_gia) formData.append('quoc_gia', values.quoc_gia);
+    if (values.nam_phat_hanh !== '') formData.append('nam_phat_hanh', values.nam_phat_hanh);
+    if (values.loi_bai_hat) formData.append('loi_bai_hat', values.loi_bai_hat);
+    if (values.image_file) formData.append('image_file', values.image_file);
+    if (values.audio_file) formData.append('audio_file', values.audio_file);
+    return formData;
+  }
+
+  if (entity === 'albums') {
+    formData.append('tieu_de', values.tieu_de);
+    formData.append('id_nghe_si', values.id_nghe_si);
+    formData.append('trang_thai', values.trang_thai);
+    if (values.ngay_phat_hanh) formData.append('ngay_phat_hanh', values.ngay_phat_hanh);
+    if (values.cover_file) formData.append('cover_file', values.cover_file);
+    return formData;
+  }
+
+  if (entity === 'artists') {
+    formData.append('ten_nghe_si', values.ten_nghe_si);
+    if (values.tieu_su) formData.append('tieu_su', values.tieu_su);
+    if (values.artist_image_file) formData.append('artist_image_file', values.artist_image_file);
+    return formData;
+  }
+
+  formData.append('ten_the_loai', values.ten_the_loai);
+  if (values.mo_ta_the_loai) formData.append('mo_ta_the_loai', values.mo_ta_the_loai);
+  if (values.topic_image_file) formData.append('topic_image_file', values.topic_image_file);
+  return formData;
+}
+
+function buildTabStats(catalog) {
+  return {
+    songs: catalog.songs.length,
+    albums: catalog.albums.length,
+    artists: catalog.artists.length,
+    genres: catalog.genres.length,
+  };
+}
+
+function statusBadge(status) {
+  return status === 'PUBLIC'
+    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
+    : 'bg-amber-50 text-amber-700 ring-1 ring-amber-100';
+}
+
+function SummaryCard({ icon: Icon, label, value, accent, helper }) {
+  return (
+    <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
+      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-slate-500">{label}</p>
+          <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">{value}</p>
+          <p className="mt-1 text-xs text-slate-400">{helper}</p>
+        </div>
+        <div className={`rounded-2xl bg-gradient-to-br ${accent} p-3 text-white shadow-lg`}>
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InputField({ label, required, ...props }) {
+  return (
+    <label className="block space-y-2">
+      <span className="text-sm font-semibold text-slate-700">
+        {label}
+        {required ? <span className="ml-1 text-rose-500">*</span> : null}
+      </span>
+      <input
+        {...props}
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
+      />
+    </label>
+  );
+}
+
+function SelectField({ label, children, required, ...props }) {
+  return (
+    <label className="block space-y-2">
+      <span className="text-sm font-semibold text-slate-700">
+        {label}
+        {required ? <span className="ml-1 text-rose-500">*</span> : null}
+      </span>
+      <select
+        {...props}
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
+      >
+        {children}
+      </select>
+    </label>
+  );
+}
+
+function ArtistTagPicker({ label, required, artists, values, onChange }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm.trim().toLowerCase());
+  const selectedArtistIds = new Set(values);
+  const selectedArtists = artists.filter((artist) => selectedArtistIds.has(artist.id.toString()));
+  const suggestedArtists = artists.filter((artist) => {
+    const artistId = artist.id.toString();
+    if (selectedArtistIds.has(artistId)) return false;
+    if (!deferredSearchTerm) return true;
+    return artist.ten_nghe_si.toLowerCase().includes(deferredSearchTerm);
+  });
+
+  const addArtist = (artistId) => {
+    if (selectedArtistIds.has(artistId)) return;
+    onChange([...values, artistId]);
+    setSearchTerm('');
+  };
+
+  const removeArtist = (artistId) => {
+    onChange(values.filter((value) => value !== artistId));
   };
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">Quản lý Kho nhạc</h2>
-        <p className="text-sm text-gray-500">Xem, chỉnh sửa hoặc xóa bài hát trong hệ thống.</p>
-      </div>
+    <label className="block space-y-2">
+      <span className="text-sm font-semibold text-slate-700">
+        {label}
+        {required ? <span className="ml-1 text-rose-500">*</span> : null}
+      </span>
+      <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 transition focus-within:border-cyan-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-cyan-50">
+          <FiSearch className="h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder={artists.length ? 'Tìm tên nghệ sĩ để thêm vào bài hát' : 'Chưa có nghệ sĩ nào trong hệ thống'}
+            disabled={!artists.length}
+            className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+          />
+        </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Tìm theo tên bài hát..."
-          className="pl-9 pr-4 py-2.5 w-full rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
-        />
-      </div>
+        <div className="mt-4 rounded-2xl bg-slate-50/80 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <FiUsers className="h-4 w-4 text-cyan-500" />
+              <span>Nghệ sĩ đã chọn</span>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow-sm">
+              {selectedArtists.length} người
+            </span>
+          </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left text-gray-500 text-xs uppercase tracking-wide">
-                <th className="px-6 py-3 font-medium">Bài hát</th>
-                <th className="px-6 py-3 font-medium">Nghệ sĩ</th>
-                <th className="px-6 py-3 font-medium">Lượt nghe</th>
-                <th className="px-6 py-3 font-medium">Trạng thái</th>
-                <th className="px-6 py-3 font-medium text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {loading ? (
-                <tr><td colSpan={5} className="text-center py-10 text-gray-400">Đang tải...</td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-10 text-gray-400">Không tìm thấy bài hát.</td></tr>
-              ) : filtered.map(song => (
-                <tr key={song.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3">
-                    <div className="flex items-center gap-3">
-                      {song.duong_dan_hinh_anh ? (
-                        <img src={song.duong_dan_hinh_anh} alt={song.tieu_de} className="w-9 h-9 rounded-lg object-cover" />
-                      ) : (
-                        <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center">
-                          <FiMusic className="text-purple-400 w-4 h-4" />
-                        </div>
-                      )}
-                      <span className="font-medium text-gray-900 max-w-[180px] truncate">{song.tieu_de}</span>
+          <div className="mt-3 flex min-h-[44px] flex-wrap gap-2">
+            {selectedArtists.length ? (
+              selectedArtists.map((artist) => (
+                <button
+                  key={artist.id}
+                  type="button"
+                  onClick={() => removeArtist(artist.id.toString())}
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+                >
+                  <span>{artist.ten_nghe_si}</span>
+                  <FiX className="h-3.5 w-3.5" />
+                </button>
+              ))
+            ) : (
+              <p className="text-sm text-slate-400">Chưa chọn ca sĩ nào. Tìm kiếm và bấm vào nghệ sĩ bên dưới để thêm.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-700">Gợi ý nghệ sĩ</p>
+              <p className="text-xs text-slate-400">Nhấn vào tên để thêm nhanh, không cần giữ Ctrl/Shift như trước.</p>
+            </div>
+            {searchTerm ? (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+              >
+                Xóa tìm kiếm
+              </button>
+            ) : null}
+          </div>
+
+          <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+            {suggestedArtists.length ? (
+              suggestedArtists.slice(0, 12).map((artist) => (
+                <button
+                  key={artist.id}
+                  type="button"
+                  onClick={() => addArtist(artist.id.toString())}
+                  className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-left transition hover:border-cyan-300 hover:bg-cyan-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-2xl bg-white p-2 text-cyan-600 shadow-sm">
+                      <FiUser className="h-4 w-4" />
                     </div>
-                  </td>
-                  <td className="px-6 py-3 text-gray-500">{song.id_nghe_si?.ten_nghe_si || '—'}</td>
-                  <td className="px-6 py-3 text-gray-500">{(song.luot_nghe ?? 0).toLocaleString()}</td>
-                  <td className="px-6 py-3">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${song.trang_thai === 'PUBLIC' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
-                      {song.trang_thai === 'PUBLIC' ? 'Công khai' : 'Chờ duyệt'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Chỉnh sửa">
-                        <FiEdit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(song.id)}
-                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Xóa"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700">{artist.ten_nghe_si}</p>
+                      <p className="text-xs text-slate-400">Bấm để thêm vào danh sách thể hiện</p>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-cyan-600 shadow-sm">
+                    Thêm
+                  </span>
+                </button>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center">
+                <p className="text-sm font-semibold text-slate-600">Không tìm thấy nghệ sĩ phù hợp</p>
+                <p className="mt-1 text-xs text-slate-400">Thử từ khóa khác hoặc tạo nghệ sĩ mới ở trang quản trị nghệ sĩ.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+    </label>
+  );
+}
+
+function TextareaField({ label, required, ...props }) {
+  return (
+    <label className="block space-y-2">
+      <span className="text-sm font-semibold text-slate-700">
+        {label}
+        {required ? <span className="ml-1 text-rose-500">*</span> : null}
+      </span>
+      <textarea
+        {...props}
+        className="min-h-[120px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
+      />
+    </label>
+  );
+}
+
+function UploadField({
+  label,
+  hint,
+  accept,
+  icon: Icon,
+  previewUrl,
+  previewLabel,
+  previewMeta,
+  audioUrl,
+  audioLabel,
+  audioMeta,
+  onChange,
+  required,
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-slate-700">
+          {label}
+          {required ? <span className="ml-1 text-rose-500">*</span> : null}
+        </span>
+        {hint ? <span className="text-xs text-slate-400">{hint}</span> : null}
+      </div>
+
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-[28px] border border-dashed border-slate-300 bg-slate-50/80 px-5 py-6 text-center transition hover:border-cyan-400 hover:bg-cyan-50/60">
+        <div className="rounded-2xl bg-white p-3 text-cyan-600 shadow-sm">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-slate-700">Chọn file từ máy</p>
+          <p className="mt-1 text-xs text-slate-400">Hỗ trợ upload trực tiếp lên Cloudinary từ form này</p>
+        </div>
+        <input type="file" accept={accept} className="hidden" onChange={onChange} />
+      </label>
+
+      {previewUrl ? (
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <img src={previewUrl} alt={label} className="h-48 w-full object-cover" />
+          <div className="border-t border-slate-100 px-4 py-3">
+            <p className="truncate text-sm font-semibold text-slate-700">{previewLabel || 'Ảnh hiện tại'}</p>
+            {previewMeta ? <p className="mt-1 text-xs text-slate-400">{previewMeta}</p> : null}
+          </div>
+        </div>
+      ) : null}
+
+      {audioUrl ? (
+        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="mb-3 truncate text-sm font-semibold text-slate-700">{audioLabel || 'Audio hiện tại'}</p>
+          {audioMeta ? <p className="mb-3 text-xs text-slate-400">{audioMeta}</p> : null}
+          <audio controls src={audioUrl} className="w-full" />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function EntityModal({
+  modalState,
+  formValues,
+  previews,
+  catalog,
+  saving,
+  formAlert,
+  onClose,
+  onSubmit,
+  onValueChange,
+  onFileChange,
+}) {
+  if (!modalState.open) return null;
+
+  const { entity, mode } = modalState;
+  const isSong = entity === 'songs';
+  const isAlbum = entity === 'albums';
+  const isArtist = entity === 'artists';
+  const title = mode === 'create'
+    ? {
+        songs: 'Thêm bài hát',
+        albums: 'Thêm album',
+        artists: 'Thêm nghệ sĩ',
+        genres: 'Thêm chủ đề',
+      }[entity]
+    : {
+        songs: 'Cập nhật bài hát',
+        albums: 'Cập nhật album',
+        artists: 'Cập nhật nghệ sĩ',
+        genres: 'Cập nhật chủ đề',
+      }[entity];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-8 backdrop-blur-sm">
+      <div className="max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-[36px] border border-white/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.96),rgba(244,247,251,0.96))] shadow-[0_30px_120px_rgba(15,23,42,0.30)]">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-7 py-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-500">Admin Studio</p>
+            <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-900">{title}</h3>
+            <p className="mt-1 text-sm text-slate-500">Chọn file và metadata trong cùng một biểu mẫu, submit một lần duy nhất.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-500 transition hover:text-slate-900"
+          >
+            <FiX className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form noValidate onSubmit={onSubmit} className="max-h-[calc(92vh-96px)] overflow-y-auto px-7 py-6">
+          {formAlert ? (
+            <div className="mb-5 flex items-start gap-3 rounded-[24px] border border-rose-100 bg-rose-50 px-4 py-3 text-rose-700">
+              <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p className="text-sm font-medium">{formAlert}</p>
+            </div>
+          ) : null}
+
+          <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="space-y-5">
+              {isSong ? (
+                <>
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <InputField
+                      label="Tên bài hát"
+                      required
+                      value={formValues.tieu_de}
+                      onChange={(event) => onValueChange('tieu_de', event.target.value)}
+                      placeholder="Ví dụ: Mưa Tháng Sáu"
+                    />
+                    <SelectField
+                      label="Trạng thái"
+                      value={formValues.trang_thai}
+                      onChange={(event) => onValueChange('trang_thai', event.target.value)}
+                    >
+                      {STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </SelectField>
+                  </div>
+
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <ArtistTagPicker
+                      label="Ca sĩ thể hiện"
+                      required
+                      artists={catalog.artists}
+                      values={formValues.id_nghe_si_ids}
+                      onChange={(selectedValues) => onValueChange('id_nghe_si_ids', selectedValues)}
+                    />
+                    <SelectField
+                      label="Album"
+                      value={formValues.id_album_id}
+                      onChange={(event) => onValueChange('id_album_id', event.target.value)}
+                    >
+                      <option value="">Không gán album</option>
+                      {catalog.albums.map((album) => (
+                        <option key={album.id} value={album.id}>{album.tieu_de}</option>
+                      ))}
+                    </SelectField>
+                  </div>
+
+                  <div className="grid gap-5 md:grid-cols-3">
+                    <SelectField
+                      label="Chủ đề"
+                      value={formValues.id_the_loai_id}
+                      onChange={(event) => onValueChange('id_the_loai_id', event.target.value)}
+                    >
+                      <option value="">Không gán chủ đề</option>
+                      {catalog.genres.map((genre) => (
+                        <option key={genre.id} value={genre.id}>{genre.ten_the_loai}</option>
+                      ))}
+                    </SelectField>
+                    <InputField
+                      label="Quốc gia"
+                      value={formValues.quoc_gia}
+                      onChange={(event) => onValueChange('quoc_gia', event.target.value)}
+                      placeholder="Việt Nam"
+                    />
+                    <InputField
+                      label="Năm phát hành"
+                      type="number"
+                      value={formValues.nam_phat_hanh}
+                      onChange={(event) => onValueChange('nam_phat_hanh', event.target.value)}
+                      placeholder="2026"
+                    />
+                  </div>
+
+                  <TextareaField
+                    label="Lời bài hát"
+                    value={formValues.loi_bai_hat}
+                    onChange={(event) => onValueChange('loi_bai_hat', event.target.value)}
+                    placeholder="Nhập lời bài hát nếu có..."
+                  />
+                </>
+              ) : null}
+
+              {isAlbum ? (
+                <>
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <InputField
+                      label="Tên album"
+                      required
+                      value={formValues.tieu_de}
+                      onChange={(event) => onValueChange('tieu_de', event.target.value)}
+                      placeholder="Ví dụ: Những Mùa Yêu"
+                    />
+                    <SelectField
+                      label="Nghệ sĩ"
+                      required
+                      value={formValues.id_nghe_si}
+                      onChange={(event) => onValueChange('id_nghe_si', event.target.value)}
+                    >
+                      <option value="">Chọn nghệ sĩ</option>
+                      {catalog.artists.map((artist) => (
+                        <option key={artist.id} value={artist.id}>{artist.ten_nghe_si}</option>
+                      ))}
+                    </SelectField>
+                  </div>
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <InputField
+                      label="Ngày phát hành"
+                      type="date"
+                      value={formValues.ngay_phat_hanh}
+                      onChange={(event) => onValueChange('ngay_phat_hanh', event.target.value)}
+                    />
+                    <SelectField
+                      label="Trạng thái"
+                      value={formValues.trang_thai}
+                      onChange={(event) => onValueChange('trang_thai', event.target.value)}
+                    >
+                      {STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </SelectField>
+                  </div>
+                </>
+              ) : null}
+
+              {isArtist ? (
+                <>
+                  <InputField
+                    label="Tên nghệ sĩ"
+                    required
+                    value={formValues.ten_nghe_si}
+                    onChange={(event) => onValueChange('ten_nghe_si', event.target.value)}
+                    placeholder="Ví dụ: Bùi Trường Linh"
+                  />
+                  <TextareaField
+                    label="Tiểu sử"
+                    value={formValues.tieu_su}
+                    onChange={(event) => onValueChange('tieu_su', event.target.value)}
+                    placeholder="Mô tả ngắn về nghệ sĩ..."
+                  />
+                </>
+              ) : null}
+
+              {!isSong && !isAlbum && !isArtist ? (
+                <>
+                  <InputField
+                    label="Tên chủ đề"
+                    required
+                    value={formValues.ten_the_loai}
+                    onChange={(event) => onValueChange('ten_the_loai', event.target.value)}
+                    placeholder="Ví dụ: Chill, Ballad, Tâm trạng"
+                  />
+                  <TextareaField
+                    label="Mô tả"
+                    value={formValues.mo_ta_the_loai}
+                    onChange={(event) => onValueChange('mo_ta_the_loai', event.target.value)}
+                    placeholder="Mô tả ngắn cho chủ đề..."
+                  />
+                </>
+              ) : null}
+            </div>
+
+            <div className="space-y-5">
+              {isSong ? (
+                <>
+                  <UploadField
+                    label="Ảnh bài hát"
+                    required={mode === 'create'}
+                    hint="JPG, PNG, WEBP..."
+                    accept="image/*"
+                    icon={FiImage}
+                    previewUrl={previews.imageUrl}
+                    previewLabel={previews.imageLabel}
+                    previewMeta={previews.imageMeta}
+                    onChange={(event) => onFileChange('image_file', event.target.files?.[0] || null)}
+                  />
+                  <UploadField
+                    label="File audio"
+                    required={mode === 'create'}
+                    hint="MP3, WAV, M4A..."
+                    accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac"
+                    icon={FiUploadCloud}
+                    audioUrl={previews.audioUrl}
+                    audioLabel={previews.audioLabel}
+                    audioMeta={previews.audioMeta}
+                    onChange={(event) => onFileChange('audio_file', event.target.files?.[0] || null)}
+                  />
+                </>
+              ) : null}
+
+              {isAlbum ? (
+                <UploadField
+                  label="Ảnh bìa album"
+                  required={mode === 'create'}
+                  hint="Tỷ lệ vuông hiển thị đẹp hơn"
+                  accept="image/*"
+                  icon={FiDisc}
+                  previewUrl={previews.imageUrl}
+                  previewLabel={previews.imageLabel}
+                  previewMeta={previews.imageMeta}
+                  onChange={(event) => onFileChange('cover_file', event.target.files?.[0] || null)}
+                />
+              ) : null}
+
+              {isArtist ? (
+                <UploadField
+                  label="Ảnh nghệ sĩ"
+                  required={mode === 'create'}
+                  hint="Ảnh chân dung hoặc avatar"
+                  accept="image/*"
+                  icon={FiUser}
+                  previewUrl={previews.imageUrl}
+                  previewLabel={previews.imageLabel}
+                  previewMeta={previews.imageMeta}
+                  onChange={(event) => onFileChange('artist_image_file', event.target.files?.[0] || null)}
+                />
+              ) : null}
+
+              {!isSong && !isAlbum && !isArtist ? (
+                <UploadField
+                  label="Ảnh chủ đề"
+                  required={mode === 'create'}
+                  hint="Ảnh đại diện cho mood/topic"
+                  accept="image/*"
+                  icon={FiFolderPlus}
+                  previewUrl={previews.imageUrl}
+                  previewLabel={previews.imageLabel}
+                  previewMeta={previews.imageMeta}
+                  onChange={(event) => onFileChange('topic_image_file', event.target.files?.[0] || null)}
+                />
+              ) : null}
+
+              <div className="rounded-[28px] border border-slate-200 bg-white/90 p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+                    <FiCheckCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800">Quy trình mới</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      Không cần Postman, không cần dán URL vào DBeaver. File được gửi thẳng từ form, backend tự upload lên Cloudinary rồi lưu metadata trong một request.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-7 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <FiUploadCloud className="h-4 w-4" />
+              {saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo mới' : 'Lưu thay đổi'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function SongsTable({ items, onEdit, onDelete }) {
+  return (
+    <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/95 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[980px] text-sm">
+          <thead>
+            <tr className="bg-slate-50 text-left text-xs uppercase tracking-[0.16em] text-slate-400">
+              <th className="px-6 py-4 font-semibold">Bài hát</th>
+              <th className="px-6 py-4 font-semibold">Nghệ sĩ</th>
+              <th className="px-6 py-4 font-semibold">Album</th>
+              <th className="px-6 py-4 font-semibold">Chủ đề</th>
+              <th className="px-6 py-4 font-semibold">Trạng thái</th>
+              <th className="px-6 py-4 font-semibold">Lượt nghe</th>
+              <th className="px-6 py-4 font-semibold text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {items.map((song) => (
+              <tr key={song.id} className="transition hover:bg-slate-50/80">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    {song.duong_dan_hinh_anh ? (
+                      <img src={song.duong_dan_hinh_anh} alt={song.tieu_de} className="h-12 w-12 rounded-2xl object-cover shadow-sm" />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                        <FiMusic className="h-4 w-4" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-900">{song.tieu_de}</p>
+                      <p className="truncate text-xs text-slate-400">{song.quoc_gia || 'Không rõ quốc gia'}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-slate-600">{getSongArtistNames(song, '—')}</td>
+                <td className="px-6 py-4 text-slate-500">{song.id_album?.tieu_de || 'Chưa gán'}</td>
+                <td className="px-6 py-4 text-slate-500">{song.id_the_loai?.ten_the_loai || 'Chưa gán'}</td>
+                <td className="px-6 py-4">
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(song.trang_thai)}`}>
+                    {song.trang_thai === 'PUBLIC' ? 'Công khai' : 'Chờ duyệt'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-slate-500">{(song.luot_nghe ?? 0).toLocaleString()}</td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(song)}
+                      className="rounded-xl bg-cyan-50 p-2 text-cyan-600 transition hover:bg-cyan-100"
+                      title="Chỉnh sửa"
+                    >
+                      <FiEdit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(song)}
+                      className="rounded-xl bg-rose-50 p-2 text-rose-600 transition hover:bg-rose-100"
+                      title="Xóa"
+                    >
+                      <FiTrash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CardList({ items, onEdit, onDelete, renderCard }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {items.map((item) => renderCard(item, onEdit, onDelete))}
+    </div>
+  );
+}
+
+function EmptyPanel({ icon: Icon, title, description }) {
+  return (
+    <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/80 px-6 py-16 text-center shadow-sm">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+        <Icon className="h-6 w-6" />
+      </div>
+      <h3 className="mt-4 text-lg font-bold text-slate-800">{title}</h3>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
+    </div>
+  );
+}
+
+export default function ManageMusic({
+  initialEntity = 'songs',
+  hideTabs = false,
+  pageTitle,
+  pageDescription,
+}) {
+  const [catalog, setCatalog] = useState({ songs: [], albums: [], artists: [], genres: [] });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
+  const [activeTab, setActiveTab] = useState(initialEntity);
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [sortOption, setSortOption] = useState(TAB_DEFAULT_SORT.songs);
+  const [modalState, setModalState] = useState({ open: false, entity: 'songs', mode: 'create', item: null });
+  const [formValues, setFormValues] = useState(getEmptyForm('songs'));
+  const [previews, setPreviews] = useState({
+    imageUrl: '',
+    imageLabel: '',
+    imageMeta: '',
+    audioUrl: '',
+    audioLabel: '',
+    audioMeta: '',
+  });
+  const [formAlert, setFormAlert] = useState('');
+  const previewRef = useRef(previews);
+
+  useEffect(() => {
+    loadCatalog();
+  }, []);
+
+  useEffect(() => {
+    previewRef.current = previews;
+  }, [previews]);
+
+  useEffect(() => {
+    return () => {
+      if (previewRef.current.imageUrl?.startsWith('blob:')) URL.revokeObjectURL(previewRef.current.imageUrl);
+      if (previewRef.current.audioUrl?.startsWith('blob:')) URL.revokeObjectURL(previewRef.current.audioUrl);
+    };
+  }, []);
+
+  async function loadCatalog() {
+    setLoading(true);
+    try {
+      const [songsRes, albumsRes, artistsRes, genresRes] = await Promise.all([
+        songService.getAll(),
+        albumService.getAll(),
+        artistService.getAll(),
+        genreService.getAll(),
+      ]);
+
+      startTransition(() => {
+        setCatalog({
+          songs: normalizeList(songsRes),
+          albums: normalizeList(albumsRes),
+          artists: normalizeList(artistsRes),
+          genres: normalizeList(genresRes),
+        });
+      });
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+      setCatalog({ songs: [], albums: [], artists: [], genres: [] });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function replacePreview(nextPreviewOrUpdater) {
+    setPreviews((prev) => {
+      const nextPreview = typeof nextPreviewOrUpdater === 'function' ? nextPreviewOrUpdater(prev) : nextPreviewOrUpdater;
+      if (prev.imageUrl?.startsWith('blob:') && prev.imageUrl !== nextPreview.imageUrl) {
+        URL.revokeObjectURL(prev.imageUrl);
+      }
+      if (prev.audioUrl?.startsWith('blob:') && prev.audioUrl !== nextPreview.audioUrl) {
+        URL.revokeObjectURL(prev.audioUrl);
+      }
+      return nextPreview;
+    });
+  }
+
+  function openModal(entity, mode, item = null) {
+    setModalState({ open: true, entity, mode, item });
+    setFormValues(getInitialForm(entity, item));
+    setFormAlert('');
+    replacePreview(getInitialPreview(entity, item));
+  }
+
+  function handleTabChange(tabKey) {
+    setActiveTab(tabKey);
+    setStatusFilter('ALL');
+    setSortOption(TAB_DEFAULT_SORT[tabKey]);
+    setSearch('');
+    setFormAlert('');
+  }
+
+  function closeModal() {
+    setModalState({ open: false, entity: activeTab, mode: 'create', item: null });
+    setFormValues(getEmptyForm(activeTab));
+    setFormAlert('');
+    replacePreview({
+      imageUrl: '',
+      imageLabel: '',
+      imageMeta: '',
+      audioUrl: '',
+      audioLabel: '',
+      audioMeta: '',
+    });
+  }
+
+  function handleValueChange(field, value) {
+    setFormAlert('');
+    setFormValues((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleFileChange(field, file) {
+    setFormAlert('');
+    setFormValues((prev) => ({ ...prev, [field]: file }));
+    if (!file) return;
+
+    const validationError = validateSelectedFile(field, file);
+    if (validationError) {
+      setFormValues((prev) => ({ ...prev, [field]: null }));
+      setFormAlert(validationError);
+      toast.error(validationError);
+      return;
+    }
+
+    if (field === 'audio_file') {
+      const audioObjectUrl = URL.createObjectURL(file);
+      replacePreview((prev) => ({
+        ...prev,
+        audioUrl: audioObjectUrl,
+        audioLabel: file.name,
+        audioMeta: `Đang đọc metadata • ${formatBytes(file.size)}`,
+      }));
+      const audioMeta = await readAudioMetadata(audioObjectUrl, file.size);
+      replacePreview((prev) => (prev.audioUrl === audioObjectUrl ? { ...prev, audioMeta } : prev));
+      return;
+    }
+
+    const imageObjectUrl = URL.createObjectURL(file);
+    replacePreview((prev) => ({
+      ...prev,
+      imageUrl: imageObjectUrl,
+      imageLabel: file.name,
+      imageMeta: `Đang đọc metadata • ${formatBytes(file.size)}`,
+    }));
+    const imageMeta = await readImageMetadata(imageObjectUrl, file.size);
+    replacePreview((prev) => (prev.imageUrl === imageObjectUrl ? { ...prev, imageMeta } : prev));
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    const { entity, mode, item } = modalState;
+    const validationError = validateForm(entity, formValues, previews);
+    if (validationError) {
+      setFormAlert(validationError);
+      toast.error(validationError);
+      return;
+    }
+
+    setSaving(true);
+    const payload = buildFormData(entity, formValues);
+
+    try {
+      if (entity === 'songs') {
+        if (mode === 'create') await songService.create(payload);
+        else await songService.update(item.id, payload);
+      }
+
+      if (entity === 'albums') {
+        if (mode === 'create') await albumService.create(payload);
+        else await albumService.update(item.id, payload);
+      }
+
+      if (entity === 'artists') {
+        if (mode === 'create') await artistService.create(payload);
+        else await artistService.update(item.id, payload);
+      }
+
+      if (entity === 'genres') {
+        if (mode === 'create') await genreService.create(payload);
+        else await genreService.update(item.id, payload);
+      }
+
+      await loadCatalog();
+      closeModal();
+      toast.success(mode === 'create' ? 'Đã tạo thành công.' : 'Đã cập nhật thành công.');
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(entity, item) {
+    const entityLabel = {
+      songs: 'bài hát',
+      albums: 'album',
+      artists: 'nghệ sĩ',
+      genres: 'chủ đề',
+    }[entity];
+
+    if (!window.confirm(`Xóa ${entityLabel} "${getEntityTitle(item)}"?`)) {
+      return;
+    }
+
+    try {
+      if (entity === 'songs') await songService.delete(item.id);
+      if (entity === 'albums') await albumService.delete(item.id);
+      if (entity === 'artists') await artistService.delete(item.id);
+      if (entity === 'genres') await genreService.delete(item.id);
+
+      await loadCatalog();
+      toast.success(`Đã xóa ${entityLabel}.`);
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+    }
+  }
+
+  const stats = buildTabStats(catalog);
+
+  const visibleItems = sortItems(catalog[activeTab].filter((item) => {
+    const keyword = deferredSearch.trim().toLowerCase();
+    const statusMatched = statusFilter === 'ALL'
+      || (activeTab === 'songs' || activeTab === 'albums' ? item.trang_thai === statusFilter : true);
+
+    if (!statusMatched) return false;
+    if (!keyword) return true;
+
+    if (activeTab === 'songs') {
+      return [
+        item.tieu_de,
+        getSongArtistNames(item, ''),
+        item.id_album?.tieu_de,
+        item.id_the_loai?.ten_the_loai,
+      ].some((value) => value?.toLowerCase().includes(keyword));
+    }
+
+    if (activeTab === 'albums') {
+      return [item.tieu_de, item.id_nghe_si_detail?.ten_nghe_si].some((value) => value?.toLowerCase().includes(keyword));
+    }
+
+    if (activeTab === 'artists') {
+      return [item.ten_nghe_si, item.tieu_su].some((value) => value?.toLowerCase().includes(keyword));
+    }
+
+    return [item.ten_the_loai, item.mo_ta_the_loai].some((value) => value?.toLowerCase().includes(keyword));
+  }), activeTab, sortOption, catalog);
+
+  const currentTabMeta = TAB_CONFIG.find((tab) => tab.key === activeTab);
+  const shouldShowStatusFilter = activeTab === 'songs' || activeTab === 'albums';
+  const showResetFilters = search || statusFilter !== 'ALL' || sortOption !== TAB_DEFAULT_SORT[activeTab];
+  const resolvedPageTitle = pageTitle || {
+    songs: 'Quản lý bài hát',
+    albums: 'Quản lý album',
+    artists: 'Quản lý nghệ sĩ',
+    genres: 'Quản lý chủ đề',
+  }[activeTab];
+  const resolvedPageDescription = pageDescription || {
+    songs: 'Thêm, sửa và duyệt bài hát với khả năng chọn nhiều ca sĩ cho một bài.',
+    albums: 'Quản lý album riêng biệt, vẫn gắn với một nghệ sĩ chính.',
+    artists: 'Quản lý nghệ sĩ, ảnh đại diện và tiểu sử.',
+    genres: 'Quản lý topic/chủ đề gồm ảnh, tên và mô tả.',
+  }[activeTab];
+
+  return (
+    <div className="space-y-6">
+      <div className="overflow-hidden rounded-[32px] bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.20),transparent_38%),linear-gradient(135deg,#0f172a,#1e293b_48%,#0f172a)] px-7 py-7 text-white shadow-[0_22px_80px_rgba(15,23,42,0.28)]">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-bold uppercase tracking-[0.32em] text-cyan-300">Upload Workspace</p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight">{resolvedPageTitle}</h2>
+            <p className="mt-3 text-sm leading-7 text-slate-300">{resolvedPageDescription}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => openModal(activeTab, 'create')}
+            className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-cyan-50"
+          >
+            <FiPlus className="h-4 w-4" />
+            {activeTab === 'songs' ? 'Thêm bài hát' : activeTab === 'albums' ? 'Thêm album' : activeTab === 'artists' ? 'Thêm nghệ sĩ' : 'Thêm chủ đề'}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard icon={FiMusic} label="Bài hát" value={stats.songs} helper="Có thể upload ảnh + audio trong cùng form" accent="from-cyan-500 to-blue-500" />
+        <SummaryCard icon={FiDisc} label="Album" value={stats.albums} helper="Ảnh bìa upload trực tiếp" accent="from-emerald-500 to-teal-500" />
+        <SummaryCard icon={FiUsers} label="Nghệ sĩ" value={stats.artists} helper="Ảnh nghệ sĩ + tiểu sử" accent="from-amber-500 to-orange-500" />
+        <SummaryCard icon={FiTag} label="Chủ đề" value={stats.genres} helper="Ảnh, tên, mô tả cho topic" accent="from-fuchsia-500 to-pink-500" />
+      </div>
+
+      <div className="rounded-[30px] border border-white/70 bg-white/85 p-4 shadow-[0_14px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {hideTabs ? (
+            <div className="flex items-center gap-3 rounded-[22px] bg-slate-950 px-4 py-3 text-white shadow-lg">
+              <div className="rounded-2xl bg-white/10 p-2">
+                {(() => {
+                  const ActiveIcon = currentTabMeta?.icon || FiMusic;
+                  return <ActiveIcon className="h-4 w-4" />;
+                })()}
+              </div>
+              <div>
+                <p className="text-sm font-semibold">{currentTabMeta?.label}</p>
+                <p className="text-xs text-slate-300">{stats[activeTab]}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {TAB_CONFIG.map((tab) => {
+                const Icon = tab.icon;
+                const active = tab.key === activeTab;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => handleTabChange(tab.key)}
+                    className={`flex items-center gap-3 rounded-[22px] px-4 py-3 text-left transition ${
+                      active
+                        ? 'bg-slate-950 text-white shadow-lg'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className={`rounded-2xl p-2 ${active ? 'bg-white/10' : 'bg-white'}`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">{tab.label}</p>
+                      <p className={`text-xs ${active ? 'text-slate-300' : 'text-slate-400'}`}>{stats[tab.key]}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+            <div className="relative min-w-[280px]">
+              <FiSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={`Tìm ${currentTabMeta?.label?.toLowerCase() || 'dữ liệu'}...`}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/90 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
+              />
+            </div>
+            {shouldShowStatusFilter ? (
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/90 px-3 py-2.5 text-slate-600">
+                <FiFilter className="h-4 w-4 text-slate-400" />
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  className="bg-transparent text-sm font-medium outline-none"
+                >
+                  <option value="ALL">Mọi trạng thái</option>
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+            <select
+              value={sortOption}
+              onChange={(event) => setSortOption(event.target.value)}
+              className="rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
+            >
+              {SORT_OPTIONS[activeTab].map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            {showResetFilters ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('ALL');
+                  setSortOption(TAB_DEFAULT_SORT[activeTab]);
+                }}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
+              >
+                Xóa bộ lọc
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => openModal(activeTab, 'create')}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600"
+            >
+              <FiPlus className="h-4 w-4" />
+              Tạo mới
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="rounded-[28px] border border-white/70 bg-white/95 px-6 py-20 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
+          <div className="flex flex-col items-center justify-center gap-4 text-slate-400">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
+            <p>Đang tải thư viện quản trị...</p>
+          </div>
+        </div>
+      ) : visibleItems.length === 0 ? (
+        <EmptyPanel
+          icon={FiAlertCircle}
+          title={`Chưa có ${currentTabMeta?.label?.toLowerCase() || 'dữ liệu'} phù hợp`}
+          description="Thử đổi từ khóa tìm kiếm hoặc tạo mới trực tiếp từ giao diện quản trị này."
+        />
+      ) : activeTab === 'songs' ? (
+        <SongsTable
+          items={visibleItems}
+          onEdit={(item) => openModal('songs', 'edit', item)}
+          onDelete={(item) => handleDelete('songs', item)}
+        />
+      ) : activeTab === 'albums' ? (
+        <CardList
+          items={visibleItems}
+          onEdit={(item) => openModal('albums', 'edit', item)}
+          onDelete={(item) => handleDelete('albums', item)}
+          renderCard={(album, onEdit, onDelete) => (
+            <div key={album.id} className="overflow-hidden rounded-[28px] border border-white/70 bg-white/95 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
+              <div className="relative h-52 bg-slate-100">
+                {album.anh_bia ? (
+                  <img src={album.anh_bia} alt={album.tieu_de} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-slate-400">
+                    <FiDisc className="h-8 w-8" />
+                  </div>
+                )}
+                <div className="absolute right-4 top-4">
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(album.trang_thai)}`}>
+                    {album.trang_thai === 'PUBLIC' ? 'Công khai' : 'Chờ duyệt'}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-4 p-5">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">{album.tieu_de}</h3>
+                  <p className="mt-1 text-sm text-slate-500">{album.id_nghe_si_detail?.ten_nghe_si || 'Chưa gán nghệ sĩ'}</p>
+                  <p className="mt-1 text-xs text-slate-400">{album.ngay_phat_hanh || 'Chưa có ngày phát hành'}</p>
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <button type="button" onClick={() => onEdit(album)} className="rounded-xl bg-cyan-50 p-2 text-cyan-600 transition hover:bg-cyan-100">
+                    <FiEdit2 className="h-4 w-4" />
+                  </button>
+                  <button type="button" onClick={() => onDelete(album)} className="rounded-xl bg-rose-50 p-2 text-rose-600 transition hover:bg-rose-100">
+                    <FiTrash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        />
+      ) : activeTab === 'artists' ? (
+        <CardList
+          items={visibleItems}
+          onEdit={(item) => openModal('artists', 'edit', item)}
+          onDelete={(item) => handleDelete('artists', item)}
+          renderCard={(artist, onEdit, onDelete) => {
+            const albumCount = getAlbumCountForArtist(catalog, artist.id);
+            const songCount = getSongCountForArtist(catalog, artist.id);
+
+            return (
+              <div key={artist.id} className="rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
+                <div className="flex items-start gap-4">
+                  {artist.anh_nghe_si ? (
+                    <img src={artist.anh_nghe_si} alt={artist.ten_nghe_si} className="h-20 w-20 rounded-[24px] object-cover shadow-sm" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-[24px] bg-amber-50 text-amber-500">
+                      <FiMic className="h-7 w-7" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-lg font-bold text-slate-900">{artist.ten_nghe_si}</h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">
+                      {artist.tieu_su || 'Chưa có tiểu sử cho nghệ sĩ này.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex items-center gap-3 text-xs font-semibold text-slate-500">
+                  <span className="rounded-full bg-slate-100 px-3 py-1">{songCount} bài hát</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1">{albumCount} album</span>
+                </div>
+
+                <div className="mt-5 flex items-center justify-end gap-2">
+                  <button type="button" onClick={() => onEdit(artist)} className="rounded-xl bg-cyan-50 p-2 text-cyan-600 transition hover:bg-cyan-100">
+                    <FiEdit2 className="h-4 w-4" />
+                  </button>
+                  <button type="button" onClick={() => onDelete(artist)} className="rounded-xl bg-rose-50 p-2 text-rose-600 transition hover:bg-rose-100">
+                    <FiTrash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          }}
+        />
+      ) : (
+        <CardList
+          items={visibleItems}
+          onEdit={(item) => openModal('genres', 'edit', item)}
+          onDelete={(item) => handleDelete('genres', item)}
+          renderCard={(genre, onEdit, onDelete) => {
+            const songCount = getSongCountForGenre(catalog, genre.id);
+
+            return (
+              <div key={genre.id} className="overflow-hidden rounded-[28px] border border-white/70 bg-white/95 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
+                <div className="relative h-44 bg-slate-100">
+                  {genre.anh_the_loai ? (
+                    <img src={genre.anh_the_loai} alt={genre.ten_the_loai} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-slate-400">
+                      <FiFolderPlus className="h-8 w-8" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/5 to-transparent" />
+                  <div className="absolute bottom-4 left-4">
+                    <p className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur">{songCount} bài hát</p>
+                  </div>
+                </div>
+                <div className="space-y-4 p-5">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">{genre.ten_the_loai}</h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">
+                      {genre.mo_ta_the_loai || 'Chưa có mô tả cho chủ đề này.'}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <button type="button" onClick={() => onEdit(genre)} className="rounded-xl bg-cyan-50 p-2 text-cyan-600 transition hover:bg-cyan-100">
+                      <FiEdit2 className="h-4 w-4" />
+                    </button>
+                    <button type="button" onClick={() => onDelete(genre)} className="rounded-xl bg-rose-50 p-2 text-rose-600 transition hover:bg-rose-100">
+                      <FiTrash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }}
+        />
+      )}
+
+      <EntityModal
+        modalState={modalState}
+        formValues={formValues}
+        previews={previews}
+        catalog={catalog}
+        saving={saving}
+        formAlert={formAlert}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+        onValueChange={handleValueChange}
+        onFileChange={handleFileChange}
+      />
     </div>
   );
 }

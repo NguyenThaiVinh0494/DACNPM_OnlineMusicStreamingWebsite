@@ -23,7 +23,14 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
       toast.error('Vui lòng nhập đầy đủ thông tin!');
       return;
     }
-    const success = await login(username, password);
+
+    const adminTab = window.open('', '_blank');
+    if (adminTab && !adminTab.closed) {
+      adminTab.document.title = 'Đang mở Admin Dashboard...';
+      adminTab.document.body.innerHTML = '<div style="font-family: system-ui; padding: 24px; color: #0f172a;">Đang xác thực tài khoản admin...</div>';
+    }
+
+    const success = await login(username, password, { adminTab });
     if (success) {
       onClose();
     }

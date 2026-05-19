@@ -5,6 +5,7 @@ import {
   FiUsers, FiMusic, FiUploadCloud, FiHeadphones,
   FiTrendingUp, FiCheckCircle, FiXCircle, FiClock
 } from 'react-icons/fi';
+import { getSongArtistNames } from '../../utils/songArtists';
 
 const StatCard = ({ icon: Icon, label, value, color, bgColor }) => (
   <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
@@ -102,7 +103,7 @@ export default function AdminDashboard() {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{song.tieu_de}</p>
-                  <p className="text-xs text-gray-400">{song.id_nghe_si?.ten_nghe_si || 'Nghệ sĩ'}</p>
+                  <p className="text-xs text-gray-400">{getSongArtistNames(song, 'Nghệ sĩ')}</p>
                 </div>
                 <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full font-medium">
                   <FiClock className="w-3 h-3" /> Chờ duyệt
@@ -125,7 +126,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { to: '/admin/users', label: 'Quản lý Users', icon: FiUsers, color: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
-          { to: '/admin/music', label: 'Quản lý Nhạc', icon: FiMusic, color: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
+          { to: '/admin/songs', label: 'Quản lý Bài hát', icon: FiMusic, color: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
           { to: '/admin/pending', label: 'Duyệt Upload', icon: FiUploadCloud, color: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
           { to: '/admin/stats', label: 'Thống kê', icon: FiTrendingUp, color: 'bg-green-50 text-green-700 hover:bg-green-100' },
         ].map(({ to, label, icon: Icon, color }) => (
