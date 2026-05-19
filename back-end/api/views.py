@@ -307,9 +307,8 @@ class BaiHatViewSet(MultipartEnabledViewSet):
     def get_queryset(self):
         queryset = BaiHat.objects.select_related(
             'id_album',
-            'id_the_loai',
             'id_nguoi_dang',
-        ).prefetch_related('cac_nghe_si').all().order_by('-id')
+        ).prefetch_related('cac_nghe_si', 'the_loais').all().order_by('-id')
 
         status_value = self.request.query_params.get('trang_thai')
         artist_id = self.request.query_params.get('id_nghe_si')
@@ -323,6 +322,6 @@ class BaiHatViewSet(MultipartEnabledViewSet):
         if album_id:
             queryset = queryset.filter(id_album_id=album_id)
         if genre_id:
-            queryset = queryset.filter(id_the_loai_id=genre_id)
+            queryset = queryset.filter(the_loais__id=genre_id)
 
         return queryset.distinct()
