@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { FiHeart, FiClock, FiUpload, FiPlus, FiMusic, FiPlay } from 'react-icons/fi';
+import { FiHeart, FiClock, FiPlus, FiMusic, FiPlay } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useMusic } from '../../context/MusicContext';
@@ -58,7 +58,7 @@ export default function MyMusic() {
       </div>
 
       {/* 2. Quick Access Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 px-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 px-2">
         
         {/* Yêu Thích */}
         <div className="flex items-center gap-4 bg-gray-50 dark:bg-[#2b332f] rounded-xl p-4 border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#343e39] transition-colors group shadow-sm">
@@ -79,17 +79,6 @@ export default function MyMusic() {
           <div className="flex flex-col gap-0.5">
             <h3 className="font-bold text-gray-900 dark:text-white text-[15px]">Nghe gần đây</h3>
             <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">{recentSongs.length} bài hát</span>
-          </div>
-        </div>
-
-        {/* Đã tải lên */}
-        <div className="flex items-center gap-4 bg-gray-50 dark:bg-[#2b332f] rounded-xl p-4 border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#343e39] transition-colors group shadow-sm">
-          <div className="w-[52px] h-[52px] rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
-            <FiUpload className="text-white text-[22px] stroke-[2.5]" />
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <h3 className="font-bold text-gray-900 dark:text-white text-[15px]">Đã tải lên</h3>
-            <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">0 bài hát • 0 video</span>
           </div>
         </div>
 

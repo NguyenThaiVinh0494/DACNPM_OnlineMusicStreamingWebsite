@@ -1,34 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiCheck, FiX } from "react-icons/fi";
 import confetti from "canvas-confetti";
 
-const MOCK_TOPICS = [
-  { id: 1, name: "Pop", color: "bg-blue-500" },
-  { id: 2, name: "R&B / Soul", color: "bg-purple-500" },
-  { id: 3, name: "Rap / Hip Hop", color: "bg-red-500" },
-  { id: 4, name: "Indie", color: "bg-yellow-500" },
-  { id: 5, name: "EDM", color: "bg-teal-500" },
-  { id: 6, name: "Acoustic", color: "bg-orange-500" },
-  { id: 7, name: "Lofi", color: "bg-pink-500" },
-  { id: 8, name: "Rock", color: "bg-gray-600" },
-];
-
-const MOCK_ARTISTS = [
-  { id: 1, name: "Sơn Tùng M-TP", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=300&h=300&fit=crop" },
-  { id: 2, name: "HIEUTHUHAI", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=300&h=300&fit=crop" },
-  { id: 3, name: "Hoàng Thùy Linh", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=300&h=300&fit=crop" },
-  { id: 4, name: "tlinh", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop" },
-  { id: 5, name: "MCK", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop" },
-  { id: 6, name: "Bích Phương", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop" },
-  { id: 7, name: "Đen Vâu", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&h=300&fit=crop" },
-  { id: 8, name: "Binz", image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=300&h=300&fit=crop" },
-];
-
-export default function OnboardingModal({ isOpen, onClose }) {
+export default function OnboardingModal({
+  isOpen,
+  onClose,
+  onComplete,
+  topics = [],
+  artists = [],
+  initialTopics = [],
+  initialArtists = [],
+}) {
   const [step, setStep] = useState(1);
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [selectedArtists, setSelectedArtists] = useState([]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setStep(1);
+    setSelectedTopics(initialTopics);
+    setSelectedArtists(initialArtists);
+  }, [initialArtists, initialTopics, isOpen]);
 
   const handleClose = () => {
     onClose();
@@ -37,6 +33,13 @@ export default function OnboardingModal({ isOpen, onClose }) {
       setSelectedTopics([]);
       setSelectedArtists([]);
     }, 500);
+  };
+
+  const persistSelections = () => {
+    onComplete?.({
+      selectedTopics,
+      selectedArtists,
+    });
   };
 
   const toggleTopic = (id) => {
@@ -56,6 +59,8 @@ export default function OnboardingModal({ isOpen, onClose }) {
   };
 
   const handleFinish = () => {
+    persistSelections();
+
     // Fire confetti
     const duration = 2000;
     const end = Date.now() + duration;
@@ -114,7 +119,10 @@ export default function OnboardingModal({ isOpen, onClose }) {
                 {step === 1 ? "1. Chủ đề yêu thích của bạn?" : "2. Nghệ sĩ bạn yêu thích?"}
               </h2>
               <button 
-                onClick={handleClose}
+                onClick={() => {
+                  persistSelections();
+                  handleClose();
+                }}
                 className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
               >
                 <FiX className="w-5 h-5" />
@@ -133,7 +141,7 @@ export default function OnboardingModal({ isOpen, onClose }) {
                     transition={{ duration: 0.2 }}
                     className="grid grid-cols-2 md:grid-cols-4 gap-4"
                   >
-                    {MOCK_TOPICS.map(topic => {
+                    {topics.map(topic => {
                       const isSelected = selectedTopics.includes(topic.id);
                       return (
                         <button
@@ -166,7 +174,7 @@ export default function OnboardingModal({ isOpen, onClose }) {
                     transition={{ duration: 0.2 }}
                     className="grid grid-cols-3 sm:grid-cols-4 gap-6"
                   >
-                    {MOCK_ARTISTS.map(artist => {
+                    {artists.map(artist => {
                       const isSelected = selectedArtists.includes(artist.id);
                       return (
                         <button

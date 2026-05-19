@@ -20,6 +20,21 @@ import {
 import { adminUserService } from '../../api/services';
 import { AuthContext } from '../../context/AuthContext';
 
+const USERS_CACHE_TTL_MS = 60_000;
+const usersCache = {
+  items: [],
+  fetchedAt: 0,
+};
+
+function isUsersCacheFresh() {
+  return Date.now() - usersCache.fetchedAt < USERS_CACHE_TTL_MS;
+}
+
+function updateUsersCache(items) {
+  usersCache.items = items;
+  usersCache.fetchedAt = Date.now();
+}
+
 function getEmptyForm() {
   return {
     username: '',
@@ -237,9 +252,9 @@ function UserModal({ state, values, saving, formError, onClose, onChange, onSubm
 
 export default function ManageUsers() {
   const { user } = useContext(AuthContext);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState(() => usersCache.items);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !isUsersCacheFresh());
   const [saving, setSaving] = useState(false);
   const [workingUserId, setWorkingUserId] = useState(null);
   const [modalState, setModalState] = useState({ open: false, mode: 'create', user: null });
@@ -249,10 +264,20 @@ export default function ManageUsers() {
   useEffect(() => {
     let isMounted = true;
 
+    if (isUsersCacheFresh()) {
+      setUsers(usersCache.items);
+      setLoading(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
     adminUserService.getAll()
       .then((data) => {
         if (!isMounted) return;
-        setUsers(normalizeCollection(data));
+        const items = normalizeCollection(data);
+        updateUsersCache(items);
+        setUsers(items);
       })
       .catch((error) => {
         if (!isMounted) return;
@@ -354,10 +379,14 @@ export default function ManageUsers() {
         : await adminUserService.update(modalState.user.id, payload);
 
       setUsers((prev) => {
+        let nextUsers;
         if (modalState.mode === 'create') {
-          return [updatedUser, ...prev];
+          nextUsers = [updatedUser, ...prev];
+        } else {
+          nextUsers = prev.map((item) => (item.id === updatedUser.id ? updatedUser : item));
         }
-        return prev.map((item) => (item.id === updatedUser.id ? updatedUser : item));
+        updateUsersCache(nextUsers);
+        return nextUsers;
       });
 
       toast.success(modalState.mode === 'create' ? 'Đã tạo tài khoản mới.' : 'Đã cập nhật người dùng.');
@@ -373,7 +402,11 @@ export default function ManageUsers() {
     setWorkingUserId(userId);
     try {
       const updatedUser = await adminUserService.update(userId, payload);
-      setUsers((prev) => prev.map((item) => (item.id === updatedUser.id ? updatedUser : item)));
+      setUsers((prev) => {
+        const nextUsers = prev.map((item) => (item.id === updatedUser.id ? updatedUser : item));
+        updateUsersCache(nextUsers);
+        return nextUsers;
+      });
       toast.success(successMessage);
     } catch (error) {
       toast.error(getErrorMessage(error, fallbackMessage));
@@ -407,7 +440,11 @@ export default function ManageUsers() {
     setWorkingUserId(selectedUser.id);
     try {
       await adminUserService.delete(selectedUser.id);
-      setUsers((prev) => prev.filter((item) => item.id !== selectedUser.id));
+      setUsers((prev) => {
+        const nextUsers = prev.filter((item) => item.id !== selectedUser.id);
+        updateUsersCache(nextUsers);
+        return nextUsers;
+      });
       toast.success('Đã xóa tài khoản.');
     } catch (error) {
       toast.error(getErrorMessage(error, 'Không thể xóa tài khoản.'));

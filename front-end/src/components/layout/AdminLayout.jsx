@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import {
-  FiGrid, FiUsers, FiMusic, FiUploadCloud,
+  FiGrid, FiUsers, FiMusic,
   FiBarChart2, FiLogOut, FiArrowLeft, FiShield, FiDisc, FiMic, FiTag
 } from 'react-icons/fi';
 
@@ -13,7 +13,6 @@ const navItems = [
   { to: '/admin/albums', label: 'Album', icon: FiDisc },
   { to: '/admin/artists', label: 'Nghệ sĩ', icon: FiMic },
   { to: '/admin/topics', label: 'Chủ đề', icon: FiTag },
-  { to: '/admin/pending', label: 'Duyệt Upload', icon: FiUploadCloud },
   { to: '/admin/stats', label: 'Thống kê', icon: FiBarChart2 },
 ];
 

@@ -4,22 +4,32 @@ import toast from 'react-hot-toast';
 import { playlistService, songService, favoriteService } from '../api/services';
 import { enrichSongsWithDuration } from '../utils/duration';
 import { AuthContext } from './AuthContext';
-import { getSongArtistNames } from '../utils/songArtists';
+import { getSongArtistNames, getSongPrimaryArtist } from '../utils/songArtists';
 
 const MusicContext = createContext();
 
 export const useMusic = () => useContext(MusicContext);
 
-const mapSong = (s) => ({
-  id: s.id,
-  title: s.tieu_de,
-  artist: getSongArtistNames(s, "Unknown Artist"),
-  image: s.duong_dan_hinh_anh,
-  audioUrl: s.duong_dan_am_thanh,
-  duration: s.thoi_luong || null,
-  lyrics: s.loi_bai_hat,
-  plays: s.luot_nghe
-});
+const mapSong = (s) => {
+  const primaryArtist = getSongPrimaryArtist(s);
+
+  return {
+    id: s.id,
+    title: s.tieu_de,
+    artist: getSongArtistNames(s, "Unknown Artist"),
+    artistId: primaryArtist?.id || null,
+    artistAvatar: primaryArtist?.anh_nghe_si || s.duong_dan_hinh_anh || '',
+    image: s.duong_dan_hinh_anh,
+    audioUrl: s.duong_dan_am_thanh,
+    duration: s.thoi_luong || null,
+    lyrics: s.loi_bai_hat,
+    plays: s.luot_nghe || 0,
+    genreId: s.id_the_loai?.id || null,
+    genreName: s.id_the_loai?.ten_the_loai || '',
+    albumId: s.id_album?.id || null,
+    uploader: s.id_nguoi_dang?.username || 'Hệ thống',
+  };
+};
 
 const mapPlaylist = (p) => ({
   id: p.id,

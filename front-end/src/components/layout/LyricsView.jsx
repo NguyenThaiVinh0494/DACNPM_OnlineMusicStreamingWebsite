@@ -1,29 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { FiChevronDown, FiHeart, FiShare2, FiMoreHorizontal, FiMusic } from "react-icons/fi";
+import { FiChevronDown, FiHeart, FiMoreHorizontal, FiMusic } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMusic } from "../../context/MusicContext";
-
-// Parse lời bài hát: hỗ trợ cả LRC ([00:12.00]Lời...) và plain text
-function parseLyrics(lyricsText) {
-  if (!lyricsText) return [];
-  const lines = lyricsText.split('\n');
-  const lrcPattern = /^\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/;
-  const parsed = [];
-
-  for (const line of lines) {
-    const match = line.match(lrcPattern);
-    if (match) {
-      const minutes = parseInt(match[1]);
-      const seconds = parseInt(match[2]);
-      const ms = parseInt(match[3]);
-      const time = minutes * 60 + seconds + ms / (match[3].length === 3 ? 1000 : 100);
-      if (match[4].trim()) parsed.push({ time, text: match[4].trim() });
-    } else if (line.trim()) {
-      parsed.push({ time: -1, text: line.trim() });
-    }
-  }
-  return parsed;
-}
+import { findActiveLyricIndex, hasTimedLyrics, parseLyrics } from "../../utils/lyrics";
 
 // Tính opacity dựa trên khoảng cách so với dòng đang hát
 function getLineOpacity(index, activeIndex, isPassed) {
@@ -59,15 +38,10 @@ export default function LyricsView() {
   }, [isLyricsOpen, audioRef]);
 
   const lyrics = parseLyrics(currentSong?.lyrics);
-  const isLRC = lyrics.length > 0 && lyrics[0].time !== -1;
+  const isLRC = hasTimedLyrics(lyrics);
 
   // Find active line index
-  const activeLineIndex = isLRC
-    ? lyrics.findIndex((line, index) => {
-        const nextLine = lyrics[index + 1];
-        return currentTime >= line.time && (!nextLine || currentTime < nextLine.time);
-      })
-    : -1;
+  const activeLineIndex = findActiveLyricIndex(lyrics, currentTime);
 
   // Auto-scroll: cuộn câu đang hát về giữa màn hình
   useEffect(() => {
@@ -167,9 +141,6 @@ export default function LyricsView() {
                 <div className="flex items-center gap-4 text-white/50">
                   <button className="hover:text-white hover:scale-110 transition-all p-2 rounded-full hover:bg-white/10">
                     <FiHeart className="w-5 h-5" />
-                  </button>
-                  <button className="hover:text-white hover:scale-110 transition-all p-2 rounded-full hover:bg-white/10">
-                    <FiShare2 className="w-5 h-5" />
                   </button>
                   <button className="hover:text-white hover:scale-110 transition-all p-2 rounded-full hover:bg-white/10 ml-auto">
                     <FiMoreHorizontal className="w-5 h-5" />

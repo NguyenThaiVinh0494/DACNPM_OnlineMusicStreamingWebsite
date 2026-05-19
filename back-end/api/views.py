@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -31,6 +32,14 @@ class IsAdminRole(BasePermission):
         return bool(request.user and request.user.is_authenticated and request.user.vai_tro == 'ADMIN')
 
 
+class IsAdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+
+        return bool(request.user and request.user.is_authenticated and request.user.vai_tro == 'ADMIN')
+
+
 # ============================
 # Upload lên Cloudinary
 # ============================
@@ -52,7 +61,7 @@ class UploadAnhView(APIView):
 
 
 class UploadNhacView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminRole]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
@@ -299,16 +308,53 @@ class LichSuNgheViewSet(viewsets.ModelViewSet):
 # ============================
 class BaiHatViewSet(MultipartEnabledViewSet):
     serializer_class = BaiHatSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['tieu_de', 'cac_nghe_si__ten_nghe_si', 'quoc_gia']
     ordering_fields = ['luot_nghe', 'nam_phat_hanh', 'id']
 
-    def get_queryset(self):
-        queryset = BaiHat.objects.select_related(
+    def _base_queryset(self):
+        return BaiHat.objects.select_related(
             'id_album',
             'id_nguoi_dang',
         ).prefetch_related('cac_nghe_si', 'the_loais').all().order_by('-id')
+        
+
+    def _get_limit(self, request, default=12, maximum=30):
+        try:
+            limit = int(request.query_params.get('limit', default))
+        except (TypeError, ValueError):
+            limit = default
+
+        return max(1, min(limit, maximum))
+
+    def _serialize_collection(self, queryset):
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def _parse_id_list(self, raw_value):
+        if not raw_value:
+            return []
+
+        values = []
+        for item in raw_value.split(','):
+            item = item.strip()
+            if not item:
+                continue
+            try:
+                values.append(int(item))
+            except ValueError:
+                continue
+
+        return values
+
+    def get_queryset(self):
+        queryset = self._base_queryset().all().order_by('-id')
 
         status_value = self.request.query_params.get('trang_thai')
         artist_id = self.request.query_params.get('id_nghe_si')
@@ -325,3 +371,103 @@ class BaiHatViewSet(MultipartEnabledViewSet):
             queryset = queryset.filter(the_loais__id=genre_id)
 
         return queryset.distinct()
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def recommended(self, request):
+        limit = self._get_limit(request)
+        public_queryset = self._base_queryset().filter(trang_thai='PUBLIC').distinct()
+        user = request.user
+        preferred_artist_ids = self._parse_id_list(request.query_params.get('preferred_artist_ids'))
+        preferred_genre_ids = self._parse_id_list(request.query_params.get('preferred_genre_ids'))
+
+        if not user.is_authenticated and not (preferred_artist_ids or preferred_genre_ids):
+            return self._serialize_collection(public_queryset.order_by('-luot_nghe', '-id')[:limit])
+
+        history_song_ids = []
+        favorite_song_ids = []
+        if user.is_authenticated:
+            history_song_ids = list(
+                LichSuNghe.objects.filter(id_nguoi_dung=user)
+                .order_by('-thoi_gian_nghe')
+                .values_list('id_bai_hat_id', flat=True)[:20]
+            )
+            favorite_song_ids = list(
+                YeuThich.objects.filter(id_nguoi_dung=user)
+                .order_by('-ngay_thich')
+                .values_list('id_bai_hat_id', flat=True)[:20]
+            )
+        signal_song_ids = list(dict.fromkeys(favorite_song_ids + history_song_ids))
+
+        signal_songs = list(self._base_queryset().filter(id__in=signal_song_ids, trang_thai='PUBLIC'))
+        signal_artist_ids = {
+            artist.id
+            for song in signal_songs
+            for artist in song.cac_nghe_si.all()
+            if artist.id
+        }
+        signal_genre_ids = {
+            genre.id
+            for song in signal_songs
+            for genre in song.the_loais.all()
+            if genre.id
+        }
+        album_ids = sorted({song.id_album_id for song in signal_songs if song.id_album_id})
+        artist_ids = sorted(signal_artist_ids.union(preferred_artist_ids))
+        genre_ids = sorted(signal_genre_ids.union(preferred_genre_ids))
+
+        if not (signal_song_ids or preferred_artist_ids or preferred_genre_ids):
+            return self._serialize_collection(public_queryset.order_by('-luot_nghe', '-id')[:limit])
+
+        recommendations = public_queryset.annotate(
+            matched_artists=(
+                Count('cac_nghe_si', filter=Q(cac_nghe_si__id__in=artist_ids), distinct=True)
+                if artist_ids
+                else Value(0, output_field=IntegerField())
+            ),
+            matched_genre=(
+                Count('the_loais', filter=Q(the_loais__id__in=genre_ids), distinct=True)
+                if genre_ids
+                else Value(0, output_field=IntegerField())
+            ),
+            matched_album=(
+                Case(
+                    When(id_album_id__in=album_ids, then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+                if album_ids
+                else Value(0, output_field=IntegerField())
+            ),
+            preferred_artists=(
+                Count('cac_nghe_si', filter=Q(cac_nghe_si__id__in=preferred_artist_ids), distinct=True)
+                if preferred_artist_ids
+                else Value(0, output_field=IntegerField())
+            ),
+            preferred_genre=(
+                Count('the_loais', filter=Q(the_loais__id__in=preferred_genre_ids), distinct=True)
+                if preferred_genre_ids
+                else Value(0, output_field=IntegerField())
+            ),
+            is_favorite=Case(
+                When(id__in=favorite_song_ids, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            ),
+            is_recent=Case(
+                When(id__in=history_song_ids, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            ),
+        ).order_by(
+            '-is_favorite',
+            '-is_recent',
+            '-preferred_artists',
+            '-preferred_genre',
+            '-matched_artists',
+            '-matched_genre',
+            '-matched_album',
+            '-luot_nghe',
+            '-id',
+        )
+
+        return self._serialize_collection(recommendations[:limit])

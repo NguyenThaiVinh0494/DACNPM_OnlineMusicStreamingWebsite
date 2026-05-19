@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import AddToPlaylistModal from "./components/layout/AddToPlaylistModal";
 import Home from "./pages/Home";
@@ -18,7 +18,6 @@ import ManageSongs from "./pages/admin/ManageSongs";
 import ManageAlbums from "./pages/admin/ManageAlbums";
 import ManageArtists from "./pages/admin/ManageArtists";
 import ManageTopics from "./pages/admin/ManageTopics";
-import PendingUploads from "./pages/admin/PendingUploads";
 import AdminStats from "./pages/admin/AdminStats";
 
 import PopularPlaylists from "./pages/discover/PopularPlaylists";
@@ -87,8 +86,8 @@ function App() {
           <Route path="albums" element={<ManageAlbums />} />
           <Route path="artists" element={<ManageArtists />} />
           <Route path="topics" element={<ManageTopics />} />
-          <Route path="pending" element={<PendingUploads />} />
           <Route path="stats" element={<AdminStats />} />
+          <Route path="pending" element={<Navigate to="/admin" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { FiPlay, FiDownload, FiShare2, FiHeart, FiMoreHorizontal } from "react-icons/fi";
+import { FiPlay, FiHeart, FiMoreHorizontal } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
 import { playlistService } from "../api/services";
@@ -102,9 +102,6 @@ export default function PlaylistDetail() {
               <FiHeart className="w-5 h-5 text-gray-700 dark:text-white" />
             </button>
             <button className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
-              <FiShare2 className="w-5 h-5 text-gray-700 dark:text-white" />
-            </button>
-            <button className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
               <FiMoreHorizontal className="w-5 h-5 text-gray-700 dark:text-white" />
             </button>
           </div>
@@ -115,11 +112,6 @@ export default function PlaylistDetail() {
               className="flex items-center gap-2 bg-nct-primary hover:bg-emerald-500 text-white px-8 py-2.5 rounded-full font-bold transition-all"
             >
               <FiPlay className="w-5 h-5 fill-current" /> Play all
-            </button>
-            <button 
-              className="flex items-center gap-2 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-900 dark:text-white px-8 py-2.5 rounded-full font-bold transition-all"
-            >
-              <FiDownload className="w-5 h-5" /> Download
             </button>
           </div>
         </div>
@@ -161,9 +153,6 @@ export default function PlaylistDetail() {
                       className="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-white text-sm text-left"
                     >
                       Thêm vào playlist
-                    </button>
-                    <button className="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-white text-sm text-left">
-                      Tải xuống
                     </button>
                   </div>
                 }
