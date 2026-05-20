@@ -49,6 +49,10 @@ export const songService = {
     const response = await api.get(`songs/${id}/`);
     return response.data;
   },
+  recordListen: async (id) => {
+    const response = await api.post(`songs/${id}/listen/`);
+    return response.data;
+  },
   create: async (data) => {
     const response = await api.post('songs/', data);
     return response.data;
@@ -179,9 +183,7 @@ export const favoriteService = {
     return response.data;
   },
   toggle: async (songId) => {
-    // Nếu đã thích thì xóa, nếu chưa thì thêm
-    // Thực tế có thể tách riêng add/remove tùy vào logic BE
-    const response = await api.post('favorites/', { id_bai_hat: songId });
+    const response = await api.post('favorites/toggle/', { id_bai_hat: songId });
     return response.data;
   },
   remove: async (id) => {

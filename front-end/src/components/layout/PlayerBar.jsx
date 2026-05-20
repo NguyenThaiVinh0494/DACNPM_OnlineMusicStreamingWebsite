@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiHeart, FiMoreHorizontal, FiShuffle, FiRepeat, FiVolume2, FiVolumeX, FiList, FiMusic, FiMic } from "react-icons/fi";
 import { FaPlay, FaPause, FaStepBackward, FaStepForward } from "react-icons/fa";
@@ -15,7 +15,7 @@ const formatTime = (time) => {
 export default function PlayerBar() {
   const { 
     currentSong, isPlaying, togglePlay, playNext, playPrev, 
-    toggleFavorite, favorites, 
+    toggleFavorite, favorites, recordSongListen, playbackSessionId,
     isShuffle, repeatMode, toggleShuffle, toggleRepeat,
     audioRef, isLyricsOpen, toggleLyrics, isQueueOpen, toggleQueue
   } = useMusic();
@@ -24,6 +24,23 @@ export default function PlayerBar() {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const listenProgressRef = useRef({
+    songId: null,
+    sessionId: null,
+    recorded: false,
+    accumulated: 0,
+    lastTime: 0,
+  });
+
+  const resetListenProgress = useCallback(() => {
+    listenProgressRef.current = {
+      songId: currentSong?.id || null,
+      sessionId: playbackSessionId,
+      recorded: false,
+      accumulated: 0,
+      lastTime: audioRef.current?.currentTime || 0,
+    };
+  }, [audioRef, currentSong?.id, playbackSessionId]);
 
   // Sync audio play/pause with Context
   useEffect(() => {
@@ -36,6 +53,10 @@ export default function PlayerBar() {
     }
   }, [isPlaying, currentSong, audioRef]);
 
+  useEffect(() => {
+    resetListenProgress();
+  }, [resetListenProgress]);
+
   // Sync volume
   useEffect(() => {
     if (audioRef.current) {
@@ -45,7 +66,28 @@ export default function PlayerBar() {
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      const nextTime = audioRef.current.currentTime;
+      setCurrentTime(nextTime);
+
+      if (!currentSong || listenProgressRef.current.recorded) {
+        listenProgressRef.current.lastTime = nextTime;
+        return;
+      }
+
+      if (listenProgressRef.current.songId !== currentSong.id || listenProgressRef.current.sessionId !== playbackSessionId) {
+        resetListenProgress();
+      }
+
+      const delta = nextTime - listenProgressRef.current.lastTime;
+      if (isPlaying && delta > 0 && delta <= 5) {
+        listenProgressRef.current.accumulated += delta;
+      }
+      listenProgressRef.current.lastTime = nextTime;
+
+      if (listenProgressRef.current.accumulated >= 10) {
+        listenProgressRef.current.recorded = true;
+        recordSongListen(currentSong);
+      }
     }
   };
 
@@ -60,6 +102,7 @@ export default function PlayerBar() {
     if (repeatMode === 2) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
+        resetListenProgress();
         audioRef.current.play();
       }
     } else {
@@ -144,7 +187,7 @@ export default function PlayerBar() {
         </div>
         {currentSong && (
           <div className="hidden md:flex items-center gap-3 ml-2 text-gray-500 dark:text-nct-text-dim">
-            <button onClick={() => toggleFavorite(currentSong)} aria-label="Thêm vào yêu thích" className={`${isFav ? 'text-nct-primary' : 'hover:text-red-500'} transition-colors`}>
+            <button type="button" onClick={() => toggleFavorite(currentSong)} aria-label="Thêm vào yêu thích" className={`${isFav ? 'text-nct-primary' : 'hover:text-red-500'} transition-colors`}>
               <FiHeart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
             </button>
             <button aria-label="Thêm tùy chọn" className="hover:text-gray-900 dark:hover:text-white transition-colors"><FiMoreHorizontal className="w-4 h-4" /></button>

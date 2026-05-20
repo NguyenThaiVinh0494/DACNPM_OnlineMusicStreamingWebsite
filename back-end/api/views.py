@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Case, Count, IntegerField, Q, Value, When
+from django.db.models import Case, Count, F, IntegerField, Q, Value, When
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -287,6 +287,34 @@ class YeuThichViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(id_nguoi_dung=self.request.user)
 
+    @action(detail=False, methods=['post'])
+    def toggle(self, request):
+        song_id = request.data.get('id_bai_hat') or request.data.get('song_id')
+        if not song_id:
+            return Response({'error': 'Vui lòng chọn bài hát.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            song = BaiHat.objects.get(id=song_id)
+        except BaiHat.DoesNotExist:
+            return Response({'error': 'Song not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        favorite = YeuThich.objects.filter(id_nguoi_dung=request.user, id_bai_hat=song).first()
+        if favorite:
+            favorite.delete()
+            is_favorite = False
+        else:
+            YeuThich.objects.create(id_nguoi_dung=request.user, id_bai_hat=song)
+            is_favorite = True
+
+        return Response(
+            {
+                'id_bai_hat': song.id,
+                'da_thich': is_favorite,
+                'so_luot_thich': song.duoc_yeu_thich.count(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 # ============================
 # Lịch sử nghe
@@ -371,6 +399,17 @@ class BaiHatViewSet(MultipartEnabledViewSet):
             queryset = queryset.filter(the_loais__id=genre_id)
 
         return queryset.distinct()
+
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
+    def listen(self, request, pk=None):
+        song = self.get_object()
+        BaiHat.objects.filter(pk=song.pk).update(luot_nghe=F('luot_nghe') + 1)
+
+        if request.user.is_authenticated:
+            LichSuNghe.objects.create(id_nguoi_dung=request.user, id_bai_hat=song)
+
+        song.refresh_from_db(fields=['luot_nghe'])
+        return Response({'id': song.id, 'luot_nghe': song.luot_nghe}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def recommended(self, request):

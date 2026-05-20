@@ -24,6 +24,8 @@ const mapSong = (s) => {
     duration: s.thoi_luong || null,
     lyrics: s.loi_bai_hat,
     plays: s.luot_nghe || 0,
+    likeCount: s.so_luot_thich || 0,
+    isFavorite: Boolean(s.da_thich),
     genreId: s.id_the_loai?.id || null,
     genreName: s.id_the_loai?.ten_the_loai || '',
     albumId: s.id_album?.id || null,
@@ -46,7 +48,7 @@ const enrichPlaylist = async (playlist) => ({
 });
 
 export const MusicProvider = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, openLoginModal } = useContext(AuthContext);
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueue] = useState([]);
@@ -55,6 +57,7 @@ export const MusicProvider = ({ children }) => {
   const [repeatMode, setRepeatMode] = useState(0); // 0: no repeat, 1: repeat all, 2: repeat one
   const [isLyricsOpen, setIsLyricsOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [playbackSessionId, setPlaybackSessionId] = useState(0);
 
   // Global library of songs
   const [allSongs, setAllSongs] = useState([]);
@@ -187,9 +190,41 @@ export const MusicProvider = ({ children }) => {
     setSongToAdd(null);
   };
 
+  const markPlaybackSession = () => {
+    setPlaybackSessionId((prev) => prev + 1);
+  };
+
+  const updateSongEverywhere = (songId, updates) => {
+    const applyUpdates = (song) => (song?.id === songId ? { ...song, ...updates } : song);
+
+    setCurrentSong((song) => applyUpdates(song));
+    setAllSongs((songs) => songs.map(applyUpdates));
+    setQueue((songs) => songs.map(applyUpdates));
+    setFavorites((songs) => songs.map(applyUpdates));
+    setRecentSongs((songs) => songs.map(applyUpdates));
+    setMyPlaylists((playlists) => playlists.map((playlist) => ({
+      ...playlist,
+      songs: playlist.songs.map(applyUpdates),
+    })));
+  };
+
+  const recordSongListen = async (song) => {
+    if (!song?.id) return null;
+
+    try {
+      const data = await songService.recordListen(song.id);
+      updateSongEverywhere(song.id, { plays: data.luot_nghe });
+      return data;
+    } catch (error) {
+      console.error("Failed to record listen:", error);
+      return null;
+    }
+  };
+
   const playSong = (song, newQueue = null) => {
     setCurrentSong(song);
     setIsPlaying(true);
+    markPlaybackSession();
     
     // Add to recent
     setRecentSongs(prev => {
@@ -232,6 +267,7 @@ export const MusicProvider = ({ children }) => {
       const song = queue[index];
       setCurrentSong(song);
       setIsPlaying(true);
+      markPlaybackSession();
       
       setRecentSongs(prev => {
         const filtered = prev.filter(s => s.id !== song.id);
@@ -272,6 +308,7 @@ export const MusicProvider = ({ children }) => {
     const song = queue[nextIndex];
     setCurrentSong(song);
     setIsPlaying(true);
+    markPlaybackSession();
 
     setRecentSongs(prev => {
       const filtered = prev.filter(s => s.id !== song.id);
@@ -301,6 +338,7 @@ export const MusicProvider = ({ children }) => {
     const song = queue[prevIndex];
     setCurrentSong(song);
     setIsPlaying(true);
+    markPlaybackSession();
 
     setRecentSongs(prev => {
       const filtered = prev.filter(s => s.id !== song.id);
@@ -315,6 +353,7 @@ export const MusicProvider = ({ children }) => {
       const song = songList[0];
       setCurrentSong(song);
       setIsPlaying(true);
+      markPlaybackSession();
 
       setRecentSongs(prev => {
         const filtered = prev.filter(s => s.id !== song.id);
@@ -334,24 +373,42 @@ export const MusicProvider = ({ children }) => {
   };
 
   const toggleFavorite = async (song) => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để tym bài hát");
+      openLoginModal?.();
+      return null;
+    }
+
+    if (!song?.id) {
+      toast.error("Không tìm thấy bài hát");
+      return null;
+    }
+
     try {
-      const isFav = favorites.some(s => s.id === song.id);
-      if (isFav) {
-        // Find the favorite ID to delete
-        const favs = await favoriteService.getAll();
-        const favToDelete = favs.find(f => f.id_bai_hat === song.id);
-        if (favToDelete) {
-          await favoriteService.remove(favToDelete.id);
-        }
-        setFavorites(favorites.filter(s => s.id !== song.id));
-        toast.success(`Đã xóa "${song.title}" khỏi Yêu thích`);
-      } else {
-        await favoriteService.toggle(song.id);
-        setFavorites([song, ...favorites]);
+      const result = await favoriteService.toggle(song.id);
+      const nextUpdates = {
+        isFavorite: result.da_thich,
+        likeCount: result.so_luot_thich,
+      };
+
+      updateSongEverywhere(song.id, nextUpdates);
+
+      if (result.da_thich) {
+        setFavorites((prev) => [{ ...song, ...nextUpdates }, ...prev.filter((s) => s.id !== song.id)]);
         toast.success(`Đã thêm "${song.title}" vào Yêu thích`);
+      } else {
+        setFavorites((prev) => prev.filter(s => s.id !== song.id));
+        toast.success(`Đã xóa "${song.title}" khỏi Yêu thích`);
       }
-    } catch {
-      toast.error("Thao tác thất bại");
+      return result;
+    } catch (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error("Vui lòng đăng nhập để tym bài hát");
+        openLoginModal?.();
+      } else {
+        toast.error("Thao tác thất bại");
+      }
+      return null;
     }
   };
 
@@ -387,6 +444,7 @@ export const MusicProvider = ({ children }) => {
     <MusicContext.Provider value={{
       currentSong,
       isPlaying,
+      playbackSessionId,
       queue,
       allSongs,
       recentSongs,
@@ -403,6 +461,7 @@ export const MusicProvider = ({ children }) => {
       openAddToPlaylistModal,
       closeAddToPlaylistModal,
       playSong,
+      recordSongListen,
       togglePlay,
       playNext,
       playPrev,

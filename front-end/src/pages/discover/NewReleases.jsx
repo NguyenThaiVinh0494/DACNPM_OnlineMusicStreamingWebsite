@@ -104,6 +104,7 @@ function SongRow({ song, index, onPlay, isCurrent, isPlaying, isFav, onFav }) {
       {/* actions */}
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button 
+          type="button"
           onClick={(e) => { e.stopPropagation(); onFav(); }} 
           className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
         >
@@ -129,9 +130,17 @@ function SongRow({ song, index, onPlay, isCurrent, isPlaying, isFav, onFav }) {
 export default function NewReleases() {
   const [typeTab,  setTypeTab]  = useState("Tất cả");
   const [genreTab, setGenreTab] = useState("Tất cả");
-  const { playSong, currentSong, isPlaying, favorites, toggleFavorite } = useMusic();
+  const { playSong, currentSong, isPlaying, favorites, toggleFavorite, allSongs } = useMusic();
+  const releaseSource = allSongs.length > 0
+    ? allSongs.map((song) => ({
+        ...song,
+        genre: song.genreName || "Khác",
+        type: "Single",
+        dateLabel: "Hôm nay",
+      }))
+    : releases;
 
-  const filtered = releases.filter(s => {
+  const filtered = releaseSource.filter(s => {
     const okType  = typeTab  === "Tất cả" || s.type  === typeTab;
     const okGenre = genreTab === "Tất cả" || s.genre === genreTab;
     return okType && okGenre;
@@ -230,7 +239,7 @@ export default function NewReleases() {
                   isPlaying={isPlaying}
                   isFav={favorites.some(f => f.id === song.id)}
                   onPlay={() => {
-                    if (song.audioUrl) playSong({ ...song }, releases.filter(r => r.audioUrl));
+                    if (song.audioUrl) playSong({ ...song }, releaseSource.filter(r => r.audioUrl));
                   }}
                   onFav={() => toggleFavorite(song)}
                 />

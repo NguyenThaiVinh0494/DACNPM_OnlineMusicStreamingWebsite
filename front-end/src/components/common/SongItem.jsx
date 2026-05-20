@@ -120,6 +120,7 @@ export default function SongItem({
 
         <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onToggleFavorite?.(song);
@@ -132,6 +133,7 @@ export default function SongItem({
 
           <div className="relative dropdown-container" ref={menuRef}>
             <button
+              type="button"
               onClick={handleDropdownClick}
               className={`p-2 rounded-full transition-colors ${showMenu || openDropdown === song.id ? 'bg-nct-primary/20 text-nct-primary' : 'text-gray-400 dark:text-nct-text-dim hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10'}`}
             >
@@ -239,6 +241,7 @@ export default function SongItem({
       {/* Hover Actions */}
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
         <button 
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onToggleFavorite?.(song);
@@ -251,6 +254,7 @@ export default function SongItem({
         
         <div className="relative dropdown-container" ref={menuRef}>
           <button 
+            type="button"
             onClick={handleDropdownClick}
             className={`p-2 rounded-full transition-colors ${showMenu || openDropdown === song.id ? 'bg-nct-primary/20 text-nct-primary' : 'text-gray-400 dark:text-nct-text-dim hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10'}`}
           >

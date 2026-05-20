@@ -99,10 +99,10 @@ function buildArtistOptions(allSongs) {
 }
 
 function getDerivedStats(song) {
-  const plays = song?.plays || 0;
+  const likes = song?.likeCount || 0;
 
   return {
-    likes: formatCompactCount(Math.max(plays, 0)),
+    likes: formatCompactCount(Math.max(likes, 0)),
   };
 }
 
@@ -120,6 +120,8 @@ function mapRecommendedSong(song) {
     duration: song.thoi_luong || null,
     lyrics: song.loi_bai_hat,
     plays: song.luot_nghe || 0,
+    likeCount: song.so_luot_thich || 0,
+    isFavorite: Boolean(song.da_thich),
     genreId: song.id_the_loai?.id || null,
     genreName: song.id_the_loai?.ten_the_loai || '',
     albumId: song.id_album?.id || null,
@@ -149,7 +151,6 @@ export default function ForYou() {
   const menuRef = useRef(null);
   const lyricRefs = useRef([]);
   const hasInitializedFeedRef = useRef(false);
-  const favoriteDependency = favorites.map((song) => song.id).sort((left, right) => left - right).join(",");
 
   const topicOptions = buildTopicOptions(allSongs);
   const artistOptions = buildArtistOptions(allSongs);
@@ -157,15 +158,25 @@ export default function ForYou() {
   if (derivedIndex === -1) derivedIndex = 0;
 
   const currentItem = feed[derivedIndex] || null;
+  const displayedCurrentItem = currentSong && currentItem && currentSong.id === currentItem.id
+    ? {
+        ...currentItem,
+        likeCount: currentSong.likeCount ?? currentItem.likeCount,
+        isFavorite: currentSong.isFavorite ?? currentItem.isFavorite,
+      }
+    : currentItem;
   const currentLyrics = parseLyrics(currentItem?.lyrics);
-  const currentItemIsFavorite = currentItem ? favorites.some((song) => song.id === currentItem.id) : false;
+  const currentItemIsFavorite = displayedCurrentItem ? favorites.some((song) => song.id === displayedCurrentItem.id) || displayedCurrentItem.isFavorite : false;
   const lyricIsTimed = hasTimedLyrics(currentLyrics);
   const activeLyricIndex = findActiveLyricIndex(currentLyrics, currentTime);
-  const stats = getDerivedStats(currentItem);
+  const stats = getDerivedStats(displayedCurrentItem);
 
   useEffect(() => {
+    let active = true;
+
     const fetchRecommendedSongs = async () => {
       setLoadingFeed(true);
+      const fallbackSongs = allSongs.slice(0, 14);
 
       try {
         const params = { limit: 14 };
@@ -179,17 +190,30 @@ export default function ForYou() {
         const response = await songService.getRecommended(params);
         const normalized = Array.isArray(response) ? response : response?.results || [];
         const enrichedFeed = await enrichSongsWithDuration(normalized, mapRecommendedSong);
-        setFeed(enrichedFeed);
+        if (!active) return;
+
+        if (enrichedFeed.length > 0) {
+          setFeed(enrichedFeed);
+        } else {
+          setFeed(fallbackSongs);
+        }
       } catch (error) {
         console.error("Không thể tải danh sách đề xuất cho For You:", error);
-        setFeed([]);
+        if (active) {
+          setFeed(fallbackSongs);
+        }
       } finally {
-        setLoadingFeed(false);
+        if (active) {
+          setLoadingFeed(false);
+        }
       }
     };
 
     fetchRecommendedSongs();
-  }, [favoriteDependency, onboardingPreferences, user?.id]);
+    return () => {
+      active = false;
+    };
+  }, [allSongs, onboardingPreferences, user?.id]);
 
   useEffect(() => {
     if (!feed.length || hasInitializedFeedRef.current) {
@@ -294,6 +318,23 @@ export default function ForYou() {
     }
   };
 
+  const handleToggleFavorite = async () => {
+    if (!currentItem) return;
+
+    const result = await toggleFavorite(currentItem);
+    if (!result) return;
+
+    setFeed((items) => items.map((song) => (
+      song.id === currentItem.id
+        ? {
+            ...song,
+            likeCount: result.so_luot_thich,
+            isFavorite: result.da_thich,
+          }
+        : song
+    )));
+  };
+
   if (loadingFeed) {
     return (
       <div className="flex h-[calc(100vh-140px)] items-center justify-center">
@@ -396,8 +437,9 @@ export default function ForYou() {
               </div>
 
               <button
-                onClick={() => toggleFavorite(currentItem)}
+                onClick={handleToggleFavorite}
                 className="group flex flex-col items-center gap-1"
+                type="button"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 shadow-sm transition-colors group-hover:bg-gray-200 dark:bg-white/5 dark:group-hover:bg-white/10">
                   <FiHeart className={`h-6 w-6 ${currentItemIsFavorite ? "fill-red-500 text-red-500" : "text-gray-700 dark:text-white"}`} />

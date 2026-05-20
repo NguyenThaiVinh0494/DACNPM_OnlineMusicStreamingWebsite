@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import LazyImage from "../../components/common/LazyImage";
-import { FiHeart, FiMoreHorizontal, FiPlay, FiChevronDown, FiChevronUp, FiPlus, FiFlag, FiMusic } from 'react-icons/fi';
+import { FiHeart, FiMoreHorizontal, FiPlay, FiChevronDown, FiChevronUp, FiPlus, FiFlag, FiMusic, FiHeadphones } from 'react-icons/fi';
 import { useMusic } from '../../context/MusicContext';
 import { albumService, songService } from '../../api/services';
 import { enrichSongsWithDuration } from '../../utils/duration';
@@ -9,7 +9,7 @@ import { getSongArtistNames, getSongPrimaryArtist } from '../../utils/songArtist
 
 export default function SongDetail() {
   const { id } = useParams();
-  const { playSong } = useMusic();
+  const { playSong, toggleFavorite, favorites, currentSong } = useMusic();
   const [showFullLyrics, setShowFullLyrics] = useState(false);
   const [activePopup, setActivePopup] = useState(null);
   const [isHeaderPopupOpen, setIsHeaderPopupOpen] = useState(false);
@@ -17,6 +17,7 @@ export default function SongDetail() {
   const [loading, setLoading] = useState(true);
   const popupRef = useRef(null);
   const headerPopupRef = useRef(null);
+  const formatCount = (value) => Number(value || 0).toLocaleString('vi-VN');
 
   // Fetch bài hát từ API theo id
   useEffect(() => {
@@ -68,7 +69,9 @@ export default function SongDetail() {
           cover: raw.duong_dan_hinh_anh || 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=400&h=400&fit=crop',
           audioUrl: raw.duong_dan_am_thanh,
           lyrics: raw.loi_bai_hat || 'Chưa có lời bài hát.',
-          likes: raw.luot_nghe?.toLocaleString() || '0',
+          plays: raw.luot_nghe || 0,
+          likes: raw.so_luot_thich || 0,
+          isFavorite: Boolean(raw.da_thich),
           contributor: raw.id_nguoi_dang?.username || 'Hệ thống',
           featuredSongs,
           featuredAlbums,
@@ -100,6 +103,37 @@ export default function SongDetail() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  const currentSongMatches = data && currentSong?.id === data.id;
+  const displayPlays = currentSongMatches ? currentSong.plays ?? data.plays : data?.plays;
+  const displayLikes = currentSongMatches ? currentSong.likeCount ?? data.likes : data?.likes;
+  const isFavorite = data
+    ? favorites.some((song) => song.id === data.id) || data.isFavorite || (currentSongMatches && currentSong.isFavorite)
+    : false;
+
+  const handleToggleFavorite = async () => {
+    if (!data) return;
+
+    const result = await toggleFavorite({
+      id: data.id,
+      title: data.title,
+      artist: data.artist,
+      image: data.cover,
+      audioUrl: data.audioUrl,
+      lyrics: data.lyrics,
+      plays: displayPlays,
+      likeCount: displayLikes,
+      isFavorite,
+    });
+
+    if (result) {
+      setData((prev) => ({
+        ...prev,
+        likes: result.so_luot_thich,
+        isFavorite: result.da_thich,
+      }));
+    }
+  };
 
   if (loading) {
     return (
@@ -155,10 +189,18 @@ export default function SongDetail() {
           
           {/* Interaction Stats */}
           <div className="flex items-center gap-8 mb-8 text-gray-700 dark:text-gray-300">
-            <div className="flex items-center gap-2 cursor-pointer group hover:text-nct-primary transition-colors">
-              <FiHeart className="text-2xl group-hover:fill-nct-primary" />
-              <span className="text-[15px] font-bold">{data.likes}</span>
+            <div className="flex items-center gap-2">
+              <FiHeadphones className="text-2xl text-nct-primary" />
+              <span className="text-[15px] font-bold">{formatCount(displayPlays)} lượt nghe</span>
             </div>
+            <button
+              type="button"
+              onClick={handleToggleFavorite}
+              className="flex items-center gap-2 cursor-pointer group hover:text-nct-primary transition-colors"
+            >
+              <FiHeart className={`text-2xl ${isFavorite ? 'fill-red-500 text-red-500' : 'group-hover:fill-nct-primary'}`} />
+              <span className="text-[15px] font-bold">{formatCount(displayLikes)} tym</span>
+            </button>
             <div className="relative">
               <div 
                 onClick={(e) => {
@@ -194,7 +236,7 @@ export default function SongDetail() {
           {/* Call to Actions */}
           <div className="flex items-center gap-4 mt-auto">
             <button
-              onClick={() => playSong({ id: data.id, title: data.title, artist: data.artist, image: data.cover, audioUrl: data.audioUrl, lyrics: data.lyrics })}
+              onClick={() => playSong({ id: data.id, title: data.title, artist: data.artist, image: data.cover, audioUrl: data.audioUrl, lyrics: data.lyrics, plays: displayPlays, likeCount: displayLikes, isFavorite })}
               className="flex items-center gap-2 px-10 py-[14px] bg-gradient-to-r from-[#00f2fe] to-[#4facfe] hover:opacity-90 hover:scale-105 text-white font-bold rounded-full shadow-[0_8px_20px_rgba(0,242,254,0.3)] transition-all"
             >
               <FiPlay className="text-xl fill-white" />

@@ -21,6 +21,7 @@ const decodeToken = (token) => {
 };
 
 export const AuthProvider = ({ children }) => {
+  const [authModal, setAuthModal] = useState(null);
   // Khởi tạo state đồng bộ (tránh render 2 lần chớp nhoáng)
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem('access_token');
@@ -52,6 +53,33 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user_info');
     setUser(null);
     toast.success('Đã đăng xuất!');
+  };
+
+  const openLoginModal = () => setAuthModal('login');
+  const openRegisterModal = () => setAuthModal('register');
+  const closeAuthModal = () => setAuthModal(null);
+
+  const persistAuthData = (data) => {
+    localStorage.setItem('access_token', data.access);
+    localStorage.setItem('refresh_token', data.refresh);
+
+    const decoded = decodeToken(data.access);
+    const apiUser = data.user || {};
+    const username = apiUser.username || decoded?.username || 'User';
+    const userInfo = {
+      id: apiUser.id || decoded?.user_id,
+      token: data.access,
+      username,
+      email: apiUser.email || '',
+      first_name: apiUser.first_name || '',
+      last_name: apiUser.last_name || '',
+      vai_tro: apiUser.vai_tro || 'USER',
+      avatar: apiUser.anh_dai_dien || `https://ui-avatars.com/api/?name=${username}&background=random`,
+    };
+
+    localStorage.setItem('user_info', JSON.stringify(userInfo));
+    setUser(userInfo);
+    return userInfo;
   };
 
   useEffect(() => {
@@ -94,29 +122,13 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const data = await authService.login(username, password);
-      localStorage.setItem('access_token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
-      
-      const decoded = decodeToken(data.access);
       
       // Gọi API lấy thông tin user thực sự
       const userRes = await axios.get('/users/me/', {
         headers: { Authorization: `Bearer ${data.access}` }
       });
       
-      const userInfo = { 
-        id: decoded.user_id, 
-        token: data.access, 
-        username: userRes.data.username,
-        email: userRes.data.email,
-        first_name: userRes.data.first_name,
-        last_name: userRes.data.last_name,
-        vai_tro: userRes.data.vai_tro,
-        avatar: userRes.data.anh_dai_dien || 'https://ui-avatars.com/api/?name=' + userRes.data.username + '&background=random' 
-      };
-      
-      localStorage.setItem('user_info', JSON.stringify(userInfo));
-      setUser(userInfo);
+      persistAuthData({ ...data, user: userRes.data });
       
       toast.success('Đăng nhập thành công!');
 
@@ -155,10 +167,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-
-
   return (
-    <AuthContext.Provider value={{ user, setUser, login, register, logout, loading }}>
+    <AuthContext.Provider value={{
+      user,
+      setUser,
+      login,
+      register,
+      logout,
+      loading,
+      authModal,
+      openLoginModal,
+      openRegisterModal,
+      closeAuthModal,
+    }}>
       {children}
     </AuthContext.Provider>
   );
