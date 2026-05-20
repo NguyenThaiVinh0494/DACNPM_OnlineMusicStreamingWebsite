@@ -233,6 +233,8 @@ class AlbumSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerializ
 
 class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerializer):
     nghe_sis = NgheSiSummarySerializer(source='cac_nghe_si', many=True, read_only=True)
+    so_luot_thich = serializers.SerializerMethodField()
+    da_thich = serializers.SerializerMethodField()
     id_nghe_si = serializers.SerializerMethodField()
     id_nghe_si_ids = serializers.PrimaryKeyRelatedField(
         queryset=NgheSi.objects.all(),
@@ -270,6 +272,8 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
             'duong_dan_hinh_anh',
             'loi_bai_hat',
             'luot_nghe',
+            'so_luot_thich',
+            'da_thich',
             'quoc_gia',
             'nam_phat_hanh',
             'trang_thai',
@@ -284,7 +288,7 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
             'image_file',
             'audio_file',
         ]
-        read_only_fields = ['luot_nghe', 'id_nguoi_dang']
+        read_only_fields = ['luot_nghe', 'so_luot_thich', 'da_thich', 'id_nguoi_dang']
         extra_kwargs = {
             'duong_dan_am_thanh': {'required': False, 'allow_blank': True},
             'duong_dan_hinh_anh': {'required': False, 'allow_blank': True},
@@ -298,6 +302,16 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
         if not first_artist:
             return None
         return NgheSiSummarySerializer(first_artist).data
+
+    def get_so_luot_thich(self, obj):
+        return obj.duoc_yeu_thich.count()
+
+    def get_da_thich(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user or not request.user.is_authenticated:
+            return False
+
+        return obj.duoc_yeu_thich.filter(id_nguoi_dung=request.user).exists()
 
     def validate(self, attrs):
         attrs = super().validate(attrs)

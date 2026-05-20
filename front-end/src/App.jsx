@@ -1,6 +1,10 @@
+import { useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import AddToPlaylistModal from "./components/layout/AddToPlaylistModal";
+import LoginModal from "./components/auth/LoginModal";
+import RegisterModal from "./components/auth/RegisterModal";
+import { AuthContext } from "./context/AuthContext";
 import Home from "./pages/Home";
 import ForYou from "./pages/ForYou";
 import MyMusic from "./pages/mymusic/MyMusic";
@@ -34,6 +38,8 @@ import ArtistDetail from "./pages/artists/ArtistDetail";
 import { Toaster } from "react-hot-toast";
 
 function App() {
+  const { authModal, closeAuthModal, openLoginModal, openRegisterModal } = useContext(AuthContext);
+
   return (
     <BrowserRouter>
       <Toaster 
@@ -42,6 +48,16 @@ function App() {
           style: { background: '#333', color: '#fff' },
           className: 'dark:bg-nct-bg dark:text-white bg-white text-gray-900 border border-gray-200 dark:border-white/10'
         }} 
+      />
+      <LoginModal
+        isOpen={authModal === 'login'}
+        onClose={closeAuthModal}
+        onSwitchToRegister={openRegisterModal}
+      />
+      <RegisterModal
+        isOpen={authModal === 'register'}
+        onClose={closeAuthModal}
+        onSwitchToLogin={openLoginModal}
       />
       <AddToPlaylistModal />
       <Routes>

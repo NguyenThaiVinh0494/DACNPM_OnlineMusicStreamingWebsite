@@ -171,7 +171,7 @@ export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const tabParam = searchParams.get("t") || "all";
-  const { playSong, currentSong, isPlaying } = useMusic();
+  const { playSong, currentSong, isPlaying, toggleFavorite, favorites } = useMusic();
 
   const [realSongs, setRealSongs] = useState([]);
   const [realPlaylists, setRealPlaylists] = useState([]);
@@ -329,7 +329,9 @@ export default function SearchResults() {
                           song={song}
                           isCurrent={currentSong?.id === song.id}
                           isPlaying={isPlaying}
+                          isFavorite={favorites.some((favorite) => favorite.id === song.id)}
                           onPlay={() => playSong(song, realSongs)}
+                          onToggleFavorite={toggleFavorite}
                         />
                       ))}
                     </div>
@@ -386,7 +388,9 @@ export default function SearchResults() {
                     song={song}
                     isCurrent={currentSong?.id === song.id}
                     isPlaying={isPlaying}
+                    isFavorite={favorites.some((favorite) => favorite.id === song.id)}
                     onPlay={() => playSong(song, realSongs)}
+                    onToggleFavorite={toggleFavorite}
                   />
                 ))}
               </div>

@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useContext, useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   FiPlay, FiHeart, FiMoreHorizontal, FiClock, FiCheck
 } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
+import { AuthContext } from "../../context/AuthContext";
 import AlbumActionMenu from "../../components/common/AlbumActionMenu";
 import SongActionMenu from "../../components/common/SongActionMenu";
 import LazyImage from "../../components/common/LazyImage";
@@ -17,6 +18,7 @@ export default function AlbumDetail() {
   const [album, setAlbum] = useState(null);
   const [loading, setLoading] = useState(true);
   const { playSong, playAll, currentSong, isPlaying, toggleFavorite, favorites } = useMusic();
+  const { user, openLoginModal } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [liked, setLiked] = useState(false);
@@ -83,6 +85,14 @@ export default function AlbumDetail() {
   }, []);
 
   const handlePlayAll = () => album && playAll(album.songs);
+  const handleToggleAlbumLike = () => {
+    if (!user) {
+      openLoginModal?.();
+      return;
+    }
+
+    setLiked((l) => !l);
+  };
 
   if (loading) {
     return (
@@ -156,7 +166,8 @@ export default function AlbumDetail() {
           {/* Like / More */}
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setLiked((l) => !l)}
+              type="button"
+              onClick={handleToggleAlbumLike}
               className={`flex flex-col items-center gap-0.5 group/btn`}
             >
               <div className={`p-2.5 rounded-full transition-colors ${liked ? "bg-red-50 dark:bg-red-900/20" : "bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10"}`}>
@@ -272,6 +283,7 @@ export default function AlbumDetail() {
                 {/* More options */}
                 <div className="flex items-center justify-center relative" ref={isMenuOpen ? songMenuRef : null}>
                   <button
+                    type="button"
                     onClick={e => { e.stopPropagation(); toggleFavorite(song); }}
                     className={`p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100
                       ${isFav ? "text-red-500 opacity-100" : "text-gray-400 dark:text-gray-500 hover:text-red-500"}`}

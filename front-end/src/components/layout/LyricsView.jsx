@@ -17,7 +17,7 @@ function getLineOpacity(index, activeIndex, isPassed) {
 }
 
 export default function LyricsView() {
-  const { currentSong, isLyricsOpen, toggleLyrics, audioRef } = useMusic();
+  const { currentSong, isLyricsOpen, toggleLyrics, audioRef, toggleFavorite, favorites } = useMusic();
   const [currentTime, setCurrentTime] = useState(0);
   const lineRefs = useRef([]);
   const scrollRef = useRef(null);
@@ -39,6 +39,7 @@ export default function LyricsView() {
 
   const lyrics = parseLyrics(currentSong?.lyrics);
   const isLRC = hasTimedLyrics(lyrics);
+  const isFavorite = currentSong ? favorites.some((song) => song.id === currentSong.id) : false;
 
   // Find active line index
   const activeLineIndex = findActiveLyricIndex(lyrics, currentTime);
@@ -139,8 +140,12 @@ export default function LyricsView() {
                   {currentSong?.artist || "-"}
                 </p>
                 <div className="flex items-center gap-4 text-white/50">
-                  <button className="hover:text-white hover:scale-110 transition-all p-2 rounded-full hover:bg-white/10">
-                    <FiHeart className="w-5 h-5" />
+                  <button
+                    type="button"
+                    onClick={() => currentSong && toggleFavorite(currentSong)}
+                    className={`hover:text-white hover:scale-110 transition-all p-2 rounded-full hover:bg-white/10 ${isFavorite ? 'text-red-400' : ''}`}
+                  >
+                    <FiHeart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                   </button>
                   <button className="hover:text-white hover:scale-110 transition-all p-2 rounded-full hover:bg-white/10 ml-auto">
                     <FiMoreHorizontal className="w-5 h-5" />

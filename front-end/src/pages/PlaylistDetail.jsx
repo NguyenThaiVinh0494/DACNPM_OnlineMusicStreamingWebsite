@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FiPlay, FiHeart, FiMoreHorizontal } from "react-icons/fi";
 import { useMusic } from "../context/MusicContext";
+import { AuthContext } from "../context/AuthContext";
 import SongItem from "../components/common/SongItem";
 import { playlistService } from "../api/services";
 import { enrichSongsWithDuration } from "../utils/duration";
@@ -10,7 +11,9 @@ import { enrichSongsWithDuration } from "../utils/duration";
 
 export default function PlaylistDetail() {
   const { id } = useParams();
-  const { playAll, playSong, currentSong, isPlaying, openAddToPlaylistModal } = useMusic();
+  const { playAll, playSong, currentSong, isPlaying, openAddToPlaylistModal, toggleFavorite, favorites } = useMusic();
+  const { user, openLoginModal } = useContext(AuthContext);
+  const [liked, setLiked] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [playlist, setPlaylist] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,6 +61,15 @@ export default function PlaylistDetail() {
     }
   };
 
+  const handleTogglePlaylistLike = () => {
+    if (!user) {
+      openLoginModal?.();
+      return;
+    }
+
+    setLiked((value) => !value);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-48 bg-transparent">
@@ -98,8 +110,12 @@ export default function PlaylistDetail() {
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">{playlist.title}</h2>
           
           <div className="flex items-center gap-4 mb-6">
-            <button className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
-              <FiHeart className="w-5 h-5 text-gray-700 dark:text-white" />
+            <button
+              type="button"
+              onClick={handleTogglePlaylistLike}
+              className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+            >
+              <FiHeart className={`w-5 h-5 ${liked ? 'text-red-500 fill-current' : 'text-gray-700 dark:text-white'}`} />
             </button>
             <button className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
               <FiMoreHorizontal className="w-5 h-5 text-gray-700 dark:text-white" />
@@ -135,9 +151,9 @@ export default function PlaylistDetail() {
                 index={index}
                 isCurrent={currentSong?.id === song.id}
                 isPlaying={isPlaying}
-                isFavorite={false} // Would normally check global state
+                isFavorite={favorites.some((favorite) => favorite.id === song.id)}
                 onPlay={(s) => playSong(s, playlist.songs)}
-                onToggleFavorite={() => {}} // Handle favorite toggle
+                onToggleFavorite={toggleFavorite}
                 onMore={toggleDropdown}
                 openDropdown={openDropdown}
                 layout="table"

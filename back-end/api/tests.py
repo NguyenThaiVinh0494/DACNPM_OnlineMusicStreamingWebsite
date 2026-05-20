@@ -75,3 +75,42 @@ class RecommendedSongsApiTests(APITestCase):
         ordered_ids = [item['id'] for item in response.data[:2]]
         self.assertEqual(ordered_ids[0], preferred_song.id)
         self.assertIn(other_song.id, ordered_ids)
+
+    def test_song_detail_includes_favorite_count_and_user_state(self):
+        song = self.create_song('liked-song', self.artist_a, 10, genre=self.genre_a)
+        YeuThich.objects.create(id_nguoi_dung=self.user, id_bai_hat=song)
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(reverse('bai-hat-detail', kwargs={'pk': song.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['so_luot_thich'], 1)
+        self.assertTrue(response.data['da_thich'])
+
+    def test_listen_action_increments_play_count_and_records_history_for_user(self):
+        song = self.create_song('listen-song', self.artist_a, 3, genre=self.genre_a)
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(reverse('bai-hat-listen', kwargs={'pk': song.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['luot_nghe'], 4)
+        song.refresh_from_db()
+        self.assertEqual(song.luot_nghe, 4)
+        self.assertEqual(LichSuNghe.objects.filter(id_nguoi_dung=self.user, id_bai_hat=song).count(), 1)
+
+    def test_favorite_toggle_adds_and_removes_favorite_idempotently(self):
+        song = self.create_song('toggle-song', self.artist_a, 3, genre=self.genre_a)
+        self.client.force_authenticate(user=self.user)
+        url = reverse('yeu-thich-toggle')
+
+        add_response = self.client.post(url, {'id_bai_hat': song.id}, format='json')
+        remove_response = self.client.post(url, {'id_bai_hat': song.id}, format='json')
+
+        self.assertEqual(add_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(add_response.data['da_thich'])
+        self.assertEqual(add_response.data['so_luot_thich'], 1)
+        self.assertEqual(remove_response.status_code, status.HTTP_200_OK)
+        self.assertFalse(remove_response.data['da_thich'])
+        self.assertEqual(remove_response.data['so_luot_thich'], 0)
+        self.assertFalse(YeuThich.objects.filter(id_nguoi_dung=self.user, id_bai_hat=song).exists())
