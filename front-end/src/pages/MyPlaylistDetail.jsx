@@ -84,7 +84,7 @@ export default function MyPlaylistDetail() {
     if (editTitle.trim()) {
       updateMyPlaylist(playlist.id, { 
         title: editTitle.trim(),
-        isPrivate: editIsPrivate
+        isPrivate: true
       });
     }
     setIsEditModalOpen(false);
@@ -498,18 +498,7 @@ export default function MyPlaylistDetail() {
                   placeholder="Nhập tên playlist..."
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-900 dark:text-white font-medium">Chế độ công khai</p>
-                  <p className="text-xs text-gray-500 dark:text-[#b3b3b3]">Mọi người có thể thấy playlist này</p>
-                </div>
-                <button 
-                  onClick={() => setEditIsPrivate(!editIsPrivate)}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${!editIsPrivate ? 'bg-nct-primary' : 'bg-gray-200 dark:bg-[#1e1e1e]'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${!editIsPrivate ? 'right-1' : 'left-1'}`}></div>
-                </button>
-              </div>
+
             </div>
             <div className="px-6 py-4 bg-gray-50 dark:bg-[#1e1e1e] flex justify-end gap-3 border-t border-gray-200 dark:border-white/5">
               <button 

@@ -81,7 +81,7 @@ export default function PlaylistDetail() {
   if (!playlist) {
     return (
       <div className="flex flex-col items-center justify-center py-48 text-nct-text-dim">
-        <p className="text-lg font-medium">Không tìm thấy playlist</p>
+        <p className="text-lg font-medium">Không tìm thấy album</p>
       </div>
     );
   }

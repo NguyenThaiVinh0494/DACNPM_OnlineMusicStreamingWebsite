@@ -26,9 +26,8 @@ export default function Sidebar() {
 
   const handleCreatePlaylist = () => {
     if (newPlaylistName.trim()) {
-      createNewPlaylist(newPlaylistName.trim(), isPrivate);
+      createNewPlaylist(newPlaylistName.trim(), true);
       setNewPlaylistName("");
-      setIsPrivate(false);
       setIsCreateModalOpen(false);
     }
   };
@@ -173,28 +172,7 @@ export default function Sidebar() {
               <span className="absolute -bottom-6 right-2 text-xs text-gray-500 dark:text-nct-text-dim">{newPlaylistName.length}/100</span>
             </div>
 
-            <div className="flex gap-6 mb-8 mt-4">
-              <label className="flex items-center gap-2 cursor-pointer text-black dark:text-white">
-                <input 
-                  type="radio" 
-                  name="privacy" 
-                  checked={!isPrivate} 
-                  onChange={() => setIsPrivate(false)}
-                  className="w-4 h-4 text-nct-primary bg-gray-100 dark:bg-white/10 border-gray-300 dark:border-white/20 focus:ring-nct-primary"
-                />
-                <span className="text-sm font-medium">{t('public')}</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer text-black dark:text-white">
-                <input 
-                  type="radio" 
-                  name="privacy" 
-                  checked={isPrivate} 
-                  onChange={() => setIsPrivate(true)}
-                  className="w-4 h-4 text-nct-primary bg-gray-100 dark:bg-white/10 border-gray-300 dark:border-white/20 focus:ring-nct-primary"
-                />
-                <span className="text-sm font-medium">{t('private')}</span>
-              </label>
-            </div>
+
 
             <div className="flex gap-4">
               <button 

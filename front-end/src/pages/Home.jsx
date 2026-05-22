@@ -5,7 +5,7 @@ import Footer from "../components/layout/Footer";
 import ListGrid from "../components/home/ListGrid";
 import MusicChart from "../components/home/MusicChart";
 import DanhSachPhatNgang from "../components/home/HorizontalPlaylist";
-import { songService, genreService } from "../api/services";
+import { songService, albumService, genreService } from "../api/services";
 import { getSongArtistNames } from "../utils/songArtists";
 
 // Gradient colors for topic cards
@@ -56,24 +56,61 @@ export default function Home() {
   const [topics, setTopics] = useState([]);
   const [loadingTopics, setLoadingTopics] = useState(true);
 
+  const [vuTruNhacViet, setVuTruNhacViet] = useState([]);
+  const [tamTrangHomNay, setTamTrangHomNay] = useState([]);
+  const [top100, setTop100] = useState([]);
+  const [dangDuocYeuThich, setDangDuocYeuThich] = useState([]);
+  const [singleMoiPhatHanh, setSingleMoiPhatHanh] = useState([]);
+
   useEffect(() => {
     let active = true;
-    const fetchNewSongs = async () => {
+    const fetchHomeData = async () => {
       try {
-        const data = await songService.getAll({ ordering: '-ngay_tao', limit: 5 });
+        const [popAlbums, top100Albums, vnAlbums, moodAlbums, newAlbums, singleSongs] = await Promise.all([
+          albumService.getAll({ ordering: '-tong_luot_thich', limit: 5 }), // Đang được yêu thích
+          albumService.getAll({ ordering: '-tong_luot_nghe', limit: 5 }), // Top 100
+          albumService.getAll({ quoc_gia: 'Việt Nam', limit: 5 }), // Vũ trụ nhạc Việt
+          albumService.getAll({ id_the_loai: 4, limit: 5 }), // Tâm trạng hôm nay (thể loại buồn/Ballad)
+          albumService.getAll({ ordering: '-ngay_phat_hanh', limit: 5 }), // Mới phát hành (theo năm)
+          songService.getAll({ ordering: '-nam_phat_hanh', limit: 12 }) // Single Mới phát hành
+        ]);
         if (!active) return;
-        const songs = data.results || data;
-        const mappedSongs = songs.slice(0, 5).map(song => ({
-          ten: song.tieu_de,
-          moTa: getSongArtistNames(song, "Đang cập nhật..."),
-          anh: song.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop"
+        
+        const mapAlbumData = (res) => (res.results || res).map(album => ({
+          id: album.id,
+          title: album.tieu_de,
+          artist: album.id_nghe_si?.ten_nghe_si || "Nhiều nghệ sĩ",
+          image: album.anh_bia || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop",
+          type: 'album'
         }));
-        setNewSongs(mappedSongs);
+
+        const mapSongData = (res) => (res.results || res).map(song => ({
+          ...song,
+          id: song.id,
+          title: song.tieu_de,
+          ten: song.tieu_de,
+          artist: getSongArtistNames(song, "Đang cập nhật..."),
+          caSi: getSongArtistNames(song, "Đang cập nhật..."),
+          image: song.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop",
+          anh: song.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop",
+          audioUrl: song.duong_dan_am_thanh,
+          label: "NCT OFFICIAL",
+          type: 'song'
+        }));
+
+        setDangDuocYeuThich(mapAlbumData(popAlbums));
+        setTop100(mapAlbumData(top100Albums));
+        setVuTruNhacViet(mapAlbumData(vnAlbums));
+        setTamTrangHomNay(mapAlbumData(moodAlbums));
+        setNewSongs(mapAlbumData(newAlbums));
+        
+        setSingleMoiPhatHanh(mapSongData(singleSongs));
+
       } catch (error) {
-        console.error("Lỗi khi tải bài hát mới:", error);
+        console.error("Lỗi khi tải dữ liệu trang chủ:", error);
       }
     };
-    fetchNewSongs();
+    fetchHomeData();
     return () => {
       active = false;
     };
@@ -180,15 +217,14 @@ export default function Home() {
       <MusicChart />
 
       {/* Tái sử dụng component lưới cho tất cả các phần còn lại! */}
-      <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" link="/discover/vu-tru-nhac-viet" />
-      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" link="/discover/mood" />
-      <ListGrid tieuDeKhuVuc="Top 100" link="/top-100" />
+      <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" link="/discover/vu-tru-nhac-viet" items={vuTruNhacViet} />
+      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" link="/discover/mood" items={tamTrangHomNay} />
+      <ListGrid tieuDeKhuVuc="Top 100" link="/top-100" items={top100} />
 
-      {/* Thêm 2 cụm danh sách mới theo yêu cầu */}
-      <DanhSachPhatNgang tieuDeKhuVuc="Single Mới Phát Hành" />
-      <DanhSachPhatNgang tieuDeKhuVuc="TikTok Top Mix" />
+      {/* Thêm cụm danh sách mới theo yêu cầu */}
+      <DanhSachPhatNgang tieuDeKhuVuc="Single Mới Phát Hành" items={singleMoiPhatHanh} />
 
-      <ListGrid tieuDeKhuVuc="Đang được yêu thích" link="/discover/popular" />
+      <ListGrid tieuDeKhuVuc="Đang được yêu thích" link="/discover/popular" items={dangDuocYeuThich} />
       <ListGrid tieuDeKhuVuc="Mới phát hành" link="/discover/new-releases" items={newSongs} />
       <Footer />
     </div>

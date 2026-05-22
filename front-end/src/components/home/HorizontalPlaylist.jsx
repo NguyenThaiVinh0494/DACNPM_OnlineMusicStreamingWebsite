@@ -1,21 +1,18 @@
 import { FaRandom } from 'react-icons/fa'; // Icon trộn bài
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { useMusic } from '../../context/MusicContext';
 
-export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
+export default function DanhSachPhatNgang({ tieuDeKhuVuc, items }) {
   const { t } = useTranslation();
-  // Mock dữ liệu 12 bài hát (4 cột x 3 hàng)
-  const danhSachBaiHat = Array(12).fill(0).map((_, i) => ({
+  const { playSong } = useMusic();
+
+  const danhSachBaiHat = items && items.length > 0 ? items : Array(12).fill(0).map((_, i) => ({
+    id: i + 1,
     ten: i % 2 === 0 ? "Ngừng Trôi" : "Nhẹ nhàng va vào nhau...",
     caSi: "Kha, SONY MUSIC",
-    anh: `https://images.unsplash.com/photo-${1500000000000 + i}?w=100&h=100&fit=crop` // Random ảnh tạm
+    anh: `https://images.unsplash.com/photo-${1500000000000 + i}?w=100&h=100&fit=crop`
   }));
-
-  // Cập nhật lại một vài data cho giống ảnh mẫu
-  danhSachBaiHat[0] = { ten: "Ngừng Trôi", caSi: "Kha", label: "SONY MUSIC", anh: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop" };
-  danhSachBaiHat[1] = { ten: "CELEBRATION", caSi: "LE SSERAFIM", label: "INGROOVES MUSIC GROUP", anh: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100&h=100&fit=crop" };
-  danhSachBaiHat[2] = { ten: "Nhẹ nhàng va vào nhau", caSi: "Lục Huy, Châu Bùi", label: "VIEENT Music", anh: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&h=100&fit=crop" };
-  danhSachBaiHat[3] = { ten: "ĐỚN", caSi: "Hà Lê, Rhymastic", label: "SONY MUSIC", anh: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" };
 
   return (
     <div className="mb-10">
@@ -31,9 +28,13 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
       {/* Lưới 4 cột */}
       <div className="grid grid-cols-4 gap-x-4 gap-y-3">
         {danhSachBaiHat.map((item, index) => (
-          <Link
-            to={`/song/${index + 1}`}
-            key={index}
+          <div
+            key={item.id || index}
+            onClick={() => {
+              if (item.audioUrl) {
+                playSong(item, danhSachBaiHat.filter(i => i.audioUrl));
+              }
+            }}
             className="flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 group transition-colors"
           >
             {/* Ảnh bìa */}
@@ -69,7 +70,7 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc }) {
               </div>
             </div>
 
-          </Link>
+          </div>
         ))}
       </div>
     </div>

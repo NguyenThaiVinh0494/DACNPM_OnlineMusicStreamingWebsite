@@ -45,7 +45,7 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
       <div className="grid grid-cols-5 gap-5">
         {danhSach.map((item, index) => (
           <Link
-            to={item.audioUrl ? `/song/${item.id}` : `/playlist/${index + 1}`}
+            to={item.audioUrl ? `/song/${item.id}` : (item.type === 'album' ? `/album/${item.id}` : `/playlist/${index + 1}`)}
             key={index}
             className="group cursor-pointer"
             onClick={(e) => handleItemClick(e, item)}
