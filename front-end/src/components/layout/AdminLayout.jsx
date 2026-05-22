@@ -12,7 +12,7 @@ const navItems = [
   { to: '/admin/songs', label: 'Bài hát', icon: FiMusic },
   { to: '/admin/albums', label: 'Album', icon: FiDisc },
   { to: '/admin/artists', label: 'Nghệ sĩ', icon: FiMic },
-  { to: '/admin/topics', label: 'Chủ đề', icon: FiTag },
+  { to: '/admin/topics', label: 'Thể loại', icon: FiTag },
   { to: '/admin/stats', label: 'Thống kê', icon: FiBarChart2 },
 ];
 

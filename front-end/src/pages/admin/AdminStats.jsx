@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
-import axios from '../../api/axios';
+import { adminStatsService } from '../../api/services';
+import { optimizeCloudinaryImage } from '../../utils/media';
 import { FiTrendingUp, FiMusic, FiUsers, FiHeadphones } from 'react-icons/fi';
 
 export default function AdminStats() {
   const [topSongs, setTopSongs] = useState([]);
+  const [summary, setSummary] = useState({ totalListens: 0, genreDistribution: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('/songs/?ordering=-luot_nghe&limit=10')
-      .then(res => {
-        const list = Array.isArray(res.data) ? res.data : res.data.results ?? [];
-        setTopSongs(list.slice(0, 10));
+    adminStatsService.getOverview()
+      .then(data => {
+        setTopSongs(data.topSongs || []);
+        setSummary({
+          totalListens: data.totalListens || 0,
+          genreDistribution: data.genreDistribution || [],
+        });
       })
-      .catch(() => setTopSongs([]))
+      .catch(() => {
+        setTopSongs([]);
+        setSummary({ totalListens: 0, genreDistribution: [] });
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -28,7 +36,7 @@ export default function AdminStats() {
       {/* Summary placeholder cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Tổng lượt nghe', value: topSongs.reduce((s, c) => s + (c.luot_nghe ?? 0), 0).toLocaleString(), icon: FiHeadphones, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Tổng lượt nghe', value: summary.totalListens.toLocaleString(), icon: FiHeadphones, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Bài hát nổi bật', value: topSongs[0]?.tieu_de ?? '—', icon: FiMusic, color: 'text-purple-600', bg: 'bg-purple-50' },
           { label: 'Lượt nghe cao nhất', value: (topSongs[0]?.luot_nghe ?? 0).toLocaleString(), icon: FiTrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
@@ -64,7 +72,7 @@ export default function AdminStats() {
                 <span className="text-xs font-bold text-gray-400 w-4 text-right">{idx + 1}</span>
                 <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                   {song.duong_dan_hinh_anh
-                    ? <img src={song.duong_dan_hinh_anh} alt={song.tieu_de} className="w-full h-full object-cover" />
+                    ? <img src={optimizeCloudinaryImage(song.duong_dan_hinh_anh, { width: 80, height: 80 })} alt={song.tieu_de} className="w-full h-full object-cover" />
                     : <FiMusic className="w-4 h-4 text-gray-400 m-auto mt-2" />
                   }
                 </div>
@@ -90,20 +98,20 @@ export default function AdminStats() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
           <FiUsers className="text-purple-500" />
-          Phân bổ thể loại nhạc (Mock UI)
+          Phân bổ thể loại nhạc
         </h3>
         <div className="flex gap-3 flex-wrap">
-          {['Pop', 'Ballad', 'EDM', 'R&B', 'Rock', 'Rap'].map((g, i) => {
-            const pct = [35, 25, 15, 12, 8, 5][i];
+          {(summary.genreDistribution.length ? summary.genreDistribution : []).map((genre, i) => {
             const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-green-500', 'bg-amber-500', 'bg-red-500'];
             return (
-              <div key={g} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl">
+              <div key={genre.id} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl">
                 <span className={`w-2.5 h-2.5 rounded-full ${colors[i]}`} />
-                <span className="text-sm text-gray-700 font-medium">{g}</span>
-                <span className="text-xs text-gray-400">{pct}%</span>
+                <span className="text-sm text-gray-700 font-medium">{genre.name}</span>
+                <span className="text-xs text-gray-400">{genre.songCount} bài</span>
               </div>
             );
           })}
+          {!summary.genreDistribution.length && <p className="text-sm text-gray-400">Chưa có dữ liệu thể loại.</p>}
         </div>
       </div>
     </div>

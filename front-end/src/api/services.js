@@ -1,3 +1,4 @@
+import axios from 'axios';
 import api from './axios';
 
 // ============================
@@ -134,6 +135,41 @@ export const genreService = {
     const response = await api.delete(`genres/${id}/`);
     return response.data;
   }
+};
+
+export const adminStatsService = {
+  getOverview: async () => {
+    const response = await api.get('admin/stats/');
+    return response.data;
+  },
+};
+
+export const homeService = {
+  getHomeData: async (params = {}) => {
+    const response = await api.get('home/', { params });
+    return response.data;
+  },
+};
+
+export const uploadService = {
+  getSignature: async (uploadType) => {
+    const response = await api.post('upload/signature/', { upload_type: uploadType });
+    return response.data;
+  },
+  uploadToCloudinary: async (file, signatureData) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('api_key', signatureData.api_key);
+    formData.append('timestamp', signatureData.timestamp);
+    formData.append('signature', signatureData.signature);
+    formData.append('folder', signatureData.folder);
+
+    const response = await axios.post(
+      `https://api.cloudinary.com/v1_1/${signatureData.cloud_name}/${signatureData.resource_type}/upload`,
+      formData,
+    );
+    return response.data;
+  },
 };
 
 // ============================

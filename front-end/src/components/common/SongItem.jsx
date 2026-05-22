@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPlay, FiPause, FiHeart, FiMoreHorizontal, FiCheck } from "react-icons/fi";
 import SongActionMenu from "./SongActionMenu";
+import { optimizeCloudinaryImage } from "../../utils/media";
 
 export default function SongItem({ 
   song, 
@@ -90,7 +91,7 @@ export default function SongItem({
         </div>
 
         <div className="relative h-10 w-10 overflow-hidden rounded shadow-md">
-          <img src={song.image} alt={song.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          <img src={optimizeCloudinaryImage(song.image, { width: 120, height: 120 })} alt={song.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -199,7 +200,7 @@ export default function SongItem({
       </div>
 
       <div className="relative w-10 h-10 rounded overflow-hidden shrink-0 shadow-md">
-        <img src={song.image} alt={song.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+        <img src={optimizeCloudinaryImage(song.image, { width: 120, height: 120 })} alt={song.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
         <div 
           onClick={(e) => {
             e.stopPropagation();

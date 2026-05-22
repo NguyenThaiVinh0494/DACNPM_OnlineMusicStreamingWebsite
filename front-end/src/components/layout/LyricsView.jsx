@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { FiChevronDown, FiHeart, FiMoreHorizontal, FiMusic } from "react-icons/fi";
+import { FiChevronDown, FiHeart, FiMoreHorizontal, FiMusic, FiPlus } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMusic } from "../../context/MusicContext";
 import { findActiveLyricIndex, hasTimedLyrics, parseLyrics } from "../../utils/lyrics";
+import { useClickOutside } from "../../hooks/useClickOutside";
 
 // Tính opacity dựa trên khoảng cách so với dòng đang hát
 function getLineOpacity(index, activeIndex, isPassed) {
@@ -17,10 +18,14 @@ function getLineOpacity(index, activeIndex, isPassed) {
 }
 
 export default function LyricsView() {
-  const { currentSong, isLyricsOpen, toggleLyrics, audioRef, toggleFavorite, favorites } = useMusic();
+  const { currentSong, isLyricsOpen, toggleLyrics, audioRef, toggleFavorite, favorites, openAddToPlaylistModal } = useMusic();
   const [currentTime, setCurrentTime] = useState(0);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const lineRefs = useRef([]);
   const scrollRef = useRef(null);
+  const moreMenuRef = useRef(null);
+
+  useClickOutside(moreMenuRef, () => setIsMoreMenuOpen(false));
 
   // Sync currentTime using requestAnimationFrame for smooth updates
   useEffect(() => {
@@ -147,9 +152,30 @@ export default function LyricsView() {
                   >
                     <FiHeart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                   </button>
-                  <button className="hover:text-white hover:scale-110 transition-all p-2 rounded-full hover:bg-white/10 ml-auto">
-                    <FiMoreHorizontal className="w-5 h-5" />
-                  </button>
+                  <div className="relative ml-auto" ref={moreMenuRef}>
+                    <button
+                      type="button"
+                      onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+                      className="hover:text-white hover:scale-110 transition-all p-2 rounded-full hover:bg-white/10"
+                    >
+                      <FiMoreHorizontal className="w-5 h-5" />
+                    </button>
+                    {isMoreMenuOpen ? (
+                      <div className="absolute bottom-12 right-0 z-50 w-52 rounded-xl border border-white/10 bg-black/80 p-1.5 text-white shadow-2xl backdrop-blur-md">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            openAddToPlaylistModal(currentSong);
+                            setIsMoreMenuOpen(false);
+                          }}
+                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10"
+                        >
+                          <FiPlus className="h-4 w-4" />
+                          Thêm vào playlist
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </div>

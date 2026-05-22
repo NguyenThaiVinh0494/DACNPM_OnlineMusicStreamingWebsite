@@ -150,10 +150,15 @@ export default function ForYou() {
   const [onboardingPreferences, setOnboardingPreferences] = useState(() => loadOnboardingPreferences(user?.id));
   const menuRef = useRef(null);
   const lyricRefs = useRef([]);
+  const allSongsRef = useRef(allSongs);
   const hasInitializedFeedRef = useRef(false);
+
+  allSongsRef.current = allSongs;
 
   const topicOptions = buildTopicOptions(allSongs);
   const artistOptions = buildArtistOptions(allSongs);
+  const selectedArtistIds = onboardingPreferences.selectedArtists.join(",");
+  const selectedTopicIds = onboardingPreferences.selectedTopics.join(",");
   let derivedIndex = feed.findIndex((song) => song.id === currentSong?.id);
   if (derivedIndex === -1) derivedIndex = 0;
 
@@ -176,15 +181,15 @@ export default function ForYou() {
 
     const fetchRecommendedSongs = async () => {
       setLoadingFeed(true);
-      const fallbackSongs = allSongs.slice(0, 14);
+      const fallbackSongs = allSongsRef.current.slice(0, 14);
 
       try {
         const params = { limit: 14 };
-        if (onboardingPreferences.selectedArtists.length) {
-          params.preferred_artist_ids = onboardingPreferences.selectedArtists.join(",");
+        if (selectedArtistIds) {
+          params.preferred_artist_ids = selectedArtistIds;
         }
-        if (onboardingPreferences.selectedTopics.length) {
-          params.preferred_genre_ids = onboardingPreferences.selectedTopics.join(",");
+        if (selectedTopicIds) {
+          params.preferred_genre_ids = selectedTopicIds;
         }
 
         const response = await songService.getRecommended(params);
@@ -213,7 +218,7 @@ export default function ForYou() {
     return () => {
       active = false;
     };
-  }, [allSongs, onboardingPreferences, user?.id]);
+  }, [allSongs.length, selectedArtistIds, selectedTopicIds, user?.id]);
 
   useEffect(() => {
     if (!feed.length || hasInitializedFeedRef.current) {
@@ -321,8 +326,31 @@ export default function ForYou() {
   const handleToggleFavorite = async () => {
     if (!currentItem) return;
 
+    const wasFavorite = currentItemIsFavorite;
+    const optimisticLikeCount = Math.max(0, (displayedCurrentItem?.likeCount || 0) + (wasFavorite ? -1 : 1));
+    setFeed((items) => items.map((song) => (
+      song.id === currentItem.id
+        ? {
+            ...song,
+            likeCount: optimisticLikeCount,
+            isFavorite: !wasFavorite,
+          }
+        : song
+    )));
+
     const result = await toggleFavorite(currentItem);
-    if (!result) return;
+    if (!result) {
+      setFeed((items) => items.map((song) => (
+        song.id === currentItem.id
+          ? {
+              ...song,
+              likeCount: displayedCurrentItem?.likeCount || 0,
+              isFavorite: wasFavorite,
+            }
+          : song
+      )));
+      return;
+    }
 
     setFeed((items) => items.map((song) => (
       song.id === currentItem.id

@@ -20,14 +20,14 @@ import {
   FiX,
 } from 'react-icons/fi';
 
-import { albumService, artistService, genreService, songService } from '../../api/services';
+import { albumService, artistService, genreService, songService, uploadService } from '../../api/services';
 import { getSongArtistNames, getSongArtists } from '../../utils/songArtists';
 
 const TAB_CONFIG = [
   { key: 'songs', label: 'Bài hát', icon: FiMusic, accent: 'from-cyan-500 to-blue-500' },
   { key: 'albums', label: 'Album', icon: FiDisc, accent: 'from-emerald-500 to-teal-500' },
   { key: 'artists', label: 'Nghệ sĩ', icon: FiUsers, accent: 'from-amber-500 to-orange-500' },
-  { key: 'genres', label: 'Chủ đề', icon: FiTag, accent: 'from-fuchsia-500 to-pink-500' },
+  { key: 'genres', label: 'Thể loại', icon: FiTag, accent: 'from-fuchsia-500 to-pink-500' },
 ];
 
 const STATUS_OPTIONS = [
@@ -69,10 +69,16 @@ const SORT_OPTIONS = {
 
 const IMAGE_FIELDS = new Set(['image_file', 'cover_file', 'artist_image_file', 'topic_image_file']);
 const AUDIO_FIELDS = new Set(['audio_file']);
+const UPLOAD_TYPE_BY_FIELD = {
+  image_file: 'song_image',
+  audio_file: 'song_audio',
+  cover_file: 'album_cover',
+  artist_image_file: 'artist_image',
+  topic_image_file: 'topic_image',
+};
 const IMAGE_LIMIT_BYTES = 8 * 1024 * 1024;
 const AUDIO_LIMIT_BYTES = 25 * 1024 * 1024;
 const CATALOG_KEYS = ['songs', 'albums', 'artists', 'genres'];
-const EMPTY_CATALOG = { songs: [], albums: [], artists: [], genres: [] };
 const CATALOG_CACHE_TTL_MS = 60_000;
 const catalogCache = {
   songs: [],
@@ -94,12 +100,12 @@ const ENTITY_FETCHERS = {
   genres: () => genreService.getAll(),
 };
 
-function getRequiredCatalogKeys(tabKey) {
-  if (tabKey === 'songs') return ['songs', 'albums', 'artists', 'genres'];
-  if (tabKey === 'albums') return ['songs', 'albums', 'artists'];
-  if (tabKey === 'artists') return ['songs', 'albums', 'artists'];
-  return ['songs', 'genres'];
-}
+const ENTITY_DEPENDENCIES = {
+  songs: ['albums', 'artists', 'genres'],
+  albums: ['songs', 'artists'],
+  artists: ['songs', 'albums'],
+  genres: ['songs'],
+};
 
 function isCatalogKeyFresh(key) {
   return Date.now() - (catalogCache.fetchedAt[key] || 0) < CATALOG_CACHE_TTL_MS;
@@ -208,11 +214,14 @@ function readAudioMetadata(objectUrl, fileSize) {
 
     audio.preload = 'metadata';
     audio.onloadedmetadata = () => {
-      resolve(`${formatDuration(audio.duration)} • ${formatBytes(fileSize)}`);
+      resolve({
+        text: `${formatDuration(audio.duration)} • ${formatBytes(fileSize)}`,
+        duration: Number.isFinite(audio.duration) ? Math.round(audio.duration) : null,
+      });
       cleanup();
     };
     audio.onerror = () => {
-      resolve(formatBytes(fileSize));
+      resolve({ text: formatBytes(fileSize), duration: null });
       cleanup();
     };
     audio.src = objectUrl;
@@ -247,8 +256,8 @@ function validateForm(entity, values, previews) {
   }
 
   if (entity === 'genres') {
-    if (!values.ten_the_loai.trim()) return 'Tên chủ đề là bắt buộc.';
-    if (!previews.imageUrl) return 'Chủ đề cần có ảnh đại diện.';
+    if (!values.ten_the_loai.trim()) return 'Tên thể loại là bắt buộc.';
+    if (!previews.imageUrl) return 'Thể loại cần có ảnh đại diện.';
   }
 
   return null;
@@ -329,6 +338,7 @@ function getEmptyForm(entity) {
       id_nghe_si_ids: [],
       id_album_id: '',
       the_loai_ids: [],
+      thoi_luong: '',
       image_file: null,
       audio_file: null,
     };
@@ -371,6 +381,7 @@ function getInitialForm(entity, item, catalog) {
       quoc_gia: item.quoc_gia || '',
       nam_phat_hanh: item.nam_phat_hanh?.toString() || '',
       loi_bai_hat: item.loi_bai_hat || '',
+      thoi_luong: item.thoi_luong?.toString() || '',
       trang_thai: item.trang_thai || 'PUBLIC',
       id_nghe_si_ids: getSongArtists(item).map((artist) => artist.id.toString()),
       id_album_id: item.id_album?.id?.toString() || '',
@@ -474,6 +485,9 @@ function buildFormData(entity, values) {
     if (values.quoc_gia) formData.append('quoc_gia', values.quoc_gia);
     if (values.nam_phat_hanh !== '') formData.append('nam_phat_hanh', values.nam_phat_hanh);
     if (values.loi_bai_hat) formData.append('loi_bai_hat', values.loi_bai_hat);
+    if (values.thoi_luong !== '') formData.append('thoi_luong', values.thoi_luong);
+    if (values.duong_dan_hinh_anh) formData.append('duong_dan_hinh_anh', values.duong_dan_hinh_anh);
+    if (values.duong_dan_am_thanh) formData.append('duong_dan_am_thanh', values.duong_dan_am_thanh);
     if (values.image_file) formData.append('image_file', values.image_file);
     if (values.audio_file) formData.append('audio_file', values.audio_file);
     return formData;
@@ -485,6 +499,7 @@ function buildFormData(entity, values) {
     formData.append('trang_thai', values.trang_thai);
     values.song_ids.forEach((songId) => formData.append('song_ids', songId));
     if (values.ngay_phat_hanh) formData.append('ngay_phat_hanh', values.ngay_phat_hanh);
+    if (values.anh_bia) formData.append('anh_bia', values.anh_bia);
     if (values.cover_file) formData.append('cover_file', values.cover_file);
     return formData;
   }
@@ -492,14 +507,45 @@ function buildFormData(entity, values) {
   if (entity === 'artists') {
     formData.append('ten_nghe_si', values.ten_nghe_si);
     if (values.tieu_su) formData.append('tieu_su', values.tieu_su);
+    if (values.anh_nghe_si) formData.append('anh_nghe_si', values.anh_nghe_si);
     if (values.artist_image_file) formData.append('artist_image_file', values.artist_image_file);
     return formData;
   }
 
   formData.append('ten_the_loai', values.ten_the_loai);
   if (values.mo_ta_the_loai) formData.append('mo_ta_the_loai', values.mo_ta_the_loai);
+  if (values.anh_the_loai) formData.append('anh_the_loai', values.anh_the_loai);
   if (values.topic_image_file) formData.append('topic_image_file', values.topic_image_file);
   return formData;
+}
+
+async function uploadPendingFiles(entity, values) {
+  const nextValues = { ...values };
+  const fieldMap = {
+    songs: [
+      ['image_file', 'duong_dan_hinh_anh'],
+      ['audio_file', 'duong_dan_am_thanh'],
+    ],
+    albums: [['cover_file', 'anh_bia']],
+    artists: [['artist_image_file', 'anh_nghe_si']],
+    genres: [['topic_image_file', 'anh_the_loai']],
+  };
+
+  for (const [fileField, urlField] of fieldMap[entity] || []) {
+    const file = values[fileField];
+    if (!file) continue;
+
+    const signatureData = await uploadService.getSignature(UPLOAD_TYPE_BY_FIELD[fileField]);
+    const uploaded = await uploadService.uploadToCloudinary(file, signatureData);
+    nextValues[urlField] = uploaded.secure_url;
+    nextValues[fileField] = null;
+
+    if (fileField === 'audio_file' && uploaded.duration) {
+      nextValues.thoi_luong = Math.round(uploaded.duration).toString();
+    }
+  }
+
+  return nextValues;
 }
 
 function buildTabStats(catalog) {
@@ -515,24 +561,6 @@ function statusBadge(status) {
   return status === 'PUBLIC'
     ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
     : 'bg-amber-50 text-amber-700 ring-1 ring-amber-100';
-}
-
-function SummaryCard({ icon: Icon, label, value, accent, helper }) {
-  return (
-    <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
-      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">{value}</p>
-          <p className="mt-1 text-xs text-slate-400">{helper}</p>
-        </div>
-        <div className={`rounded-2xl bg-gradient-to-br ${accent} p-3 text-white shadow-lg`}>
-          <Icon className="h-5 w-5" />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function InputField({ label, required, ...props }) {
@@ -825,7 +853,7 @@ function MultiSelectDropdown({ label, options, values, onChange }) {
         className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus-within:border-cyan-400 focus-within:ring-4 focus-within:ring-cyan-50 cursor-pointer flex justify-between items-center"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="truncate">{selectedLabels || 'Không gán chủ đề'}</span>
+        <span className="truncate">{selectedLabels || 'Không gán thể loại'}</span>
         <svg className="h-4 w-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -948,13 +976,13 @@ function EntityModal({
         songs: 'Thêm bài hát',
         albums: 'Thêm album',
         artists: 'Thêm nghệ sĩ',
-        genres: 'Thêm chủ đề',
+        genres: 'Thêm thể loại',
       }[entity]
     : {
         songs: 'Cập nhật bài hát',
         albums: 'Cập nhật album',
         artists: 'Cập nhật nghệ sĩ',
-        genres: 'Cập nhật chủ đề',
+        genres: 'Cập nhật thể loại',
       }[entity];
 
   return (
@@ -1028,7 +1056,7 @@ function EntityModal({
 
                   <div className="grid gap-5 md:grid-cols-2">
                     <MultiSelectDropdown
-                      label="Chủ đề"
+                      label="Thể loại"
                       options={catalog.genres.map(g => ({ value: g.id.toString(), label: g.ten_the_loai }))}
                       values={formValues.the_loai_ids}
                       onChange={(selectedValues) => onValueChange('the_loai_ids', selectedValues)}
@@ -1129,7 +1157,7 @@ function EntityModal({
               {!isSong && !isAlbum && !isArtist ? (
                 <>
                   <InputField
-                    label="Tên chủ đề"
+                    label="Tên thể loại"
                     required
                     value={formValues.ten_the_loai}
                     onChange={(event) => onValueChange('ten_the_loai', event.target.value)}
@@ -1139,7 +1167,7 @@ function EntityModal({
                     label="Mô tả"
                     value={formValues.mo_ta_the_loai}
                     onChange={(event) => onValueChange('mo_ta_the_loai', event.target.value)}
-                    placeholder="Mô tả ngắn cho chủ đề..."
+                    placeholder="Mô tả ngắn cho thể loại..."
                   />
                 </>
               ) : null}
@@ -1203,9 +1231,9 @@ function EntityModal({
 
               {!isSong && !isAlbum && !isArtist ? (
                 <UploadField
-                  label="Ảnh chủ đề"
+                  label="Ảnh thể loại"
                   required={mode === 'create'}
-                  hint="Ảnh đại diện cho mood/topic"
+                  hint="Ảnh đại diện cho thể loại/mood"
                   accept="image/*"
                   icon={FiFolderPlus}
                   previewUrl={previews.imageUrl}
@@ -1264,7 +1292,7 @@ function SongsTable({ items, onEdit, onDelete }) {
               <th className="px-6 py-4 font-semibold">Bài hát</th>
               <th className="px-6 py-4 font-semibold">Nghệ sĩ</th>
               <th className="px-6 py-4 font-semibold">Album</th>
-              <th className="px-6 py-4 font-semibold">Chủ đề</th>
+              <th className="px-6 py-4 font-semibold">Thể loại</th>
               <th className="px-6 py-4 font-semibold">Trạng thái</th>
               <th className="px-6 py-4 font-semibold">Lượt nghe</th>
               <th className="px-6 py-4 font-semibold text-right">Thao tác</th>
@@ -1393,34 +1421,30 @@ export default function ManageMusic({
 
   async function loadCatalog(tabKey = activeTab, { force = false } = {}) {
     const requestId = ++loadRequestIdRef.current;
-    const requiredKeys = getRequiredCatalogKeys(tabKey);
-    const hasRequiredCache = requiredKeys.every(hasCatalogKeyData);
-    const keysToFetch = requiredKeys.filter((key) => force || !isCatalogKeyFresh(key));
+    const primaryKey = tabKey;
+    const supportingKeys = (ENTITY_DEPENDENCIES[tabKey] || []).filter((key) => force || !isCatalogKeyFresh(key));
+    const shouldFetchPrimary = force || !isCatalogKeyFresh(primaryKey);
 
     startTransition(() => {
       setCatalog(getCachedCatalogSnapshot());
     });
 
-    if (!keysToFetch.length) {
+    if (!shouldFetchPrimary && !supportingKeys.length) {
       setLoading(false);
       return;
     }
 
-    if (!hasRequiredCache) {
+    if (shouldFetchPrimary && !hasCatalogKeyData(primaryKey)) {
       setLoading(true);
     }
 
     try {
-      const responses = await Promise.all(
-        keysToFetch.map(async (key) => [key, normalizeList(await ENTITY_FETCHERS[key]())]),
-      );
-
-      if (requestId !== loadRequestIdRef.current) return;
-
-      responses.forEach(([key, items]) => {
-        catalogCache[key] = items;
-        catalogCache.fetchedAt[key] = Date.now();
-      });
+      if (shouldFetchPrimary) {
+        const primaryItems = normalizeList(await ENTITY_FETCHERS[primaryKey]());
+        if (requestId !== loadRequestIdRef.current) return;
+        catalogCache[primaryKey] = primaryItems;
+        catalogCache.fetchedAt[primaryKey] = Date.now();
+      }
 
       startTransition(() => {
         setCatalog(getCachedCatalogSnapshot());
@@ -1428,14 +1452,34 @@ export default function ManageMusic({
     } catch (error) {
       if (requestId !== loadRequestIdRef.current) return;
       toast.error(extractErrorMessage(error));
-      if (!hasRequiredCache) {
-        setCatalog(EMPTY_CATALOG);
-      }
+      setCatalog((prev) => ({ ...prev, [primaryKey]: [] }));
     } finally {
       if (requestId === loadRequestIdRef.current) {
         setLoading(false);
       }
     }
+
+    if (!supportingKeys.length) return;
+
+    Promise.allSettled(
+      supportingKeys.map(async (key) => [key, normalizeList(await ENTITY_FETCHERS[key]())]),
+    ).then((results) => {
+      if (requestId !== loadRequestIdRef.current) return;
+      let hasNewData = false;
+      results.forEach((result) => {
+        if (result.status !== 'fulfilled') return;
+        const [key, items] = result.value;
+        catalogCache[key] = items;
+        catalogCache.fetchedAt[key] = Date.now();
+        hasNewData = true;
+      });
+
+      if (hasNewData) {
+        startTransition(() => {
+          setCatalog(getCachedCatalogSnapshot());
+        });
+      }
+    });
   }
 
   function replacePreview(nextPreviewOrUpdater) {
@@ -1507,7 +1551,10 @@ export default function ManageMusic({
         audioMeta: `Đang đọc metadata • ${formatBytes(file.size)}`,
       }));
       const audioMeta = await readAudioMetadata(audioObjectUrl, file.size);
-      replacePreview((prev) => (prev.audioUrl === audioObjectUrl ? { ...prev, audioMeta } : prev));
+      if (audioMeta.duration) {
+        setFormValues((prev) => (prev.audio_file === file ? { ...prev, thoi_luong: audioMeta.duration.toString() } : prev));
+      }
+      replacePreview((prev) => (prev.audioUrl === audioObjectUrl ? { ...prev, audioMeta: audioMeta.text } : prev));
       return;
     }
 
@@ -1534,9 +1581,11 @@ export default function ManageMusic({
     }
 
     setSaving(true);
-    const payload = buildFormData(entity, formValues);
 
     try {
+      const uploadReadyValues = await uploadPendingFiles(entity, formValues);
+      const payload = buildFormData(entity, uploadReadyValues);
+
       if (entity === 'songs') {
         if (mode === 'create') await songService.create(payload);
         else await songService.update(item.id, payload);
@@ -1573,7 +1622,7 @@ export default function ManageMusic({
       songs: 'bài hát',
       albums: 'album',
       artists: 'nghệ sĩ',
-      genres: 'chủ đề',
+      genres: 'thể loại',
     }[entity];
 
     if (!window.confirm(`Xóa ${entityLabel} "${getEntityTitle(item)}"?`)) {
@@ -1631,13 +1680,13 @@ export default function ManageMusic({
     songs: 'Quản lý bài hát',
     albums: 'Quản lý album',
     artists: 'Quản lý nghệ sĩ',
-    genres: 'Quản lý chủ đề',
+    genres: 'Quản lý thể loại',
   }[activeTab];
   const resolvedPageDescription = pageDescription || {
     songs: 'Thêm, sửa và duyệt bài hát với khả năng chọn nhiều ca sĩ cho một bài.',
     albums: 'Quản lý album riêng biệt, vẫn gắn với một nghệ sĩ chính.',
     artists: 'Quản lý nghệ sĩ, ảnh đại diện và tiểu sử.',
-    genres: 'Quản lý topic/chủ đề gồm ảnh, tên và mô tả.',
+    genres: 'Quản lý thể loại gồm ảnh, tên và mô tả.',
   }[activeTab];
 
   return (
@@ -1656,16 +1705,9 @@ export default function ManageMusic({
             className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-cyan-50"
           >
             <FiPlus className="h-4 w-4" />
-            {activeTab === 'songs' ? 'Thêm bài hát' : activeTab === 'albums' ? 'Thêm album' : activeTab === 'artists' ? 'Thêm nghệ sĩ' : 'Thêm chủ đề'}
+            {activeTab === 'songs' ? 'Thêm bài hát' : activeTab === 'albums' ? 'Thêm album' : activeTab === 'artists' ? 'Thêm nghệ sĩ' : 'Thêm thể loại'}
           </button>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard icon={FiMusic} label="Bài hát" value={stats.songs} helper="Có thể upload ảnh + audio trong cùng form" accent="from-cyan-500 to-blue-500" />
-        <SummaryCard icon={FiDisc} label="Album" value={stats.albums} helper="Ảnh bìa upload trực tiếp" accent="from-emerald-500 to-teal-500" />
-        <SummaryCard icon={FiUsers} label="Nghệ sĩ" value={stats.artists} helper="Ảnh nghệ sĩ + tiểu sử" accent="from-amber-500 to-orange-500" />
-        <SummaryCard icon={FiTag} label="Chủ đề" value={stats.genres} helper="Ảnh, tên, mô tả cho topic" accent="from-fuchsia-500 to-pink-500" />
       </div>
 
       <div className="rounded-[30px] border border-white/70 bg-white/85 p-4 shadow-[0_14px_40px_rgba(15,23,42,0.08)] backdrop-blur">
@@ -1902,7 +1944,7 @@ export default function ManageMusic({
                   <div>
                     <h3 className="text-lg font-bold text-slate-900">{genre.ten_the_loai}</h3>
                     <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">
-                      {genre.mo_ta_the_loai || 'Chưa có mô tả cho chủ đề này.'}
+                      {genre.mo_ta_the_loai || 'Chưa có mô tả cho thể loại này.'}
                     </p>
                   </div>
                   <div className="flex items-center justify-end gap-2">

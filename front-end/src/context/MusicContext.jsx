@@ -5,6 +5,7 @@ import { playlistService, songService, favoriteService } from '../api/services';
 import { enrichSongsWithDuration } from '../utils/duration';
 import { AuthContext } from './AuthContext';
 import { getSongArtistNames, getSongPrimaryArtist } from '../utils/songArtists';
+import { optimizeCloudinaryImage } from '../utils/media';
 
 const MusicContext = createContext();
 
@@ -18,8 +19,8 @@ const mapSong = (s) => {
     title: s.tieu_de,
     artist: getSongArtistNames(s, "Unknown Artist"),
     artistId: primaryArtist?.id || null,
-    artistAvatar: primaryArtist?.anh_nghe_si || s.duong_dan_hinh_anh || '',
-    image: s.duong_dan_hinh_anh,
+    artistAvatar: optimizeCloudinaryImage(primaryArtist?.anh_nghe_si || s.duong_dan_hinh_anh || '', { width: 120, height: 120 }),
+    image: optimizeCloudinaryImage(s.duong_dan_hinh_anh, { width: 300, height: 300 }),
     audioUrl: s.duong_dan_am_thanh,
     duration: s.thoi_luong || null,
     lyrics: s.loi_bai_hat,
@@ -38,7 +39,7 @@ const mapPlaylist = (p) => ({
   title: p.tieu_de,
   isPrivate: false,
   songs: (p.bai_hats_detail || []).map(mapSong),
-  image: p.bai_hats_detail?.[0]?.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop",
+  image: optimizeCloudinaryImage(p.bai_hats_detail?.[0]?.duong_dan_hinh_anh, { width: 300, height: 300 }) || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop",
   songCount: p.so_luong_bai_hat || 0
 });
 
@@ -384,6 +385,20 @@ export const MusicProvider = ({ children }) => {
       return null;
     }
 
+    const wasFavorite = favorites.some((favorite) => favorite.id === song.id) || Boolean(song.isFavorite);
+    const previousLikeCount = song.likeCount || 0;
+    const optimisticUpdates = {
+      isFavorite: !wasFavorite,
+      likeCount: Math.max(0, previousLikeCount + (wasFavorite ? -1 : 1)),
+    };
+
+    updateSongEverywhere(song.id, optimisticUpdates);
+    if (optimisticUpdates.isFavorite) {
+      setFavorites((prev) => [{ ...song, ...optimisticUpdates }, ...prev.filter((s) => s.id !== song.id)]);
+    } else {
+      setFavorites((prev) => prev.filter(s => s.id !== song.id));
+    }
+
     try {
       const result = await favoriteService.toggle(song.id);
       const nextUpdates = {
@@ -402,6 +417,17 @@ export const MusicProvider = ({ children }) => {
       }
       return result;
     } catch (error) {
+      const rollbackUpdates = {
+        isFavorite: wasFavorite,
+        likeCount: previousLikeCount,
+      };
+      updateSongEverywhere(song.id, rollbackUpdates);
+      if (wasFavorite) {
+        setFavorites((prev) => [{ ...song, ...rollbackUpdates }, ...prev.filter((s) => s.id !== song.id)]);
+      } else {
+        setFavorites((prev) => prev.filter(s => s.id !== song.id));
+      }
+
       if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error("Vui lòng đăng nhập để tym bài hát");
         openLoginModal?.();

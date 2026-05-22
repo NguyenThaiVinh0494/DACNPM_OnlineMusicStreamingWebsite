@@ -1,7 +1,7 @@
 # pyrefly: ignore [missing-import]
 from rest_framework import serializers
 
-from .cloudinary_utils import upload_audio_file, upload_image_file
+from .cloudinary_utils import upload_audio_asset, upload_image_file
 from .models import (
     Album,
     BaiHat,
@@ -108,7 +108,10 @@ class CloudinaryUploadSerializerMixin:
             return
 
         try:
-            validated_data[target_field] = upload_audio_file(audio_file, folder)
+            result = upload_audio_asset(audio_file, folder)
+            validated_data[target_field] = result['secure_url']
+            if not validated_data.get('thoi_luong') and result.get('duration'):
+                validated_data['thoi_luong'] = round(result['duration'])
         except ValueError as exc:
             raise serializers.ValidationError({input_field: [str(exc)]}) from exc
 
@@ -179,7 +182,7 @@ class TheLoaiSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerial
     def validate(self, attrs):
         attrs = super().validate(attrs)
         if self.instance is None and not (attrs.get('anh_the_loai') or attrs.get('topic_image_file')):
-            raise serializers.ValidationError({'topic_image_file': ['Vui lòng chọn ảnh chủ đề hoặc nhập URL ảnh.']})
+            raise serializers.ValidationError({'topic_image_file': ['Vui lòng chọn ảnh thể loại hoặc nhập URL ảnh.']})
         return attrs
 
     def create(self, validated_data):
@@ -271,6 +274,7 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
             'duong_dan_am_thanh',
             'duong_dan_hinh_anh',
             'loi_bai_hat',
+            'thoi_luong',
             'luot_nghe',
             'so_luot_thich',
             'da_thich',
@@ -293,6 +297,7 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
             'duong_dan_am_thanh': {'required': False, 'allow_blank': True},
             'duong_dan_hinh_anh': {'required': False, 'allow_blank': True},
             'loi_bai_hat': {'required': False, 'allow_null': True, 'allow_blank': True},
+            'thoi_luong': {'required': False, 'allow_null': True},
             'quoc_gia': {'required': False, 'allow_null': True, 'allow_blank': True},
             'nam_phat_hanh': {'required': False, 'allow_null': True},
         }
@@ -304,9 +309,17 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
         return NgheSiSummarySerializer(first_artist).data
 
     def get_so_luot_thich(self, obj):
+        annotated_count = getattr(obj, 'so_luot_thich_annotated', None)
+        if annotated_count is not None:
+            return annotated_count
+
         return obj.duoc_yeu_thich.count()
 
     def get_da_thich(self, obj):
+        annotated_value = getattr(obj, 'da_thich_value', None)
+        if annotated_value is not None:
+            return bool(annotated_value)
+
         request = self.context.get('request')
         if not request or not request.user or not request.user.is_authenticated:
             return False

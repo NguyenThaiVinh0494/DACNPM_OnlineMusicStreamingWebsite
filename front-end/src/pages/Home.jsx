@@ -5,8 +5,11 @@ import Footer from "../components/layout/Footer";
 import ListGrid from "../components/home/ListGrid";
 import MusicChart from "../components/home/MusicChart";
 import DanhSachPhatNgang from "../components/home/HorizontalPlaylist";
-import { songService, albumService, genreService } from "../api/services";
-import { getSongArtistNames } from "../utils/songArtists";
+import { homeService } from "../api/services";
+import { optimizeCloudinaryImage } from "../utils/media";
+import morningBanner from "../assets/morning.jpg";
+import afternoonBanner from "../assets/afternoon.jpg";
+import eveningBanner from "../assets/evening.jpg";
 
 // Gradient colors for topic cards
 const GRADIENT_COLORS = [
@@ -40,16 +43,6 @@ const FALLBACK_IMAGES = [
 
 
 
-// Fisher-Yates shuffle
-function shuffleArray(arr) {
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
 export default function Home() {
   const { t } = useTranslation();
   const [newSongs, setNewSongs] = useState([]);
@@ -66,48 +59,24 @@ export default function Home() {
     let active = true;
     const fetchHomeData = async () => {
       try {
-        const [popAlbums, top100Albums, vnAlbums, moodAlbums, newAlbums, singleSongs] = await Promise.all([
-          albumService.getAll({ ordering: '-tong_luot_thich', limit: 5 }), // Đang được yêu thích
-          albumService.getAll({ ordering: '-tong_luot_nghe', limit: 5 }), // Top 100
-          albumService.getAll({ quoc_gia: 'Việt Nam', limit: 5 }), // Vũ trụ nhạc Việt
-          albumService.getAll({ id_the_loai: 4, limit: 5 }), // Tâm trạng hôm nay (thể loại buồn/Ballad)
-          albumService.getAll({ ordering: '-ngay_phat_hanh', limit: 5 }), // Mới phát hành (theo năm)
-          songService.getAll({ ordering: '-nam_phat_hanh', limit: 12 }) // Single Mới phát hành
-        ]);
+        const data = await homeService.getHomeData();
         if (!active) return;
-        
-        const mapAlbumData = (res) => (res.results || res).map(album => ({
-          id: album.id,
-          title: album.tieu_de,
-          artist: album.id_nghe_si?.ten_nghe_si || "Nhiều nghệ sĩ",
-          image: album.anh_bia || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop",
-          type: 'album'
-        }));
 
-        const mapSongData = (res) => (res.results || res).map(song => ({
-          ...song,
-          id: song.id,
-          title: song.tieu_de,
-          ten: song.tieu_de,
-          artist: getSongArtistNames(song, "Đang cập nhật..."),
-          caSi: getSongArtistNames(song, "Đang cập nhật..."),
-          image: song.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop",
-          anh: song.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop",
-          audioUrl: song.duong_dan_am_thanh,
-          label: "NCT OFFICIAL",
-          type: 'song'
-        }));
-
-        setDangDuocYeuThich(mapAlbumData(popAlbums));
-        setTop100(mapAlbumData(top100Albums));
-        setVuTruNhacViet(mapAlbumData(vnAlbums));
-        setTamTrangHomNay(mapAlbumData(moodAlbums));
-        setNewSongs(mapAlbumData(newAlbums));
-        
-        setSingleMoiPhatHanh(mapSongData(singleSongs));
-
+        setDangDuocYeuThich(data.dangDuocYeuThich || []);
+        setTop100(data.top100 || []);
+        setVuTruNhacViet(data.vuTruNhacViet || []);
+        setTamTrangHomNay(data.tamTrangHomNay || []);
+        setNewSongs(data.newSongs || []);
+        setSingleMoiPhatHanh(data.singleMoiPhatHanh || []);
+        setTopics((data.topics || []).map((topic, index) => ({
+          ...topic,
+          color: GRADIENT_COLORS[index % GRADIENT_COLORS.length],
+          image: topic.image || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length],
+        })));
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu trang chủ:", error);
+      } finally {
+        if (active) setLoadingTopics(false);
       }
     };
     fetchHomeData();
@@ -116,61 +85,47 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    const fetchGenres = async () => {
-      setLoadingTopics(true);
-      try {
-        const data = await genreService.getAll();
-        if (!active) return;
-        const genreList = data.results || data;
-        const mapped = genreList.map((genre, index) => ({
-          id: genre.id,
-          name: genre.ten_the_loai,
-          color: GRADIENT_COLORS[index % GRADIENT_COLORS.length],
-          image: genre.anh_the_loai || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length],
-        }));
-        const randomTopics = shuffleArray(mapped).slice(0, 10);
-        setTopics(randomTopics);
-      } catch (error) {
-        console.error("Lỗi khi tải thể loại:", error);
-      } finally {
-        if (active) setLoadingTopics(false);
-      }
-    };
-    fetchGenres();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // 1. Tạo hàm lấy lời chào dựa vào giờ hệ thống
-  const layLoiChao = () => {
+  const getGreetingBanner = () => {
     const gioHienTai = new Date().getHours();
 
     if (gioHienTai >= 5 && gioHienTai < 12) {
-      return t('good_morning', "Chào buổi sáng");
-    } else if (gioHienTai >= 12 && gioHienTai < 18) {
-      return t('good_afternoon', "Chào buổi chiều");
-    } else {
-      return t('good_evening', "Chào buổi tối");
+      return {
+        greeting: t('good_morning', "Chào buổi sáng"),
+        image: morningBanner,
+        title: "Morning Vibes",
+      };
     }
+
+    if (gioHienTai >= 12 && gioHienTai < 18) {
+      return {
+        greeting: t('good_afternoon', "Chào buổi chiều"),
+        image: afternoonBanner,
+        title: "Afternoon Flow",
+      };
+    }
+
+    return {
+      greeting: t('good_evening', "Chào buổi tối"),
+      image: eveningBanner,
+      title: "Evening Chill",
+    };
   };
+  const greetingBanner = getGreetingBanner();
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-bold">{layLoiChao()}</h2>
+      <h2 className="text-3xl font-bold">{greetingBanner.greeting}</h2>
 
       {/* Banners */}
       <div className="grid grid-cols-2 gap-6">
         <div className="rounded-xl overflow-hidden h-48 relative group cursor-pointer">
           <img
-            src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=800&h=300&fit=crop"
-            alt="Banner 1"
+            src={greetingBanner.image}
+            alt={greetingBanner.greeting}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-            <h3 className="text-2xl font-bold text-white">Daydream on Sofa</h3>
+            <h3 className="text-2xl font-bold text-white">{greetingBanner.title}</h3>
           </div>
         </div>
         <div className="rounded-xl overflow-hidden h-48 relative group cursor-pointer bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center p-8">
@@ -187,7 +142,7 @@ export default function Home() {
       {/* Categories / Topics */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-black dark:text-white">{t('topics', 'Chủ đề')}</h3>
+          <h3 className="text-xl font-bold text-black dark:text-white">{t('topics', 'Thể loại')}</h3>
           <Link to="/discover/topics" className="text-sm text-gray-500 dark:text-nct-text-dim hover:text-black dark:hover:text-white uppercase font-medium tracking-wider transition-colors">{t('more', 'Thêm')}</Link>
         </div>
         <div className="grid grid-cols-5 gap-4">
@@ -204,7 +159,7 @@ export default function Home() {
               >
                 <h4 className="absolute top-3 left-3 text-white font-bold text-lg z-10 drop-shadow-md">{topic.name}</h4>
                 <img
-                  src={topic.image}
+                  src={optimizeCloudinaryImage(topic.image, { width: 160, height: 160 })}
                   alt={topic.name}
                   className="absolute -right-4 -bottom-2 w-16 h-16 object-cover rounded-md rotate-[25deg] group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 shadow-lg"
                 />
