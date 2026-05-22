@@ -10,6 +10,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { songService, artistService, albumService } from '../../api/services';
 import { getSongArtistNames } from '../../utils/songArtists';
+import { optimizeCloudinaryImage } from '../../utils/media';
 
 export default function Topbar() {
   const { t } = useTranslation();
@@ -59,7 +60,7 @@ export default function Topbar() {
           id: s.id,
           title: s.tieu_de,
           artist: getSongArtistNames(s, "Không rõ"),
-          image: s.duong_dan_hinh_anh || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop",
+          image: optimizeCloudinaryImage(s.duong_dan_hinh_anh, { width: 100, height: 100 }) || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop",
           audioUrl: s.duong_dan_am_thanh,
           lyrics: s.loi_bai_hat,
           duration: s.thoi_luong || "04:00"
@@ -68,14 +69,14 @@ export default function Topbar() {
         const mappedArtists = artistsRes.map(a => ({
           id: a.id,
           name: a.ten_nghe_si,
-          image: a.anh_nghe_si || null,
+          image: optimizeCloudinaryImage(a.anh_nghe_si, { width: 100, height: 100 }) || null,
         }));
 
         const mappedAlbums = albumsRes.map(a => ({
           id: a.id,
           title: a.tieu_de,
-          artist: a.ten_nghe_si || "Nghệ sĩ",
-          image: a.anh_bia || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop"
+          artist: a.id_nghe_si_detail?.ten_nghe_si || a.ten_nghe_si || "Nghệ sĩ",
+          image: optimizeCloudinaryImage(a.anh_bia, { width: 300, height: 300 }) || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop"
         }));
 
         setSuggestions({

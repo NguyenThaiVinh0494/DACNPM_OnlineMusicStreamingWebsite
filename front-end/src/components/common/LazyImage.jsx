@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { FiImage } from 'react-icons/fi';
+import { optimizeCloudinaryImage } from '../../utils/media';
 
-export default function LazyImage({ src, alt, className = "", fallbackIcon = <FiImage className="w-8 h-8 text-gray-400" /> }) {
+export default function LazyImage({ src, alt, className = "", fallbackIcon = <FiImage className="w-8 h-8 text-gray-400" />, width = 400, height = 400 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const optimizedSrc = optimizeCloudinaryImage(src, { width, height });
 
   return (
     <div className={`relative overflow-hidden bg-gray-200 dark:bg-white/5 flex items-center justify-center ${className}`}>
@@ -19,7 +21,7 @@ export default function LazyImage({ src, alt, className = "", fallbackIcon = <Fi
         </div>
       ) : (
         <img
-          src={src}
+          src={optimizedSrc}
           alt={alt}
           loading="lazy"
           onLoad={() => setLoaded(true)}

@@ -1,6 +1,4 @@
-const audioDurationCache = new Map();
-
-function formatSeconds(totalSeconds) {
+export function formatSeconds(totalSeconds) {
   if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
     return null;
   }
@@ -41,41 +39,7 @@ export async function resolveSongDuration(rawDuration, audioUrl) {
     return normalized;
   }
 
-  if (!audioUrl) {
-    return '--:--';
-  }
-
-  if (audioDurationCache.has(audioUrl)) {
-    return audioDurationCache.get(audioUrl);
-  }
-
-  const pendingPromise = new Promise((resolve) => {
-    const audio = document.createElement('audio');
-
-    const cleanup = () => {
-      audio.removeAttribute('src');
-      audio.load();
-    };
-
-    audio.preload = 'metadata';
-    audio.onloadedmetadata = () => {
-      const formatted = formatSeconds(audio.duration) || '--:--';
-      audioDurationCache.set(audioUrl, formatted);
-      cleanup();
-      resolve(formatted);
-    };
-    audio.onerror = () => {
-      audioDurationCache.set(audioUrl, '--:--');
-      cleanup();
-      resolve('--:--');
-    };
-    audio.src = audioUrl;
-  });
-
-  audioDurationCache.set(audioUrl, pendingPromise);
-  const resolved = await pendingPromise;
-  audioDurationCache.set(audioUrl, resolved);
-  return resolved;
+  return audioUrl ? '--:--' : '--:--';
 }
 
 export async function enrichSongsWithDuration(songs, mapSong) {

@@ -116,7 +116,7 @@ export default function OnboardingModal({
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {step === 1 ? "1. Chủ đề yêu thích của bạn?" : "2. Nghệ sĩ bạn yêu thích?"}
+                {step === 1 ? "1. Thể loại yêu thích của bạn?" : "2. Nghệ sĩ bạn yêu thích?"}
               </h2>
               <button 
                 onClick={() => {

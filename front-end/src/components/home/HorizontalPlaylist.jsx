@@ -1,7 +1,7 @@
 import { FaRandom } from 'react-icons/fa'; // Icon trộn bài
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { useMusic } from '../../context/MusicContext';
+import { optimizeCloudinaryImage } from '../../utils/media';
 
 export default function DanhSachPhatNgang({ tieuDeKhuVuc, items }) {
   const { t } = useTranslation();
@@ -40,7 +40,7 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc, items }) {
             {/* Ảnh bìa */}
             <div className="w-14 h-14 flex-shrink-0 relative">
               <img
-                src={item.anh}
+                src={optimizeCloudinaryImage(item.anh, { width: 120, height: 120 })}
                 alt={item.ten}
                 className="w-full h-full object-cover rounded-md"
               />

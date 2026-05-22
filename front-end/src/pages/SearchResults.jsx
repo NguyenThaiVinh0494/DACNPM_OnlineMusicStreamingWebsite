@@ -5,14 +5,11 @@ import { useMusic } from "../context/MusicContext";
 import SongItem from "../components/common/SongItem";
 import LazyImage from "../components/common/LazyImage";
 import EmptyState from "../components/common/EmptyState";
-import { songService, artistService, albumService, playlistService } from "../api/services";
+import { songService, artistService, albumService } from "../api/services";
 import { enrichSongsWithDuration } from "../utils/duration";
 import { getSongArtistNames } from "../utils/songArtists";
 
-// ── Mock Data ──────────────────────────────────────────────────────────────
 
-
-// ── Card Components ────────────────────────────────────────────────────────
 
 function ArtistCard({ artist }) {
   return (
@@ -71,7 +68,6 @@ function AlbumCard({ album }) {
 
 
 
-// ── Main Component ─────────────────────────────────────────────────────────
 
 const TABS = [
   { id: "all", label: "Tất cả" },

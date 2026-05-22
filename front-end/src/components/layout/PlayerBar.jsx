@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiHeart, FiMoreHorizontal, FiShuffle, FiRepeat, FiVolume2, FiVolumeX, FiList, FiMusic, FiMic } from "react-icons/fi";
+import { FiHeart, FiMoreHorizontal, FiPlus, FiShuffle, FiRepeat, FiVolume2, FiVolumeX, FiList, FiMusic, FiMic } from "react-icons/fi";
 import { FaPlay, FaPause, FaStepBackward, FaStepForward } from "react-icons/fa";
 import { useMusic } from "../../context/MusicContext";
+import { useClickOutside } from "../../hooks/useClickOutside";
 
 // Utility to format time (seconds to mm:ss)
 const formatTime = (time) => {
@@ -17,13 +18,16 @@ export default function PlayerBar() {
     currentSong, isPlaying, togglePlay, playNext, playPrev, 
     toggleFavorite, favorites, recordSongListen, playbackSessionId,
     isShuffle, repeatMode, toggleShuffle, toggleRepeat,
-    audioRef, isLyricsOpen, toggleLyrics, isQueueOpen, toggleQueue
+    audioRef, isLyricsOpen, toggleLyrics, isQueueOpen, toggleQueue,
+    openAddToPlaylistModal
   } = useMusic();
   
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef(null);
   const listenProgressRef = useRef({
     songId: null,
     sessionId: null,
@@ -31,6 +35,8 @@ export default function PlayerBar() {
     accumulated: 0,
     lastTime: 0,
   });
+
+  useClickOutside(moreMenuRef, () => setIsMoreMenuOpen(false));
 
   const resetListenProgress = useCallback(() => {
     listenProgressRef.current = {
@@ -190,7 +196,31 @@ export default function PlayerBar() {
             <button type="button" onClick={() => toggleFavorite(currentSong)} aria-label="Thêm vào yêu thích" className={`${isFav ? 'text-nct-primary' : 'hover:text-red-500'} transition-colors`}>
               <FiHeart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
             </button>
-            <button aria-label="Thêm tùy chọn" className="hover:text-gray-900 dark:hover:text-white transition-colors"><FiMoreHorizontal className="w-4 h-4" /></button>
+            <div className="relative" ref={moreMenuRef}>
+              <button
+                type="button"
+                aria-label="Thêm tùy chọn"
+                onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+                className="hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                <FiMoreHorizontal className="w-4 h-4" />
+              </button>
+              {isMoreMenuOpen ? (
+                <div className="absolute bottom-8 left-0 z-[80] w-48 rounded-xl border border-gray-200 bg-white p-1.5 text-gray-700 shadow-2xl dark:border-white/10 dark:bg-[#242424] dark:text-white">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openAddToPlaylistModal(currentSong);
+                      setIsMoreMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10"
+                  >
+                    <FiPlus className="h-4 w-4" />
+                    Thêm vào playlist
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         )}
         
@@ -241,9 +271,6 @@ export default function PlayerBar() {
 
       {/* Right: Actions (Hidden on Mobile) */}
       <div className={`hidden md:flex items-center justify-end gap-4 w-[30%] text-gray-500 dark:text-nct-text-dim transition-opacity duration-300 ${!currentSong ? 'opacity-40 pointer-events-none grayscale' : 'opacity-100'}`}>
-        <div className="text-[10px] font-bold border border-gray-300 dark:border-white/20 px-1.5 py-0.5 rounded hover:border-gray-500 dark:hover:border-white/40 hover:text-gray-900 dark:hover:text-white transition-colors cursor-default select-none">
-          320 kbps
-        </div>
         <div className="flex items-center gap-2 group w-24">
           <button aria-label="Âm lượng" onClick={() => setIsMuted(!isMuted)} className="hover:text-gray-900 dark:hover:text-white transition-colors p-1.5">
             {isMuted || volume === 0 ? <FiVolumeX className="w-4 h-4" /> : <FiVolume2 className="w-4 h-4" />}

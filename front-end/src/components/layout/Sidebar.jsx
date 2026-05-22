@@ -15,7 +15,6 @@ export default function Sidebar() {
   const { myPlaylists, createNewPlaylist } = useMusic();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
-  const [isPrivate, setIsPrivate] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
   const mainLinks = [

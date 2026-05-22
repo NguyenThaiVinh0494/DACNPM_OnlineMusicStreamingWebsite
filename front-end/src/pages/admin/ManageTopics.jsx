@@ -5,8 +5,8 @@ export default function ManageTopics() {
     <ManageMusic
       initialEntity="genres"
       hideTabs
-      pageTitle="Quản lý chủ đề"
-      pageDescription="Quản lý topic/TheLoai với ảnh đại diện, tên, mô tả và các bài hát liên quan."
+      pageTitle="Quản lý thể loại"
+      pageDescription="Quản lý thể loại với ảnh đại diện, tên, mô tả và các bài hát liên quan."
     />
   );
 }

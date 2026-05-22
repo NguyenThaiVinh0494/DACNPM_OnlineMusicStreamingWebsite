@@ -29,12 +29,16 @@ class Album(models.Model):
     ngay_phat_hanh = models.DateField(blank=True, null=True)
     class Meta:
         db_table = 'tbl_album'
+        indexes = [
+            models.Index(fields=['trang_thai', 'ngay_phat_hanh']),
+        ]
 # 2. Bảng tbl_bai_hat
 class BaiHat(models.Model):
     tieu_de = models.CharField(max_length=255)
     duong_dan_am_thanh = models.URLField(max_length=500)
     duong_dan_hinh_anh = models.URLField(max_length=500)
     loi_bai_hat = models.TextField(blank=True, null=True)  # Lời bài hát (có thể để trống)
+    thoi_luong = models.PositiveIntegerField(blank=True, null=True)
     luot_nghe = models.IntegerField(default=0)
     quoc_gia = models.CharField(max_length=50, blank=True, null=True)
     nam_phat_hanh = models.IntegerField(blank=True, null=True)
@@ -45,6 +49,11 @@ class BaiHat(models.Model):
     id_nguoi_dang = models.ForeignKey(NguoiDung, on_delete=models.CASCADE, related_name='bai_hats_da_dang')
     class Meta:
         db_table = 'tbl_bai_hat'
+        indexes = [
+            models.Index(fields=['trang_thai', 'luot_nghe']),
+            models.Index(fields=['trang_thai', 'nam_phat_hanh']),
+            models.Index(fields=['quoc_gia']),
+        ]
 # 5. Bảng tbl_danh_sach_phat
 class DanhSachPhat(models.Model):
     tieu_de = models.CharField(max_length=255)

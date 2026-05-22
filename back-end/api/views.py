@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Case, Count, F, IntegerField, Q, Value, When
+from django.core.cache import cache
+from django.db.models import Case, Count, Exists, F, IntegerField, OuterRef, Q, Sum, Value, When
+from django.db.models.functions import Coalesce
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -8,7 +10,7 @@ from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .cloudinary_utils import upload_audio_file, upload_image_file
+from .cloudinary_utils import make_upload_signature, upload_audio_file, upload_image_file
 from .models import Album, BaiHat, DanhSachPhat, LichSuNghe, NgheSi, NguoiDung, TheLoai, YeuThich
 from .serializers import (
     AlbumSerializer,
@@ -75,6 +77,31 @@ class UploadNhacView(APIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'url': url}, status=status.HTTP_200_OK)
+
+
+class CloudinaryUploadSignatureView(APIView):
+    permission_classes = [IsAdminRole]
+
+    FOLDERS = {
+        'song_image': ('music_streaming/song_images', 'image'),
+        'song_audio': ('music_streaming/audio', 'video'),
+        'album_cover': ('music_streaming/albums', 'image'),
+        'artist_image': ('music_streaming/artists', 'image'),
+        'topic_image': ('music_streaming/topics', 'image'),
+        'profile_image': ('music_streaming/images', 'image'),
+    }
+
+    def post(self, request):
+        upload_type = request.data.get('upload_type')
+        if upload_type not in self.FOLDERS:
+            return Response({'error': 'Loại upload không hợp lệ.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        folder, resource_type = self.FOLDERS[upload_type]
+        signature_data = make_upload_signature(folder, resource_type)
+        if not signature_data.get('cloud_name') or not signature_data.get('api_key') or not signature_data.get('signature'):
+            return Response({'error': 'Cloudinary chưa được cấu hình.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(signature_data, status=status.HTTP_200_OK)
 
 
 # ============================
@@ -180,6 +207,48 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 
+class AdminStatsView(APIView):
+    permission_classes = [IsAdminRole]
+
+    def get(self, request):
+        top_songs = list(
+            BaiHat.objects.select_related('id_album').prefetch_related('cac_nghe_si')
+            .filter(trang_thai='PUBLIC')
+            .annotate(so_luot_thich_annotated=Count('duoc_yeu_thich', distinct=True))
+            .order_by('-luot_nghe', '-id')[:10]
+        )
+        total_listens = BaiHat.objects.aggregate(total=Coalesce(Sum('luot_nghe'), Value(0), output_field=IntegerField()))['total']
+
+        genre_rows = (
+            TheLoai.objects.annotate(song_count=Count('bai_hats', distinct=True))
+            .filter(song_count__gt=0)
+            .order_by('-song_count', 'ten_the_loai')[:6]
+        )
+
+        return Response(
+            {
+                'counts': {
+                    'songs': BaiHat.objects.count(),
+                    'albums': Album.objects.count(),
+                    'artists': NgheSi.objects.count(),
+                    'genres': TheLoai.objects.count(),
+                    'users': NguoiDung.objects.count(),
+                },
+                'totalListens': total_listens or 0,
+                'topSongs': BaiHatSerializer(top_songs, many=True, context={'request': request}).data,
+                'genreDistribution': [
+                    {
+                        'id': genre.id,
+                        'name': genre.ten_the_loai,
+                        'songCount': genre.song_count,
+                    }
+                    for genre in genre_rows
+                ],
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 # ============================
 # Nghệ sĩ, Thể loại, Album
 # ============================
@@ -204,20 +273,151 @@ class AlbumViewSet(MultipartEnabledViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['tieu_de', 'id_nghe_si__ten_nghe_si']
-    ordering_fields = ['ngay_phat_hanh', 'id']
+    ordering_fields = ['ngay_phat_hanh', 'id', 'tong_luot_nghe', 'tong_luot_thich', 'song_count']
+
+    def _get_limit(self, request, maximum=100):
+        try:
+            limit = int(request.query_params.get('limit', 0))
+        except (TypeError, ValueError):
+            return None
+        if limit <= 0:
+            return None
+        return min(limit, maximum)
 
     def get_queryset(self):
         queryset = Album.objects.select_related('id_nghe_si').all().order_by('-ngay_phat_hanh', '-id')
+        metric_fields = {'tong_luot_nghe', 'tong_luot_thich', 'song_count'}
+        ordering_value = self.request.query_params.get('ordering', '')
+        needs_metrics = any(item.strip().lstrip('-') in metric_fields for item in ordering_value.split(','))
+
+        if needs_metrics:
+            queryset = queryset.annotate(
+                tong_luot_nghe=Coalesce(Sum('bai_hats__luot_nghe'), Value(0), output_field=IntegerField()),
+                tong_luot_thich=Count('bai_hats__duoc_yeu_thich', distinct=True),
+                song_count=Count('bai_hats', distinct=True),
+            )
 
         artist_id = self.request.query_params.get('id_nghe_si')
         status_value = self.request.query_params.get('trang_thai')
+        country = self.request.query_params.get('quoc_gia')
+        genre_id = self.request.query_params.get('id_the_loai')
 
         if artist_id:
             queryset = queryset.filter(id_nghe_si_id=artist_id)
         if status_value:
             queryset = queryset.filter(trang_thai=status_value)
+        if country:
+            queryset = queryset.filter(bai_hats__quoc_gia=country)
+        if genre_id:
+            queryset = queryset.filter(bai_hats__the_loais__id=genre_id)
 
-        return queryset
+        return queryset.distinct()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        limit = self._get_limit(request)
+        if limit:
+            queryset = queryset[:limit]
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class HomeView(APIView):
+    permission_classes = [AllowAny]
+    CACHE_KEY = 'home:v1'
+    CACHE_SECONDS = 120
+
+    def _album_queryset(self):
+        return Album.objects.select_related('id_nghe_si').annotate(
+            tong_luot_nghe=Coalesce(Sum('bai_hats__luot_nghe'), Value(0), output_field=IntegerField()),
+            tong_luot_thich=Count('bai_hats__duoc_yeu_thich', distinct=True),
+            song_count=Count('bai_hats', distinct=True),
+        ).filter(trang_thai='PUBLIC')
+
+    def _song_queryset(self):
+        return BaiHat.objects.select_related('id_album', 'id_nguoi_dang').prefetch_related(
+            'cac_nghe_si',
+            'the_loais',
+        ).filter(trang_thai='PUBLIC')
+
+    def _album_item(self, album):
+        return {
+            'id': album.id,
+            'title': album.tieu_de,
+            'artist': album.id_nghe_si.ten_nghe_si if album.id_nghe_si_id else 'Nhiều nghệ sĩ',
+            'image': album.anh_bia,
+            'type': 'album',
+            'songCount': getattr(album, 'song_count', 0),
+            'totalPlays': getattr(album, 'tong_luot_nghe', 0) or 0,
+            'totalLikes': getattr(album, 'tong_luot_thich', 0) or 0,
+        }
+
+    def _song_item(self, song):
+        artist_names = ', '.join(artist.ten_nghe_si for artist in song.cac_nghe_si.all()) or 'Đang cập nhật'
+        return {
+            'id': song.id,
+            'title': song.tieu_de,
+            'ten': song.tieu_de,
+            'artist': artist_names,
+            'caSi': artist_names,
+            'image': song.duong_dan_hinh_anh,
+            'anh': song.duong_dan_hinh_anh,
+            'audioUrl': song.duong_dan_am_thanh,
+            'duration': song.thoi_luong,
+            'lyrics': song.loi_bai_hat,
+            'label': 'NCT OFFICIAL',
+            'type': 'song',
+        }
+
+    def _topic_item(self, genre):
+        return {
+            'id': genre.id,
+            'name': genre.ten_the_loai,
+            'image': genre.anh_the_loai,
+        }
+
+    def get(self, request):
+        cached_payload = cache.get(self.CACHE_KEY)
+        if cached_payload:
+            return Response(cached_payload, status=status.HTTP_200_OK)
+
+        albums = self._album_queryset()
+        songs = self._song_queryset()
+        mood_genre_id = request.query_params.get('mood_genre_id', 4)
+
+        payload = {
+            'vuTruNhacViet': [
+                self._album_item(album)
+                for album in albums.filter(bai_hats__quoc_gia='Việt Nam').distinct().order_by('-ngay_phat_hanh', '-id')[:5]
+            ],
+            'tamTrangHomNay': [
+                self._album_item(album)
+                for album in albums.filter(bai_hats__the_loais__id=mood_genre_id).distinct().order_by('-tong_luot_nghe', '-id')[:5]
+            ],
+            'top100': [
+                self._album_item(album)
+                for album in albums.order_by('-tong_luot_nghe', '-id')[:5]
+            ],
+            'dangDuocYeuThich': [
+                self._album_item(album)
+                for album in albums.order_by('-tong_luot_thich', '-id')[:5]
+            ],
+            'newSongs': [
+                self._album_item(album)
+                for album in albums.order_by('-ngay_phat_hanh', '-id')[:5]
+            ],
+            'singleMoiPhatHanh': [
+                self._song_item(song)
+                for song in songs.order_by('-nam_phat_hanh', '-id')[:12]
+            ],
+            'topics': [
+                self._topic_item(genre)
+                for genre in TheLoai.objects.all().order_by('ten_the_loai')[:10]
+            ],
+        }
+        cache.set(self.CACHE_KEY, payload, self.CACHE_SECONDS)
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 # ============================
@@ -342,10 +542,23 @@ class BaiHatViewSet(MultipartEnabledViewSet):
     ordering_fields = ['luot_nghe', 'nam_phat_hanh', 'id']
 
     def _base_queryset(self):
-        return BaiHat.objects.select_related(
+        queryset = BaiHat.objects.select_related(
             'id_album',
             'id_nguoi_dang',
-        ).prefetch_related('cac_nghe_si', 'the_loais').all().order_by('-id')
+        ).prefetch_related('cac_nghe_si', 'the_loais').annotate(
+            so_luot_thich_annotated=Count('duoc_yeu_thich', distinct=True),
+        ).all().order_by('-id')
+
+        request = getattr(self, 'request', None)
+        user = getattr(request, 'user', None)
+        if user and user.is_authenticated:
+            queryset = queryset.annotate(
+                da_thich_value=Exists(
+                    YeuThich.objects.filter(id_nguoi_dung=user, id_bai_hat=OuterRef('pk'))
+                )
+            )
+
+        return queryset
         
 
     def _get_limit(self, request, default=12, maximum=30):
@@ -388,6 +601,7 @@ class BaiHatViewSet(MultipartEnabledViewSet):
         artist_id = self.request.query_params.get('id_nghe_si')
         album_id = self.request.query_params.get('id_album')
         genre_id = self.request.query_params.get('id_the_loai')
+        country = self.request.query_params.get('quoc_gia')
 
         if status_value:
             queryset = queryset.filter(trang_thai=status_value)
@@ -397,8 +611,22 @@ class BaiHatViewSet(MultipartEnabledViewSet):
             queryset = queryset.filter(id_album_id=album_id)
         if genre_id:
             queryset = queryset.filter(the_loais__id=genre_id)
+        if country:
+            queryset = queryset.filter(quoc_gia=country)
 
         return queryset.distinct()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        try:
+            limit = int(request.query_params.get('limit', 0))
+        except (TypeError, ValueError):
+            limit = 0
+        if limit:
+            queryset = queryset[:min(max(limit, 1), 100)]
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def listen(self, request, pk=None):

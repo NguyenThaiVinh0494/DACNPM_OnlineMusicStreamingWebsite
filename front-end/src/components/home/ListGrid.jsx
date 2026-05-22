@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useMusic } from "../../context/MusicContext";
+import { optimizeCloudinaryImage } from "../../utils/media";
 
 export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
   const { t } = useTranslation();
@@ -53,7 +54,7 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
             {/* Khung ảnh */}
             <div className="w-full aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100 dark:bg-white/5 flex items-center justify-center">
               <img
-                src={item.image || item.anh}
+                src={optimizeCloudinaryImage(item.image || item.anh, { width: 320, height: 320 })}
                 alt={item.title || item.ten}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />

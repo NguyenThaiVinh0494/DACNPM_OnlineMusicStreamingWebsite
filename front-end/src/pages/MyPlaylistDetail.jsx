@@ -27,7 +27,6 @@ export default function MyPlaylistDetail() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
-  const [editIsPrivate, setEditIsPrivate] = useState(false);
   const [addSourceTab, setAddSourceTab] = useState("all"); // "all" or "favorites"
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSongs, setSelectedSongs] = useState([]);
@@ -168,7 +167,6 @@ export default function MyPlaylistDetail() {
                     onClick={() => {
                       setOpenDropdown(null);
                       setEditTitle(playlist.title);
-                      setEditIsPrivate(playlist.isPrivate || false);
                       setIsEditModalOpen(true);
                     }}
                     className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white text-sm text-left flex items-center gap-3 transition-colors"
