@@ -152,53 +152,76 @@ export default function Topbar() {
                   <span>Hãy thử nhập từ khóa khác xem sao nhé!</span>
                 </div>
               ) : (
-                <div className="max-h-[420px] overflow-y-auto hide-scrollbar py-2 px-2">
-                  <div className="space-y-0.5">
-                    {suggestions.songs.map((song) => (
-                      <div
-                        key={`song-${song.id}`}
-                        onClick={() => {
-                          navigate(`/search?q=${encodeURIComponent(song.title)}`);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer group/item transition-colors"
-                      >
-                        <FiSearch className="w-4 h-4 text-gray-400 group-hover/item:text-nct-primary transition-colors flex-shrink-0" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300 group-hover/item:text-nct-primary dark:group-hover/item:text-white truncate font-medium">
-                          {song.title}
-                        </span>
+                <div className="max-h-[420px] overflow-y-auto hide-scrollbar py-3 px-2">
+                  <div className="space-y-4">
+                    {suggestions.songs.length > 0 && (
+                      <div className="space-y-1">
+                        <h4 className="text-[11px] font-bold text-gray-500 dark:text-nct-text-dim uppercase tracking-wider px-3 mb-1">Bài hát</h4>
+                        {suggestions.songs.map((song) => (
+                          <div
+                            key={`song-${song.id}`}
+                            onClick={() => {
+                              navigate(`/search?q=${encodeURIComponent(song.title)}`);
+                              setIsDropdownOpen(false);
+                            }}
+                            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer group/item transition-colors"
+                          >
+                            <FiSearch className="w-4 h-4 text-gray-400 group-hover/item:text-nct-primary transition-colors flex-shrink-0" />
+                            <div className="flex flex-col overflow-hidden">
+                              <span className="text-sm text-gray-700 dark:text-gray-300 group-hover/item:text-nct-primary dark:group-hover/item:text-white truncate font-medium leading-tight">
+                                {song.title}
+                              </span>
+                              <span className="text-[11px] text-gray-500 dark:text-nct-text-dim truncate mt-0.5">{song.artist}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    {suggestions.artists.map((artist) => (
-                      <div
-                        key={`artist-${artist.id}`}
-                        onClick={() => {
-                          navigate(`/search?q=${encodeURIComponent(artist.name)}`);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer group/item transition-colors"
-                      >
-                        <FiSearch className="w-4 h-4 text-gray-400 group-hover/item:text-nct-primary transition-colors flex-shrink-0" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300 group-hover/item:text-nct-primary dark:group-hover/item:text-white truncate font-medium">
-                          {artist.name}
-                        </span>
+                    )}
+                    
+                    {suggestions.artists.length > 0 && (
+                      <div className="space-y-1">
+                        <h4 className="text-[11px] font-bold text-gray-500 dark:text-nct-text-dim uppercase tracking-wider px-3 mb-1">Nghệ sĩ</h4>
+                        {suggestions.artists.map((artist) => (
+                          <div
+                            key={`artist-${artist.id}`}
+                            onClick={() => {
+                              navigate(`/search?q=${encodeURIComponent(artist.name)}`);
+                              setIsDropdownOpen(false);
+                            }}
+                            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer group/item transition-colors"
+                          >
+                            <FiSearch className="w-4 h-4 text-gray-400 group-hover/item:text-nct-primary transition-colors flex-shrink-0" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300 group-hover/item:text-nct-primary dark:group-hover/item:text-white truncate font-medium">
+                              {artist.name}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    {suggestions.albums.map((album) => (
-                      <div
-                        key={`album-${album.id}`}
-                        onClick={() => {
-                          navigate(`/search?q=${encodeURIComponent(album.title)}`);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer group/item transition-colors"
-                      >
-                        <FiSearch className="w-4 h-4 text-gray-400 group-hover/item:text-nct-primary transition-colors flex-shrink-0" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300 group-hover/item:text-nct-primary dark:group-hover/item:text-white truncate font-medium">
-                          {album.title}
-                        </span>
+                    )}
+
+                    {suggestions.albums.length > 0 && (
+                      <div className="space-y-1">
+                        <h4 className="text-[11px] font-bold text-gray-500 dark:text-nct-text-dim uppercase tracking-wider px-3 mb-1">Album</h4>
+                        {suggestions.albums.map((album) => (
+                          <div
+                            key={`album-${album.id}`}
+                            onClick={() => {
+                              navigate(`/search?q=${encodeURIComponent(album.title)}`);
+                              setIsDropdownOpen(false);
+                            }}
+                            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer group/item transition-colors"
+                          >
+                            <FiSearch className="w-4 h-4 text-gray-400 group-hover/item:text-nct-primary transition-colors flex-shrink-0" />
+                            <div className="flex flex-col overflow-hidden">
+                              <span className="text-sm text-gray-700 dark:text-gray-300 group-hover/item:text-nct-primary dark:group-hover/item:text-white truncate font-medium leading-tight">
+                                {album.title}
+                              </span>
+                              <span className="text-[11px] text-gray-500 dark:text-nct-text-dim truncate mt-0.5">{album.artist}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}

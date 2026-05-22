@@ -47,7 +47,7 @@ export default function AddToPlaylistModal() {
           <button 
             onClick={() => {
               const name = prompt("Nhập tên playlist mới:");
-              if (name) createNewPlaylist(name, false);
+              if (name) createNewPlaylist(name, true);
             }}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-dashed border-gray-300 dark:border-white/20 text-gray-500 dark:text-nct-text-dim hover:text-gray-900 dark:hover:text-white hover:border-nct-primary hover:bg-gray-50 dark:hover:bg-nct-primary/5 transition-all font-medium text-sm"
           >

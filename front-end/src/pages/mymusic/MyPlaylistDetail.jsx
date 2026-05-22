@@ -84,7 +84,7 @@ export default function MyPlaylistDetail() {
     if (editTitle.trim()) {
       updateMyPlaylist(playlist.id, { 
         title: editTitle.trim(),
-        isPrivate: editIsPrivate
+        isPrivate: true
       });
     }
     setIsEditModalOpen(false);
@@ -386,12 +386,7 @@ export default function MyPlaylistDetail() {
                   className="w-full bg-gray-50 dark:bg-[#1e1e1e] text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 outline-none focus:border-nct-primary transition-colors"
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-900 dark:text-white font-medium">Công khai</span>
-                <button onClick={() => setEditIsPrivate(!editIsPrivate)} className={`w-12 h-6 rounded-full transition-colors relative ${!editIsPrivate ? 'bg-nct-primary' : 'bg-gray-300 dark:bg-[#1e1e1e]'}`}>
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${!editIsPrivate ? 'right-1' : 'left-1'}`}></div>
-                </button>
-              </div>
+
             </div>
             <div className="mt-8 flex justify-end gap-3">
               <button onClick={() => setIsEditModalOpen(false)} className="px-6 py-2 text-gray-500 dark:text-[#b3b3b3] hover:text-gray-900 dark:hover:text-white transition-colors">Hủy</button>

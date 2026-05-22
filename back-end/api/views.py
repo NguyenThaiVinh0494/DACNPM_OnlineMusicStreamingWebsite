@@ -338,7 +338,7 @@ class BaiHatViewSet(MultipartEnabledViewSet):
     serializer_class = BaiHatSerializer
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['tieu_de', 'cac_nghe_si__ten_nghe_si', 'quoc_gia']
+    search_fields = ['tieu_de', 'cac_nghe_si__ten_nghe_si']
     ordering_fields = ['luot_nghe', 'nam_phat_hanh', 'id']
 
     def _base_queryset(self):
