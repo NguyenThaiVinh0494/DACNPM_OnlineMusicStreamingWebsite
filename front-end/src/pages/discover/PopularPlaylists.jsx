@@ -1,49 +1,92 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FiPlay } from "react-icons/fi";
+import { FiChevronRight } from "react-icons/fi";
+import { useTranslation } from 'react-i18next';
+import { albumService } from "../../api/services";
+import { optimizeCloudinaryImage } from "../../utils/media";
+
+const mapAlbumItem = (album) => ({
+  id: album.id,
+  title: album.tieu_de || album.title,
+  artist: album.id_nghe_si_detail?.ten_nghe_si || "Nhiều nghệ sĩ",
+  image: album.anh_bia || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop",
+  totalLikes: album.tong_luot_thich ?? 0,
+});
+
+function AlbumCard({ album }) {
+  return (
+    <Link to={`/album/${album.id}`} className="group cursor-pointer">
+      <div className="relative aspect-square rounded-3xl overflow-hidden mb-3 bg-gray-100 dark:bg-white/5 shadow-sm">
+        <img
+          src={optimizeCloudinaryImage(album.image, { width: 400, height: 400 })}
+          alt={album.title}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      </div>
+      <div className="space-y-1">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">{album.title}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{album.artist}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{album.totalLikes ?? 0} lượt thích</p>
+      </div>
+    </Link>
+  );
+}
 
 export default function PopularPlaylists() {
-  const playlists = [
-    { id: 1, title: "V-Pop Hit", artist: "Nhiều nghệ sĩ", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=400&h=400&fit=crop" },
-    { id: 2, title: "Indie Việt", artist: "Nhiều nghệ sĩ", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=400&h=400&fit=crop" },
-    { id: 3, title: "Rap Việt Cực Chất", artist: "Nhiều nghệ sĩ", image: "https://images.unsplash.com/photo-1601643157091-ce5c665179ab?w=400&h=400&fit=crop" },
-    { id: 4, title: "Nhạc Trẻ Gây Nghiện", artist: "Nhiều nghệ sĩ", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=400&fit=crop" },
-    { id: 5, title: "Bolero Trữ Tình", artist: "Nhiều nghệ sĩ", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=400&fit=crop" },
-    { id: 6, title: "K-Pop Hot", artist: "Nhiều nghệ sĩ", image: "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=400&h=400&fit=crop" },
-    { id: 7, title: "US-UK Top Hits", artist: "Nhiều nghệ sĩ", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=400&h=400&fit=crop" },
-    { id: 8, title: "Lofi Chill Đêm", artist: "Nhiều nghệ sĩ", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop" },
-  ];
+  const { t } = useTranslation();
+  const [albums, setAlbums] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchPopular = async () => {
+      setLoading(true);
+      try {
+        const data = await albumService.getAll({ trang_thai: 'PUBLIC', ordering: '-tong_luot_thich', limit: 50 });
+        if (!active) return;
+        const rawAlbums = data.results || data || [];
+        setAlbums(rawAlbums.map(mapAlbumItem));
+      } catch (error) {
+        console.error("Lỗi khi tải Đang được yêu thích:", error);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    fetchPopular();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="space-y-8 pb-20">
       <div className="flex items-center gap-3 text-gray-500 dark:text-[#b3b3b3] text-sm uppercase font-bold tracking-widest">
-        <Link to="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">Khám phá</Link>
+        <Link to="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">{t('home', 'Trang chủ')}</Link>
         <span>/</span>
-        <span className="text-gray-900 dark:text-white">Đang được yêu thích</span>
+        <span className="text-gray-900 dark:text-white">{t('popular', 'Đang được yêu thích')}</span>
       </div>
 
-      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Đang được yêu thích</h2>
+      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('popular_albums', 'Đang được yêu thích')}</h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {playlists.map(playlist => (
-          <div key={playlist.id} className="group cursor-pointer">
-            <div className="relative aspect-square rounded-xl overflow-hidden mb-4 bg-gray-100 dark:bg-white/5">
-              <img 
-                src={playlist.image} 
-                alt={playlist.title} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                <button className="w-12 h-12 rounded-full bg-nct-primary text-white flex items-center justify-center transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
-                  <FiPlay className="w-6 h-6 fill-current ml-1" />
-                </button>
-              </div>
-              <Link to={`/playlist/${playlist.id}`} className="absolute inset-0 z-10"></Link>
-            </div>
-            <h3 className="font-bold text-gray-900 dark:text-white mb-1 truncate hover:text-nct-primary transition-colors">{playlist.title}</h3>
-            <p className="text-sm text-gray-500 dark:text-[#b3b3b3] truncate">{playlist.artist}</p>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center h-48 rounded-2xl bg-gray-100 dark:bg-white/5">
+          <span className="text-gray-500">{t('loading_content', 'Đang tải nội dung...')}</span>
+        </div>
+      ) : albums.length === 0 ? (
+        <div className="flex items-center justify-center h-48 rounded-2xl bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400">
+          {t('no_albums_found', 'Không tìm thấy album nào.')}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+          {albums.map(album => (
+            <AlbumCard key={album.id} album={album} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
