@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { FaRandom } from 'react-icons/fa'; // Icon trộn bài
 import { useTranslation } from 'react-i18next';
 import { useMusic } from '../../context/MusicContext';
@@ -7,19 +8,29 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc, items }) {
   const { t } = useTranslation();
   const { playSong } = useMusic();
 
-  const danhSachBaiHat = items && items.length > 0 ? items : Array(12).fill(0).map((_, i) => ({
-    id: i + 1,
-    ten: i % 2 === 0 ? "Ngừng Trôi" : "Nhẹ nhàng va vào nhau...",
-    caSi: "Kha, SONY MUSIC",
-    anh: `https://images.unsplash.com/photo-${1500000000000 + i}?w=100&h=100&fit=crop`
-  }));
+  const danhSachBaiHat = useMemo(() => {
+    return items && items.length > 0 ? items.filter(i => i.audioUrl) : [];
+  }, [items]);
+
+  const handleShufflePlay = () => {
+    if (danhSachBaiHat.length === 0) return;
+    const shuffled = [...danhSachBaiHat].sort(() => Math.random() - 0.5);
+    playSong(shuffled[0], shuffled);
+  };
+
+  if (!danhSachBaiHat.length) {
+    return null;
+  }
 
   return (
     <div className="mb-10">
       {/* Phần Tiêu đề & Nút Nghe ngẫu nhiên */}
       <div className="flex justify-between items-center mb-5 mt-8">
         <h3 className="text-2xl font-bold text-black dark:text-white">{tieuDeKhuVuc}</h3>
-        <button className="flex items-center gap-2 bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-gray-800 dark:text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors">
+        <button
+          onClick={handleShufflePlay}
+          className="flex items-center gap-2 bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-gray-800 dark:text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+        >
           {t('shuffle', 'Nghe ngẫu nhiên')}
           <FaRandom size={12} className="text-green-600 dark:text-teal-400" />
         </button>

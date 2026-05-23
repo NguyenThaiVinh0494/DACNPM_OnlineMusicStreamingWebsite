@@ -112,13 +112,6 @@ export default function AlbumDetail() {
 
   return (
     <div className="pb-24 space-y-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-[#b3b3b3]">
-        <Link to="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">Trang chủ</Link>
-        <span>/</span>
-        <span className="text-gray-900 dark:text-white">{album.title}</span>
-      </nav>
-
       {/* ── Header ── */}
       <div className="flex gap-8 items-start">
         {/* Cover Image */}

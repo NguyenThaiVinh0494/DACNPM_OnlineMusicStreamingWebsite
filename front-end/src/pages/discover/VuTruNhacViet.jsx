@@ -64,12 +64,6 @@ export default function VuTruNhacViet() {
 
   return (
     <div className="pb-24 space-y-10">
-      <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-[#b3b3b3]">
-        <Link to="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">{t('home', 'Trang chủ')}</Link>
-        <FiChevronRight className="w-3 h-3" />
-        <span className="text-gray-900 dark:text-white">Vũ Trụ Nhạc Việt</span>
-      </nav>
-
       <div className="relative rounded-2xl overflow-hidden h-56">
         <img
           src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1400&h=400&fit=crop"

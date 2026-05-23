@@ -67,12 +67,6 @@ export default function Top100() {
 
   return (
     <div className="pb-24 space-y-10">
-      <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-[#b3b3b3]">
-        <Link to="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">{t('home', 'Trang chủ')}</Link>
-        <FiChevronRight className="w-3 h-3" />
-        <span className="text-gray-900 dark:text-white">Top 100</span>
-      </nav>
-
       <div className="relative h-64 rounded-2xl overflow-hidden bg-gradient-to-r from-purple-900 to-indigo-900 flex items-center p-12 shadow-xl">
         <div className="z-10 max-w-2xl">
           <h2 className="text-5xl font-bold text-white mb-4">TOP 100</h2>
