@@ -1,9 +1,12 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import BaiHat, LichSuNghe, NgheSi, TheLoai, YeuThich
+from .models import Album, BaiHat, LichSuNghe, NgheSi, TheLoai, YeuThich
 
 
 class RecommendedSongsApiTests(APITestCase):
@@ -114,3 +117,72 @@ class RecommendedSongsApiTests(APITestCase):
         self.assertFalse(remove_response.data['da_thich'])
         self.assertEqual(remove_response.data['so_luot_thich'], 0)
         self.assertFalse(YeuThich.objects.filter(id_nguoi_dung=self.user, id_bai_hat=song).exists())
+
+
+class AdminStatsApiTests(APITestCase):
+    def setUp(self):
+        self.user_model = get_user_model()
+        self.admin = self.user_model.objects.create_user(username='admin', password='secret123', vai_tro='ADMIN')
+        self.uploader = self.user_model.objects.create_user(username='uploader2', password='secret123')
+        self.artist = NgheSi.objects.create(ten_nghe_si='Stats Artist', anh_nghe_si='https://example.com/stats.jpg')
+        self.genre_pop = TheLoai.objects.create(ten_the_loai='Pop')
+        self.genre_rock = TheLoai.objects.create(ten_the_loai='Rock')
+        self.url = reverse('api_admin_stats')
+
+    def create_song(self, title, plays, status_value='PUBLIC', genres=None):
+        song = BaiHat.objects.create(
+            tieu_de=title,
+            duong_dan_am_thanh=f'https://example.com/{title}.mp3',
+            duong_dan_hinh_anh=f'https://example.com/{title}.jpg',
+            luot_nghe=plays,
+            trang_thai=status_value,
+            id_nguoi_dang=self.uploader,
+        )
+        song.cac_nghe_si.add(self.artist)
+        if genres:
+            song.the_loais.add(*genres)
+        return song
+
+    def add_likes(self, song, count):
+        for index in range(count):
+            user = self.user_model.objects.create_user(username=f'liker-{song.id}-{index}', password='secret123')
+            YeuThich.objects.create(id_nguoi_dung=user, id_bai_hat=song)
+
+    def test_admin_stats_returns_top_ten_lists_and_public_genre_distribution(self):
+        public_songs = [
+            self.create_song(f'public-{index}', plays=index * 10, genres=[self.genre_pop])
+            for index in range(1, 7)
+        ]
+        liked_song = self.create_song('most-liked', plays=1, genres=[self.genre_rock])
+        pending_song = self.create_song('pending-song', plays=999, status_value='PENDING', genres=[self.genre_rock])
+        self.add_likes(liked_song, 3)
+        self.add_likes(public_songs[0], 1)
+        Album.objects.create(tieu_de='Public Album', anh_bia='https://example.com/public-album.jpg', id_nghe_si=self.artist, trang_thai='PUBLIC')
+        Album.objects.create(tieu_de='Pending Album', anh_bia='https://example.com/pending-album.jpg', id_nghe_si=self.artist, trang_thai='PENDING')
+        LichSuNghe.objects.create(id_nguoi_dung=self.uploader, id_bai_hat=liked_song)
+        old_history = LichSuNghe.objects.create(id_nguoi_dung=self.uploader, id_bai_hat=public_songs[0])
+        old_history.thoi_gian_nghe = timezone.now() - timedelta(days=20)
+        old_history.save(update_fields=['thoi_gian_nghe'])
+        self.client.force_authenticate(user=self.admin)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['topSongs']), 7)
+        self.assertNotIn(pending_song.id, [item['id'] for item in response.data['topSongs']])
+        self.assertEqual(response.data['topLikedSongs'][0]['id'], liked_song.id)
+        self.assertEqual(response.data['topLikedSongs'][0]['so_luot_thich'], 3)
+        self.assertEqual(response.data['totalLikes'], 4)
+        self.assertEqual(response.data['contentStatus']['songs']['public'], 7)
+        self.assertEqual(response.data['contentStatus']['songs']['pending'], 1)
+        self.assertEqual(response.data['contentStatus']['albums']['public'], 1)
+        self.assertEqual(response.data['contentStatus']['albums']['pending'], 1)
+        self.assertEqual(len(response.data['listenTrend']), 14)
+        self.assertEqual(response.data['listenTrend'][-1]['listens'], 1)
+        self.assertEqual(response.data['topArtists'][0]['name'], self.artist.ten_nghe_si)
+
+        genre_counts = {item['name']: item['songCount'] for item in response.data['genreDistribution']}
+        self.assertEqual(genre_counts['Pop'], 6)
+        self.assertEqual(genre_counts['Rock'], 1)
+        genre_listens = {item['name']: item['totalListens'] for item in response.data['genreDistribution']}
+        self.assertEqual(genre_listens['Rock'], 1)

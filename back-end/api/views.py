@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from datetime import timedelta
 from django.db.models import Case, Count, Exists, F, IntegerField, OuterRef, Q, Sum, Value, When
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncDate
+from django.utils import timezone
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -211,18 +213,65 @@ class AdminStatsView(APIView):
     permission_classes = [IsAdminRole]
 
     def get(self, request):
+        today = timezone.localdate()
+        trend_start_date = today - timedelta(days=13)
+        new_user_start_date = today - timedelta(days=29)
+
         top_songs = list(
             BaiHat.objects.select_related('id_album').prefetch_related('cac_nghe_si')
             .filter(trang_thai='PUBLIC')
             .annotate(so_luot_thich_annotated=Count('duoc_yeu_thich', distinct=True))
             .order_by('-luot_nghe', '-id')[:10]
         )
+        top_liked_songs = list(
+            BaiHat.objects.select_related('id_album').prefetch_related('cac_nghe_si')
+            .filter(trang_thai='PUBLIC')
+            .annotate(so_luot_thich_annotated=Count('duoc_yeu_thich', distinct=True))
+            .order_by('-so_luot_thich_annotated', '-luot_nghe', '-id')[:10]
+        )
         total_listens = BaiHat.objects.aggregate(total=Coalesce(Sum('luot_nghe'), Value(0), output_field=IntegerField()))['total']
+        total_likes = YeuThich.objects.count()
+        public_song_count = BaiHat.objects.filter(trang_thai='PUBLIC').count()
+        pending_song_count = BaiHat.objects.filter(trang_thai='PENDING').count()
+        public_album_count = Album.objects.filter(trang_thai='PUBLIC').count()
+        pending_album_count = Album.objects.filter(trang_thai='PENDING').count()
+        new_users_30_days = NguoiDung.objects.filter(date_joined__date__gte=new_user_start_date).count()
+        average_listens_per_song = round((total_listens or 0) / public_song_count, 1) if public_song_count else 0
+        like_rate = round((total_likes / total_listens) * 100, 2) if total_listens else 0
+
+        listen_rows = (
+            LichSuNghe.objects.filter(thoi_gian_nghe__date__gte=trend_start_date)
+            .annotate(day=TruncDate('thoi_gian_nghe'))
+            .values('day')
+            .annotate(count=Count('id'))
+            .order_by('day')
+        )
+        listen_counts_by_day = {row['day']: row['count'] for row in listen_rows}
+        listen_trend = [
+            {
+                'date': (trend_start_date + timedelta(days=offset)).isoformat(),
+                'listens': listen_counts_by_day.get(trend_start_date + timedelta(days=offset), 0),
+            }
+            for offset in range(14)
+        ]
 
         genre_rows = (
-            TheLoai.objects.annotate(song_count=Count('bai_hats', distinct=True))
+            TheLoai.objects.annotate(
+                song_count=Count('bai_hats', filter=Q(bai_hats__trang_thai='PUBLIC'), distinct=True),
+                total_listens=Coalesce(Sum('bai_hats__luot_nghe', filter=Q(bai_hats__trang_thai='PUBLIC')), Value(0), output_field=IntegerField()),
+            )
             .filter(song_count__gt=0)
-            .order_by('-song_count', 'ten_the_loai')[:6]
+            .order_by('-total_listens', '-song_count', 'ten_the_loai')[:6]
+        )
+
+        artist_rows = (
+            NgheSi.objects.annotate(
+                song_count=Count('bai_hats', filter=Q(bai_hats__trang_thai='PUBLIC'), distinct=True),
+                total_listens=Coalesce(Sum('bai_hats__luot_nghe', filter=Q(bai_hats__trang_thai='PUBLIC')), Value(0), output_field=IntegerField()),
+                total_likes=Count('bai_hats__duoc_yeu_thich', filter=Q(bai_hats__trang_thai='PUBLIC'), distinct=True),
+            )
+            .filter(song_count__gt=0)
+            .order_by('-total_listens', '-total_likes', 'ten_nghe_si')[:5]
         )
 
         return Response(
@@ -235,15 +284,43 @@ class AdminStatsView(APIView):
                     'users': NguoiDung.objects.count(),
                 },
                 'totalListens': total_listens or 0,
+                'totalLikes': total_likes,
+                'averageListensPerSong': average_listens_per_song,
+                'likeRate': like_rate,
+                'newUsers30Days': new_users_30_days,
                 'topSongs': BaiHatSerializer(top_songs, many=True, context={'request': request}).data,
+                'topLikedSongs': BaiHatSerializer(top_liked_songs, many=True, context={'request': request}).data,
+                'listenTrend': listen_trend,
                 'genreDistribution': [
                     {
                         'id': genre.id,
                         'name': genre.ten_the_loai,
                         'songCount': genre.song_count,
+                        'totalListens': genre.total_listens,
                     }
                     for genre in genre_rows
                 ],
+                'topArtists': [
+                    {
+                        'id': artist.id,
+                        'name': artist.ten_nghe_si,
+                        'image': artist.anh_nghe_si,
+                        'songCount': artist.song_count,
+                        'totalListens': artist.total_listens,
+                        'totalLikes': artist.total_likes,
+                    }
+                    for artist in artist_rows
+                ],
+                'contentStatus': {
+                    'songs': {
+                        'public': public_song_count,
+                        'pending': pending_song_count,
+                    },
+                    'albums': {
+                        'public': public_album_count,
+                        'pending': pending_album_count,
+                    },
+                },
             },
             status=status.HTTP_200_OK,
         )
