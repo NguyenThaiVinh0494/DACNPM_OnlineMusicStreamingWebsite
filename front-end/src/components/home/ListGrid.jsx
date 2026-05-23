@@ -7,16 +7,11 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
   const { t } = useTranslation();
   const { playSong } = useMusic();
 
-  // Dữ liệu mẫu
-  const danhSachFallback = [
-    { title: "Hit Việt Quốc Dân", artist: "HIEUTHUHAI, Trọng Nhân...", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&h=200&fit=crop" },
-    { title: "TikTok Remix Việt", artist: "Inso, Ness Remix...", image: "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=200&h=200&fit=crop" },
-    { title: "V-Pop Thịnh Hành", artist: "GREY D, Đặng Thanh Tuyền...", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=200&h=200&fit=crop" },
-    { title: "Gen Gì Gen Z", artist: "HIEUTHUHAI, Ogenus...", image: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?w=200&h=200&fit=crop" },
-    { title: "Ballad Việt", artist: "Lyly, Đỗ Hoàng Long...", image: "https://images.unsplash.com/photo-1516280440502-6c382101e4a6?w=200&h=200&fit=crop" }
-  ];
+  const danhSach = items && items.length > 0 ? items : [];
 
-  const danhSach = items && items.length > 0 ? items : danhSachFallback;
+  if (!danhSach.length) {
+    return null;
+  }
 
   const handleItemClick = (e, item) => {
     // Nếu là bài hát (có audioUrl) thì phát nhạc

@@ -64,12 +64,6 @@ export default function PopularPlaylists() {
 
   return (
     <div className="space-y-8 pb-20">
-      <div className="flex items-center gap-3 text-gray-500 dark:text-[#b3b3b3] text-sm uppercase font-bold tracking-widest">
-        <Link to="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">{t('home', 'Trang chủ')}</Link>
-        <span>/</span>
-        <span className="text-gray-900 dark:text-white">{t('popular', 'Đang được yêu thích')}</span>
-      </div>
-
       <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('popular_albums', 'Đang được yêu thích')}</h2>
 
       {loading ? (

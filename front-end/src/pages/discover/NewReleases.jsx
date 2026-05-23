@@ -151,13 +151,6 @@ export default function NewReleases() {
   return (
     <div className="pb-24 space-y-8">
 
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-[#b3b3b3]">
-        <Link to="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">Trang chủ</Link>
-        <FiChevronRight className="w-3 h-3" />
-        <span className="text-gray-900 dark:text-white">Mới Phát Hành</span>
-      </nav>
-
       {/* Hero */}
       <div className="relative rounded-2xl overflow-hidden h-56">
         <img
