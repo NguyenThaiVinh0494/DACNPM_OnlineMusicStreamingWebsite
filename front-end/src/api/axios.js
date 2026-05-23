@@ -4,6 +4,56 @@ const api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api/',
 });
 
+let refreshTokenRequest = null;
+
+function persistAccessToken(accessToken) {
+  localStorage.setItem('access_token', accessToken);
+
+  const savedUser = localStorage.getItem('user_info');
+  if (!savedUser) {
+    return;
+  }
+
+  try {
+    const userInfo = JSON.parse(savedUser);
+    localStorage.setItem('user_info', JSON.stringify({ ...userInfo, token: accessToken }));
+  } catch {
+    localStorage.removeItem('user_info');
+  }
+}
+
+function clearAuthData() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user_info');
+}
+
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) {
+    throw new Error('Missing refresh token');
+  }
+
+  if (!refreshTokenRequest) {
+    refreshTokenRequest = axios
+      .post(`${api.defaults.baseURL}login/refresh/`, { refresh: refreshToken })
+      .then((response) => {
+        const nextAccessToken = response.data?.access;
+        if (!nextAccessToken) {
+          throw new Error('Refresh response did not include an access token');
+        }
+
+        persistAccessToken(nextAccessToken);
+        return nextAccessToken;
+      })
+      .finally(() => {
+        refreshTokenRequest = null;
+      });
+  }
+
+  return refreshTokenRequest;
+}
+
 // Thêm token vào header của mọi request gửi đi
 api.interceptors.request.use(
   (config) => {
@@ -23,6 +73,31 @@ api.interceptors.request.use(
   (error) => {
     return Promise.reject(error);
   }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
+    const isRefreshRequest = originalRequest?.url?.includes('login/refresh/');
+
+    if (status !== 401 || !originalRequest || originalRequest._retry || isRefreshRequest) {
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      const accessToken = await refreshAccessToken();
+      originalRequest.headers = originalRequest.headers || {};
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+      return api(originalRequest);
+    } catch (refreshError) {
+      clearAuthData();
+      return Promise.reject(refreshError);
+    }
+  },
 );
 
 export default api;

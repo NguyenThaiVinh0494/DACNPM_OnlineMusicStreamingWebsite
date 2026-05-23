@@ -15,8 +15,8 @@ function isDashboardCacheFresh() {
   return Date.now() - dashboardCache.fetchedAt < DASHBOARD_CACHE_TTL_MS;
 }
 
-const ContentSummaryCard = ({ icon: Icon, label, value, accent, helper }) => (
-  <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
+const ContentSummaryCard = ({ icon: Icon, label, value, accent, helper, className = '' }) => (
+  <div className={`relative overflow-hidden rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.08)] ${className}`}>
     <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
     <div className="flex items-start justify-between gap-4">
       <div>
@@ -81,20 +81,20 @@ export default function AdminDashboard() {
         <p className="text-sm text-gray-500 mt-0.5">Theo dõi các chỉ số quan trọng trong thời gian thực.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <ContentSummaryCard icon={FiMusic} label="Bài hát" value={stats?.songs} helper="Có thể upload ảnh + audio trong cùng form" accent="from-cyan-500 to-blue-500" />
-        <ContentSummaryCard icon={FiDisc} label="Album" value={stats?.albums} helper="Ảnh bìa upload trực tiếp" accent="from-emerald-500 to-teal-500" />
-        <ContentSummaryCard icon={FiUsers} label="Nghệ sĩ" value={stats?.artists} helper="Ảnh nghệ sĩ + tiểu sử" accent="from-amber-500 to-orange-500" />
-        <ContentSummaryCard icon={FiTag} label="Thể loại" value={stats?.genres} helper="Ảnh, tên, mô tả cho thể loại" accent="from-fuchsia-500 to-pink-500" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-8">
+        <ContentSummaryCard className="xl:col-span-2" icon={FiMusic} label="Bài hát" value={stats?.songs} helper="Có thể upload ảnh + audio trong cùng form" accent="from-cyan-500 to-blue-500" />
+        <ContentSummaryCard className="xl:col-span-2" icon={FiDisc} label="Album" value={stats?.albums} helper="Ảnh bìa upload trực tiếp" accent="from-emerald-500 to-teal-500" />
+        <ContentSummaryCard className="xl:col-span-2" icon={FiUsers} label="Nghệ sĩ" value={stats?.artists} helper="Ảnh nghệ sĩ + tiểu sử" accent="from-amber-500 to-orange-500" />
+        <ContentSummaryCard className="xl:col-span-2" icon={FiTag} label="Thể loại" value={stats?.genres} helper="Ảnh, tên, mô tả cho thể loại" accent="from-fuchsia-500 to-pink-500" />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <ContentSummaryCard icon={FiUsers} label="Người dùng" value={stats?.users} helper="Tài khoản đã đăng ký trong hệ thống" accent="from-blue-500 to-indigo-500" />
-        <ContentSummaryCard icon={FiHeadphones} label="Tổng lượt nghe" value={stats?.totalListens?.toLocaleString?.() ?? 0} helper="Tổng lượt phát của toàn bộ bài hát" accent="from-green-500 to-emerald-500" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-8">
+        <ContentSummaryCard className="xl:col-span-2 xl:col-start-2" icon={FiUsers} label="Người dùng" value={stats?.users} helper="Tài khoản đã đăng ký trong hệ thống" accent="from-blue-500 to-indigo-500" />
+        <ContentSummaryCard className="xl:col-span-2 xl:col-start-6" icon={FiHeadphones} label="Tổng lượt nghe" value={stats?.totalListens?.toLocaleString?.() ?? 0} helper="Tổng lượt phát của toàn bộ bài hát" accent="from-green-500 to-emerald-500" />
       </div>
 
       {/* Quick Links */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-8">
         {[
           { to: '/admin/users', label: 'Quản lý Người dùng', icon: FiUsers, color: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
           { to: '/admin/songs', label: 'Quản lý Bài hát', icon: FiMusic, color: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
@@ -102,11 +102,11 @@ export default function AdminDashboard() {
           { to: '/admin/artists', label: 'Quản lý Nghệ sĩ', icon: FiUsers, color: 'bg-orange-50 text-orange-700 hover:bg-orange-100' },
           { to: '/admin/topics', label: 'Quản lý Thể loại', icon: FiTag, color: 'bg-pink-50 text-pink-700 hover:bg-pink-100' },
           { to: '/admin/stats', label: 'Thống kê', icon: FiTrendingUp, color: 'bg-green-50 text-green-700 hover:bg-green-100' },
-        ].map(({ to, label, icon: Icon, color }) => (
+        ].map(({ to, label, icon: Icon, color }, index) => (
           <Link
             key={to}
             to={to}
-            className={`flex flex-col items-center gap-2 py-5 rounded-2xl font-medium text-sm transition-colors ${color}`}
+            className={`flex flex-col items-center gap-2 py-5 rounded-2xl font-medium text-sm transition-colors xl:col-span-2 ${index === 4 ? 'xl:col-start-2' : ''} ${index === 5 ? 'xl:col-start-6' : ''} ${color}`}
           >
             <Icon className="w-6 h-6" />
             {label}

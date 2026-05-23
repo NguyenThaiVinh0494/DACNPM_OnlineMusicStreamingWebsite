@@ -11,91 +11,18 @@ import {
   FiPlay,
   FiPlus,
 } from "react-icons/fi";
-import OnboardingModal from "../components/layout/OnboardingModal";
 import { songService } from "../api/services";
 import { AuthContext } from "../context/AuthContext";
 import { useMusic } from "../context/MusicContext";
 import { enrichSongsWithDuration } from "../utils/duration";
 import { findActiveLyricIndex, hasTimedLyrics, parseLyrics } from "../utils/lyrics";
-import {
-  hasCompletedOnboarding,
-  loadOnboardingPreferences,
-  markOnboardingCompleted,
-  saveOnboardingPreferences,
-} from "../utils/onboardingPreferences";
 import { getSongArtistNames, getSongPrimaryArtist } from "../utils/songArtists";
-
-const TOPIC_COLORS = [
-  "bg-blue-500",
-  "bg-purple-500",
-  "bg-red-500",
-  "bg-yellow-500",
-  "bg-teal-500",
-  "bg-orange-500",
-  "bg-pink-500",
-  "bg-gray-600",
-];
 
 function formatCompactCount(value) {
   return new Intl.NumberFormat("vi-VN", {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value || 0);
-}
-
-function buildTopicOptions(allSongs) {
-  const topics = new Map();
-
-  allSongs.forEach((song) => {
-    if (!song.genreId || !song.genreName) {
-      return;
-    }
-
-    const current = topics.get(song.genreId) || {
-      id: song.genreId,
-      name: song.genreName,
-      score: 0,
-    };
-
-    current.score += (song.plays || 0) + 1;
-    topics.set(song.genreId, current);
-  });
-
-  return [...topics.values()]
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 8)
-    .map((topic, index) => ({
-      id: topic.id,
-      name: topic.name,
-      color: TOPIC_COLORS[index % TOPIC_COLORS.length],
-    }));
-}
-
-function buildArtistOptions(allSongs) {
-  const artists = new Map();
-
-  allSongs.forEach((song) => {
-    if (!song.artistId) {
-      return;
-    }
-
-    const current = artists.get(song.artistId) || {
-      id: song.artistId,
-      name: song.artist,
-      image: song.artistAvatar || song.image,
-      score: 0,
-    };
-
-    current.score += (song.plays || 0) + 1;
-    if (!current.image && (song.artistAvatar || song.image)) {
-      current.image = song.artistAvatar || song.image;
-    }
-    artists.set(song.artistId, current);
-  });
-
-  return [...artists.values()]
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 8);
 }
 
 function getDerivedStats(song) {
@@ -143,26 +70,19 @@ export default function ForYou() {
     audioRef,
   } = useMusic();
   const [showMenu, setShowMenu] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [feed, setFeed] = useState([]);
   const [loadingFeed, setLoadingFeed] = useState(true);
-  const [onboardingPreferences, setOnboardingPreferences] = useState(() => loadOnboardingPreferences(user?.id));
   const menuRef = useRef(null);
   const lyricRefs = useRef([]);
   const allSongsRef = useRef(allSongs);
   const hasInitializedFeedRef = useRef(false);
 
-  allSongsRef.current = allSongs;
-
-  const topicOptions = buildTopicOptions(allSongs);
-  const artistOptions = buildArtistOptions(allSongs);
-  const selectedArtistIds = onboardingPreferences.selectedArtists.join(",");
-  const selectedTopicIds = onboardingPreferences.selectedTopics.join(",");
   let derivedIndex = feed.findIndex((song) => song.id === currentSong?.id);
   if (derivedIndex === -1) derivedIndex = 0;
 
   const currentItem = feed[derivedIndex] || null;
+  const currentItemId = currentItem?.id;
   const displayedCurrentItem = currentSong && currentItem && currentSong.id === currentItem.id
     ? {
         ...currentItem,
@@ -177,6 +97,10 @@ export default function ForYou() {
   const stats = getDerivedStats(displayedCurrentItem);
 
   useEffect(() => {
+    allSongsRef.current = allSongs;
+  }, [allSongs]);
+
+  useEffect(() => {
     let active = true;
 
     const fetchRecommendedSongs = async () => {
@@ -185,13 +109,6 @@ export default function ForYou() {
 
       try {
         const params = { limit: 14 };
-        if (selectedArtistIds) {
-          params.preferred_artist_ids = selectedArtistIds;
-        }
-        if (selectedTopicIds) {
-          params.preferred_genre_ids = selectedTopicIds;
-        }
-
         const response = await songService.getRecommended(params);
         const normalized = Array.isArray(response) ? response : response?.results || [];
         const enrichedFeed = await enrichSongsWithDuration(normalized, mapRecommendedSong);
@@ -218,7 +135,7 @@ export default function ForYou() {
     return () => {
       active = false;
     };
-  }, [allSongs.length, selectedArtistIds, selectedTopicIds, user?.id]);
+  }, [allSongs.length, user?.id]);
 
   useEffect(() => {
     if (!feed.length || hasInitializedFeedRef.current) {
@@ -242,14 +159,14 @@ export default function ForYou() {
       }
     };
 
-    if (currentItem && currentSong?.id === currentItem.id) {
+    if (currentItemId && currentSong?.id === currentItemId) {
       animationFrameId = requestAnimationFrame(updateTime);
     } else {
-      setCurrentTime(0);
+      animationFrameId = requestAnimationFrame(() => setCurrentTime(0));
     }
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [audioRef, currentItem?.id, currentSong?.id]);
+  }, [audioRef, currentItemId, currentSong?.id]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -263,25 +180,12 @@ export default function ForYou() {
   }, []);
 
   useEffect(() => {
-    if (user && !hasCompletedOnboarding(user.id) && (topicOptions.length > 0 || artistOptions.length > 0)) {
-      const timer = setTimeout(() => {
-        setShowOnboarding(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-
-    setShowOnboarding(false);
-    return undefined;
-  }, [artistOptions.length, topicOptions.length, user]);
-
-  useEffect(() => {
-    setOnboardingPreferences(loadOnboardingPreferences(user?.id));
     hasInitializedFeedRef.current = false;
   }, [user?.id]);
 
   useEffect(() => {
     lyricRefs.current = [];
-  }, [currentItem?.id]);
+  }, [currentItemId]);
 
   useEffect(() => {
     if (activeLyricIndex === -1 || !lyricRefs.current[activeLyricIndex]) {
@@ -293,23 +197,6 @@ export default function ForYou() {
       block: "center",
     });
   }, [activeLyricIndex]);
-
-  const handleCloseOnboarding = () => {
-    setShowOnboarding(false);
-  };
-
-  const handleOnboardingComplete = ({ selectedTopics, selectedArtists }) => {
-    const nextPreferences = {
-      selectedTopics,
-      selectedArtists,
-    };
-
-    saveOnboardingPreferences(user?.id, nextPreferences);
-    markOnboardingCompleted(user?.id);
-    setOnboardingPreferences(nextPreferences);
-    setShowOnboarding(false);
-    hasInitializedFeedRef.current = false;
-  };
 
   const handleNext = () => {
     if (derivedIndex < feed.length - 1) {
@@ -385,16 +272,6 @@ export default function ForYou() {
 
   return (
     <div className="relative flex h-[calc(100vh-140px)] w-full flex-col">
-      <OnboardingModal
-        isOpen={showOnboarding}
-        onClose={handleCloseOnboarding}
-        onComplete={handleOnboardingComplete}
-        topics={topicOptions}
-        artists={artistOptions}
-        initialTopics={onboardingPreferences.selectedTopics}
-        initialArtists={onboardingPreferences.selectedArtists}
-      />
-
       <div className="mb-4 flex items-end justify-between px-2">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Dành Cho Bạn</h2>
