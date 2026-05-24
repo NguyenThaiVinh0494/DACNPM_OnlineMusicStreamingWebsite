@@ -1,4 +1,4 @@
-import { FiPlusSquare, FiFlag } from "react-icons/fi";
+import { FiPlusSquare } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 
 export default function SongActionMenu({ 
@@ -23,15 +23,6 @@ export default function SongActionMenu({
       >
         <FiPlusSquare className="w-4 h-4" />
         <span>Thêm vào playlist</span>
-      </button>
-
-      <div className="h-px bg-gray-200 dark:bg-white/5 my-1.5"></div>
-
-      <button 
-        className="w-full px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/10 text-[13px] text-left flex items-center gap-3 transition-colors text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white"
-      >
-        <FiFlag className="w-4 h-4" />
-        <span>Báo cáo</span>
       </button>
     </div>
   );

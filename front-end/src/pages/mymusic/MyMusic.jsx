@@ -61,7 +61,7 @@ export default function MyMusic() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 px-2">
         
         {/* Yêu Thích */}
-        <div className="flex items-center gap-4 bg-gray-50 dark:bg-[#2b332f] rounded-xl p-4 border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#343e39] transition-colors group shadow-sm">
+        <Link to="/my-music/favorites" className="flex items-center gap-4 bg-gray-50 dark:bg-[#2b332f] rounded-xl p-4 border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#343e39] transition-colors group shadow-sm">
           <div className="w-[52px] h-[52px] rounded-xl bg-gradient-to-br from-pink-400 to-pink-500 flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
             <FiHeart className="text-white text-2xl fill-white" />
           </div>
@@ -69,10 +69,10 @@ export default function MyMusic() {
             <h3 className="font-bold text-gray-900 dark:text-white text-[15px]">Yêu Thích</h3>
             <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">{favorites.length} bài hát</span>
           </div>
-        </div>
+        </Link>
 
         {/* Nghe gần đây */}
-        <div className="flex items-center gap-4 bg-gray-50 dark:bg-[#2b332f] rounded-xl p-4 border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#343e39] transition-colors group shadow-sm">
+        <Link to="/my-music/recent" className="flex items-center gap-4 bg-gray-50 dark:bg-[#2b332f] rounded-xl p-4 border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#343e39] transition-colors group shadow-sm">
           <div className="w-[52px] h-[52px] rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
             <FiClock className="text-white text-[26px]" />
           </div>
@@ -80,7 +80,7 @@ export default function MyMusic() {
             <h3 className="font-bold text-gray-900 dark:text-white text-[15px]">Nghe gần đây</h3>
             <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">{recentSongs.length} bài hát</span>
           </div>
-        </div>
+        </Link>
 
       </div>
 
