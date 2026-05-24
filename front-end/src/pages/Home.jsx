@@ -48,6 +48,7 @@ export default function Home() {
   const [newSongs, setNewSongs] = useState([]);
   const [topics, setTopics] = useState([]);
   const [loadingTopics, setLoadingTopics] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [vuTruNhacViet, setVuTruNhacViet] = useState([]);
   const [tamTrangHomNay, setTamTrangHomNay] = useState([]);
@@ -76,7 +77,10 @@ export default function Home() {
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu trang chủ:", error);
       } finally {
-        if (active) setLoadingTopics(false);
+        if (active) {
+          setLoadingTopics(false);
+          setIsLoading(false);
+        }
       }
     };
     fetchHomeData();
@@ -169,18 +173,18 @@ export default function Home() {
         </div>
       </div>
       {/* Ráp các component mới vào đây */}
-      <MusicChart />
+      <MusicChart isLoading={isLoading} />
 
       {/* Tái sử dụng component lưới cho tất cả các phần còn lại! */}
-      <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" link="/discover/vu-tru-nhac-viet" items={vuTruNhacViet} />
-      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" link="/discover/mood" items={tamTrangHomNay} />
-      <ListGrid tieuDeKhuVuc="Top 100" link="/top-100" items={top100} />
+      <ListGrid tieuDeKhuVuc="Vũ Trụ Nhạc Việt" link="/discover/vu-tru-nhac-viet" items={vuTruNhacViet} isLoading={isLoading} />
+      <ListGrid tieuDeKhuVuc="Tâm Trạng Hôm Nay" link="/discover/mood" items={tamTrangHomNay} isLoading={isLoading} />
+      <ListGrid tieuDeKhuVuc="Top 100" link="/top-100" items={top100} isLoading={isLoading} />
 
       {/* Thêm cụm danh sách mới theo yêu cầu */}
-      <DanhSachPhatNgang tieuDeKhuVuc="Single Mới Phát Hành" items={singleMoiPhatHanh} />
+      <DanhSachPhatNgang tieuDeKhuVuc="Single Mới Phát Hành" items={singleMoiPhatHanh} isLoading={isLoading} />
 
-      <ListGrid tieuDeKhuVuc="Đang được yêu thích" link="/discover/popular" items={dangDuocYeuThich} />
-      <ListGrid tieuDeKhuVuc="Mới phát hành" link="/discover/new-releases" items={newSongs} />
+      <ListGrid tieuDeKhuVuc="Đang được yêu thích" link="/discover/popular" items={dangDuocYeuThich} isLoading={isLoading} />
+      <ListGrid tieuDeKhuVuc="Mới phát hành" link="/discover/new-releases" items={newSongs} isLoading={isLoading} />
       <Footer />
     </div>
   );

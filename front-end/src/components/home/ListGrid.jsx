@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import { useMusic } from "../../context/MusicContext";
 import { optimizeCloudinaryImage } from "../../utils/media";
 
-export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
+export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items, isLoading = false }) {
   const { t } = useTranslation();
   const { playSong } = useMusic();
 
   const danhSach = items && items.length > 0 ? items : [];
 
-  if (!danhSach.length) {
+  // Nếu không loading và không có data thì không render
+  if (!isLoading && !danhSach.length) {
     return null;
   }
 
@@ -39,26 +40,37 @@ export default function LuoiDanhSachPhat({ tieuDeKhuVuc, link, items }) {
 
       {/* Lưới thẻ (5 thẻ trên 1 hàng) */}
       <div className="grid grid-cols-5 gap-5">
-        {danhSach.map((item, index) => (
-          <Link
-            to={item.audioUrl ? `/song/${item.id}` : (item.type === 'album' ? `/album/${item.id}` : `/playlist/${index + 1}`)}
-            key={index}
-            className="group cursor-pointer"
-            onClick={(e) => handleItemClick(e, item)}
-          >
-            {/* Khung ảnh */}
-            <div className="w-full aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-              <img
-                src={optimizeCloudinaryImage(item.image || item.anh, { width: 320, height: 320 })}
-                alt={item.title || item.ten}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+        {isLoading ? (
+          // Skeleton loading
+          Array(5).fill(0).map((_, index) => (
+            <div key={`skeleton-${index}`} className="group cursor-pointer animate-pulse">
+              <div className="w-full aspect-square rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-white/10" />
+              <div className="h-4 bg-gray-200 dark:bg-white/10 rounded mb-2" />
+              <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-3/4" />
             </div>
-            {/* Thông tin */}
-            <h4 className="text-black dark:text-white text-base font-bold mb-1 truncate">{item.title || item.ten}</h4>
-            <p className="text-gray-500 dark:text-gray-400 text-sm truncate">{item.artist || item.moTa}</p>
-          </Link>
-        ))}
+          ))
+        ) : danhSach.length > 0 ? (
+          danhSach.map((item, index) => (
+            <Link
+              to={item.audioUrl ? `/song/${item.id}` : (item.type === 'album' ? `/album/${item.id}` : `/playlist/${index + 1}`)}
+              key={index}
+              className="group cursor-pointer"
+              onClick={(e) => handleItemClick(e, item)}
+            >
+              {/* Khung ảnh */}
+              <div className="w-full aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100 dark:bg-white/5 flex items-center justify-center">
+                <img
+                  src={optimizeCloudinaryImage(item.image || item.anh, { width: 320, height: 320 })}
+                  alt={item.title || item.ten}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              {/* Thông tin */}
+              <h4 className="text-black dark:text-white text-base font-bold mb-1 truncate">{item.title || item.ten}</h4>
+              <p className="text-gray-500 dark:text-gray-400 text-sm truncate">{item.artist || item.moTa}</p>
+            </Link>
+          ))
+        ) : null}
       </div>
     </div>
   );
