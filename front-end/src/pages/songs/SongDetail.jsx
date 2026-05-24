@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import LazyImage from "../../components/common/LazyImage";
-import { FiHeart, FiMoreHorizontal, FiPlay, FiChevronDown, FiChevronUp, FiPlus, FiFlag, FiMusic, FiHeadphones } from 'react-icons/fi';
+import { FiHeart, FiMoreHorizontal, FiPlay, FiChevronDown, FiChevronUp, FiPlus, FiMusic, FiHeadphones } from 'react-icons/fi';
 import { useMusic } from '../../context/MusicContext';
 import { albumService, songService } from '../../api/services';
 import { enrichSongsWithDuration } from '../../utils/duration';
@@ -224,10 +224,6 @@ export default function SongDetail() {
                       <span>Thêm vào playlist</span>
                     </div>
                   </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 text-[14px] font-semibold transition-colors">
-                    <FiFlag className="text-lg" />
-                    <span>Báo cáo</span>
-                  </button>
                 </div>
               )}
             </div>
@@ -368,10 +364,6 @@ export default function SongDetail() {
                           <FiPlus className="text-lg" />
                           <span>Thêm vào playlist</span>
                         </div>
-                      </button>
-                      <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 text-[14px] font-semibold transition-colors">
-                        <FiFlag className="text-lg" />
-                        <span>Báo cáo</span>
                       </button>
                     </div>
                   )}

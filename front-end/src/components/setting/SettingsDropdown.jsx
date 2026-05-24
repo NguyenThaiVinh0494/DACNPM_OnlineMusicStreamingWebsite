@@ -106,12 +106,6 @@ export default function SettingsDropdown() {
             </div>
           </button>
 
-          {/* Hướng dẫn và hỗ trợ */}
-          <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-sm text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white">
-            <FiLifeBuoy className="w-4 h-4" />
-            <span>{t('help_support')}</span>
-          </button>
-
           {user?.vai_tro === 'ADMIN' && (
             <button
               onClick={() => {
@@ -124,12 +118,6 @@ export default function SettingsDropdown() {
               <span>Quản lý & thống kê</span>
             </button>
           )}
-
-          {/* Góp ý */}
-          <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-sm text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white">
-            <FiMessageSquare className="w-4 h-4" />
-            <span>{t('feedback')}</span>
-          </button>
         </div>
       )}
     </div>
