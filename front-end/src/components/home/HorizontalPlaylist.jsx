@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useMusic } from '../../context/MusicContext';
 import { optimizeCloudinaryImage } from '../../utils/media';
 
-export default function DanhSachPhatNgang({ tieuDeKhuVuc, items }) {
+export default function DanhSachPhatNgang({ tieuDeKhuVuc, items, isLoading = false }) {
   const { t } = useTranslation();
   const { playSong } = useMusic();
 
@@ -12,15 +12,16 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc, items }) {
     return items && items.length > 0 ? items.filter(i => i.audioUrl) : [];
   }, [items]);
 
+  // Nếu không loading và không có data thì không render
+  if (!isLoading && !danhSachBaiHat.length) {
+    return null;
+  }
+
   const handleShufflePlay = () => {
     if (danhSachBaiHat.length === 0) return;
     const shuffled = [...danhSachBaiHat].sort(() => Math.random() - 0.5);
     playSong(shuffled[0], shuffled);
   };
-
-  if (!danhSachBaiHat.length) {
-    return null;
-  }
 
   return (
     <div className="mb-10">
@@ -29,7 +30,8 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc, items }) {
         <h3 className="text-2xl font-bold text-black dark:text-white">{tieuDeKhuVuc}</h3>
         <button
           onClick={handleShufflePlay}
-          className="flex items-center gap-2 bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-gray-800 dark:text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+          disabled={isLoading || danhSachBaiHat.length === 0}
+          className="flex items-center gap-2 bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-gray-800 dark:text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('shuffle', 'Nghe ngẫu nhiên')}
           <FaRandom size={12} className="text-green-600 dark:text-teal-400" />
@@ -38,51 +40,64 @@ export default function DanhSachPhatNgang({ tieuDeKhuVuc, items }) {
 
       {/* Lưới 4 cột */}
       <div className="grid grid-cols-4 gap-x-4 gap-y-3">
-        {danhSachBaiHat.map((item, index) => (
-          <div
-            key={item.id || index}
-            onClick={() => {
-              if (item.audioUrl) {
-                playSong(item, danhSachBaiHat.filter(i => i.audioUrl));
-              }
-            }}
-            className="flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 group transition-colors"
-          >
-            {/* Ảnh bìa */}
-            <div className="w-14 h-14 flex-shrink-0 relative">
-              <img
-                src={optimizeCloudinaryImage(item.anh, { width: 120, height: 120 })}
-                alt={item.ten}
-                className="w-full h-full object-cover rounded-md"
-              />
-              {/* Lớp phủ mờ khi hover (Tùy chọn cho đẹp) */}
-              <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-md">
-                <div className="w-0 h-0 border-t-4 border-t-transparent border-l-6 border-l-white border-b-4 border-b-transparent ml-1"></div>
+        {isLoading ? (
+          // Skeleton loading
+          Array(4).fill(0).map((_, index) => (
+            <div key={`skeleton-${index}`} className="flex items-center gap-3 p-2 -mx-2 rounded-lg animate-pulse">
+              <div className="w-14 h-14 flex-shrink-0 bg-gray-200 dark:bg-white/10 rounded-md" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-full" />
+                <div className="h-2 bg-gray-200 dark:bg-white/10 rounded w-3/4" />
               </div>
             </div>
-
-            {/* Thông tin bài hát */}
-            <div className="flex-1 min-w-0">
-              <h4 className="text-black dark:text-white text-sm font-bold truncate mb-0.5 group-hover:text-green-600 dark:group-hover:text-teal-400 transition-colors">
-                {item.ten}
-              </h4>
-              <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
-                {item.caSi}
-              </p>
-
-              {/* Mô phỏng icon Hãng đĩa (Label) như trong ảnh */}
-              <div className="flex items-center gap-1 mt-1">
-                <div className="w-3 h-3 rounded-full bg-black/10 dark:bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[7px] text-gray-800 dark:text-white">🎵</span>
+          ))
+        ) : danhSachBaiHat.length > 0 ? (
+          danhSachBaiHat.map((item, index) => (
+            <div
+              key={item.id || index}
+              onClick={() => {
+                if (item.audioUrl) {
+                  playSong(item, danhSachBaiHat.filter(i => i.audioUrl));
+                }
+              }}
+              className="flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 group transition-colors"
+            >
+              {/* Ảnh bìa */}
+              <div className="w-14 h-14 flex-shrink-0 relative">
+                <img
+                  src={optimizeCloudinaryImage(item.anh, { width: 120, height: 120 })}
+                  alt={item.ten}
+                  className="w-full h-full object-cover rounded-md"
+                />
+                {/* Lớp phủ mờ khi hover (Tùy chọn cho đẹp) */}
+                <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-md">
+                  <div className="w-0 h-0 border-t-4 border-t-transparent border-l-6 border-l-white border-b-4 border-b-transparent ml-1"></div>
                 </div>
-                <span className="text-gray-500 text-[11px] truncate uppercase tracking-wider font-semibold">
-                  {item.label || "UNIVERSAL MUSIC"}
-                </span>
               </div>
-            </div>
 
-          </div>
-        ))}
+              {/* Thông tin bài hát */}
+              <div className="flex-1 min-w-0">
+                <h4 className="text-black dark:text-white text-sm font-bold truncate mb-0.5 group-hover:text-green-600 dark:group-hover:text-teal-400 transition-colors">
+                  {item.ten}
+                </h4>
+                <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
+                  {item.caSi}
+                </p>
+
+                {/* Mô phỏng icon Hãng đĩa (Label) như trong ảnh */}
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="w-3 h-3 rounded-full bg-black/10 dark:bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[7px] text-gray-800 dark:text-white">🎵</span>
+                  </div>
+                  <span className="text-gray-500 text-[11px] truncate uppercase tracking-wider font-semibold">
+                    {item.label || "UNIVERSAL MUSIC"}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          ))
+        ) : null}
       </div>
     </div>
   );
