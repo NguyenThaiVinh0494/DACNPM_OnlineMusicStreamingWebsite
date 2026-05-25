@@ -1,41 +1,46 @@
-import { useContext } from "react";
+import { lazy, Suspense, useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import AddToPlaylistModal from "./components/layout/AddToPlaylistModal";
 import LoginModal from "./components/auth/LoginModal";
 import RegisterModal from "./components/auth/RegisterModal";
 import { AuthContext } from "./context/AuthContext";
-import Home from "./pages/Home";
-import ForYou from "./pages/ForYou";
-import MyMusic from "./pages/mymusic/MyMusic";
-import Favorites from "./pages/mymusic/Favorites";
-import Recent from "./pages/mymusic/Recent";
-import PlaylistDetail from "./pages/PlaylistDetail";
-import MyPlaylistDetail from "./pages/mymusic/MyPlaylistDetail";
-import SongDetail from "./pages/songs/SongDetail";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import AdminLayout from "./components/layout/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import ManageUsers from "./pages/admin/ManageUsers";
-import ManageSongs from "./pages/admin/ManageSongs";
-import ManageAlbums from "./pages/admin/ManageAlbums";
-import ManageArtists from "./pages/admin/ManageArtists";
-import ManageTopics from "./pages/admin/ManageTopics";
-import AdminStats from "./pages/admin/AdminStats";
-
-import PopularPlaylists from "./pages/discover/PopularPlaylists";
-import MoodPlaylists from "./pages/discover/MoodPlaylists";
-import Top100 from "./pages/discover/Top100";
-import MoodTopics from "./pages/discover/MoodTopics";
-import VuTruNhacViet from "./pages/discover/VuTruNhacViet";
-import NewReleases from "./pages/discover/NewReleases";
-import GenreDetail from "./pages/discover/GenreDetail";
-import SearchResults from "./pages/SearchResults";
-import AlbumDetail from "./pages/albums/AlbumDetail";
-import ArtistDetail from "./pages/artists/ArtistDetail";
-
 import { Toaster } from "react-hot-toast";
+
+const Home = lazy(() => import("./pages/Home"));
+const ForYou = lazy(() => import("./pages/ForYou"));
+const MyMusic = lazy(() => import("./pages/mymusic/MyMusic"));
+const Favorites = lazy(() => import("./pages/mymusic/Favorites"));
+const Recent = lazy(() => import("./pages/mymusic/Recent"));
+const PlaylistDetail = lazy(() => import("./pages/PlaylistDetail"));
+const MyPlaylistDetail = lazy(() => import("./pages/mymusic/MyPlaylistDetail"));
+const SongDetail = lazy(() => import("./pages/songs/SongDetail"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const ManageUsers = lazy(() => import("./pages/admin/ManageUsers"));
+const ManageSongs = lazy(() => import("./pages/admin/ManageSongs"));
+const ManageAlbums = lazy(() => import("./pages/admin/ManageAlbums"));
+const ManageArtists = lazy(() => import("./pages/admin/ManageArtists"));
+const ManageTopics = lazy(() => import("./pages/admin/ManageTopics"));
+const AdminStats = lazy(() => import("./pages/admin/AdminStats"));
+const PopularPlaylists = lazy(() => import("./pages/discover/PopularPlaylists"));
+const MoodPlaylists = lazy(() => import("./pages/discover/MoodPlaylists"));
+const Top100 = lazy(() => import("./pages/discover/Top100"));
+const MoodTopics = lazy(() => import("./pages/discover/MoodTopics"));
+const VuTruNhacViet = lazy(() => import("./pages/discover/VuTruNhacViet"));
+const NewReleases = lazy(() => import("./pages/discover/NewReleases"));
+const GenreDetail = lazy(() => import("./pages/discover/GenreDetail"));
+const SearchResults = lazy(() => import("./pages/SearchResults"));
+const AlbumDetail = lazy(() => import("./pages/albums/AlbumDetail"));
+const ArtistDetail = lazy(() => import("./pages/artists/ArtistDetail"));
+
+const pageFallback = (
+  <div className="flex min-h-48 items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+    Đang tải nội dung...
+  </div>
+);
 
 function App() {
   const { authModal, closeAuthModal, openLoginModal, openRegisterModal } = useContext(AuthContext);
@@ -60,52 +65,54 @@ function App() {
         onSwitchToLogin={openLoginModal}
       />
       <AddToPlaylistModal />
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="for-you" element={<ForYou />} />
+      <Suspense fallback={pageFallback}>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path="for-you" element={<ForYou />} />
 
-          {/* Discover Routes */}
-          <Route path="discover/popular" element={<PopularPlaylists />} />
-          <Route path="discover/mood" element={<MoodPlaylists />} />
-          <Route path="discover/topics" element={<MoodTopics />} />
-          <Route path="top-100" element={<Top100 />} />
-          <Route path="discover/vu-tru-nhac-viet" element={<VuTruNhacViet />} />
-          <Route path="discover/new-releases" element={<NewReleases />} />
-          <Route path="genre/:id" element={<GenreDetail />} />
+            {/* Discover Routes */}
+            <Route path="discover/popular" element={<PopularPlaylists />} />
+            <Route path="discover/mood" element={<MoodPlaylists />} />
+            <Route path="discover/topics" element={<MoodTopics />} />
+            <Route path="top-100" element={<Top100 />} />
+            <Route path="discover/vu-tru-nhac-viet" element={<VuTruNhacViet />} />
+            <Route path="discover/new-releases" element={<NewReleases />} />
+            <Route path="genre/:id" element={<GenreDetail />} />
 
-          <Route path="my-music" element={<ProtectedRoute />}>
-            <Route index element={<MyMusic />} />
-            <Route path="favorites" element={<Favorites />} />
-            <Route path="recent" element={<Recent />} />
-            <Route path="playlist/:id" element={<MyPlaylistDetail />} />
+            <Route path="my-music" element={<ProtectedRoute />}>
+              <Route index element={<MyMusic />} />
+              <Route path="favorites" element={<Favorites />} />
+              <Route path="recent" element={<Recent />} />
+              <Route path="playlist/:id" element={<MyPlaylistDetail />} />
+            </Route>
+            <Route path="playlist/:id" element={<PlaylistDetail />} />
+            <Route path="search" element={<SearchResults />} />
+            <Route path="album/:id" element={<AlbumDetail />} />
+            <Route path="artist/:id" element={<ArtistDetail />} />
+            <Route path="song/:id" element={<SongDetail />} />
           </Route>
-          <Route path="playlist/:id" element={<PlaylistDetail />} />
-          <Route path="search" element={<SearchResults />} />
-          <Route path="album/:id" element={<AlbumDetail />} />
-          <Route path="artist/:id" element={<ArtistDetail />} />
-          <Route path="song/:id" element={<SongDetail />} />
-        </Route>
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminLayout />
-            </AdminRoute>
-          }
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<ManageUsers />} />
-          <Route path="songs" element={<ManageSongs />} />
-          <Route path="albums" element={<ManageAlbums />} />
-          <Route path="artists" element={<ManageArtists />} />
-          <Route path="topics" element={<ManageTopics />} />
-          <Route path="stats" element={<AdminStats />} />
-          <Route path="pending" element={<Navigate to="/admin" replace />} />
-        </Route>
-      </Routes>
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<ManageUsers />} />
+            <Route path="songs" element={<ManageSongs />} />
+            <Route path="albums" element={<ManageAlbums />} />
+            <Route path="artists" element={<ManageArtists />} />
+            <Route path="topics" element={<ManageTopics />} />
+            <Route path="stats" element={<AdminStats />} />
+            <Route path="pending" element={<Navigate to="/admin" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

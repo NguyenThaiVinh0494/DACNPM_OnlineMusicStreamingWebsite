@@ -148,10 +148,10 @@ export default function BangXepHang({ isLoading = false }) {
           type="button"
           onClick={handleShufflePlay}
           disabled={isLoading || !topSongs.length}
-          className="flex items-center justify-center gap-2 bg-nct-primary/90 hover:bg-nct-primary dark:bg-nct-primary/80 dark:hover:bg-nct-primary text-gray-900 dark:text-black px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-gray-800 dark:text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <FaRandom className="w-3.5 h-3.5" />
           {t('shuffle', 'Nghe ngẫu nhiên')}
+          <FaRandom size={12} className="text-green-600 dark:text-teal-400" />
         </button>
       </div>
 

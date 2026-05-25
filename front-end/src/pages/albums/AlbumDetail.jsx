@@ -1,15 +1,14 @@
 import { useContext, useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
-  FiPlay, FiHeart, FiMoreHorizontal, FiClock, FiCheck
+  FiPlay, FiHeart, FiClock, FiCheck
 } from "react-icons/fi";
 import { useMusic } from "../../context/MusicContext";
 import { AuthContext } from "../../context/AuthContext";
-import AlbumActionMenu from "../../components/common/AlbumActionMenu";
 import SongActionMenu from "../../components/common/SongActionMenu";
 import LazyImage from "../../components/common/LazyImage";
 import { albumService, songService } from "../../api/services";
-import { enrichSongsWithDuration } from "../../utils/duration";
+import { enrichSongsWithDuration, formatSongDuration } from "../../utils/duration";
 
 
 
@@ -23,9 +22,7 @@ export default function AlbumDetail() {
 
   const [liked, setLiked] = useState(false);
   const [hoveredRow, setHoveredRow] = useState(null);
-  const [showAlbumMenu, setShowAlbumMenu] = useState(false);
   const [activeSongMenu, setActiveSongMenu] = useState(null);
-  const albumMenuRef = useRef(null);
   const songMenuRef = useRef(null);
 
   useEffect(() => {
@@ -73,9 +70,6 @@ export default function AlbumDetail() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (albumMenuRef.current && !albumMenuRef.current.contains(event.target)) {
-        setShowAlbumMenu(false);
-      }
       if (songMenuRef.current && !songMenuRef.current.contains(event.target)) {
         setActiveSongMenu(null);
       }
@@ -156,7 +150,7 @@ export default function AlbumDetail() {
             <span className="text-sm font-semibold">{album.artistName}</span>
           </Link>
 
-          {/* Like / More */}
+          {/* Like */}
           <div className="flex items-center gap-3 mb-6">
             <button
               type="button"
@@ -168,18 +162,6 @@ export default function AlbumDetail() {
               </div>
               <span className="text-[10px] text-gray-500 dark:text-gray-400">{liked ? 1 : 0}</span>
             </button>
-
-            <div className="relative" ref={albumMenuRef}>
-              <button 
-                onClick={() => setShowAlbumMenu(!showAlbumMenu)}
-                className="flex flex-col items-center gap-0.5"
-              >
-                <div className={`p-2.5 rounded-full transition-colors ${showAlbumMenu ? "bg-gray-200 dark:bg-white/10" : "bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10"}`}>
-                  <FiMoreHorizontal className="w-5 h-5 text-gray-700 dark:text-white" />
-                </div>
-              </button>
-              {showAlbumMenu && <AlbumActionMenu onClose={() => setShowAlbumMenu(false)} />}
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -271,7 +253,7 @@ export default function AlbumDetail() {
                 </span>
 
                 {/* Duration */}
-                <span className="text-sm text-gray-500 dark:text-gray-400 text-center">{song.duration}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400 text-center">{formatSongDuration(song.duration)}</span>
 
                 {/* More options */}
                 <div className="flex items-center justify-center relative" ref={isMenuOpen ? songMenuRef : null}>

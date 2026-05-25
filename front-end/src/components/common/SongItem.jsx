@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiPlay, FiPause, FiHeart, FiMoreHorizontal, FiCheck } from "react-icons/fi";
 import SongActionMenu from "./SongActionMenu";
 import { optimizeCloudinaryImage } from "../../utils/media";
+import { formatSongDuration } from "../../utils/duration";
 
 export default function SongItem({ 
   song, 
@@ -116,7 +117,7 @@ export default function SongItem({
         </div>
 
         <div className={`${durationColumnClass} shrink-0 text-center text-sm text-gray-500 dark:text-nct-text-dim ${isCurrent ? 'text-nct-primary' : ''}`}>
-          {song.duration || "--:--"}
+          {formatSongDuration(song.duration)}
         </div>
 
         <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -236,7 +237,7 @@ export default function SongItem({
       ) : null}
 
       <div className={`${durationColumnClass} shrink-0 text-center text-sm text-gray-500 dark:text-nct-text-dim ${isCurrent ? 'text-nct-primary' : ''}`}>
-        {song.duration || "--:--"}
+        {formatSongDuration(song.duration)}
       </div>
 
       {/* Hover Actions */}

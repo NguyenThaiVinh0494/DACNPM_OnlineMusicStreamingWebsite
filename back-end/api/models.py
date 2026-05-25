@@ -2,8 +2,12 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class NguoiDung(AbstractUser):
+    email = models.EmailField(unique=True)
     anh_dai_dien = models.URLField(default='def.jpg', max_length=500)
     vai_tro = models.CharField(max_length=10, choices=[('USER', 'User'), ('ADMIN', 'Admin')], default='USER')
+
+    REQUIRED_FIELDS = ['email']
+
     class Meta:
         db_table = 'tbl_nguoi_dung'
 # 4. Bảng tbl_nghe_si

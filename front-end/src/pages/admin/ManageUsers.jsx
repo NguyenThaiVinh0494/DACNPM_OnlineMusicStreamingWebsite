@@ -265,8 +265,6 @@ export default function ManageUsers() {
     let isMounted = true;
 
     if (isUsersCacheFresh()) {
-      setUsers(usersCache.items);
-      setLoading(false);
       return () => {
         isMounted = false;
       };

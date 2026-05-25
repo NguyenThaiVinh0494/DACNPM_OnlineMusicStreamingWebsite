@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { playlistService, songService, favoriteService } from '../api/services';
+import { playlistService, songService, favoriteService, historyService } from '../api/services';
 import { enrichSongsWithDuration } from '../utils/duration';
 import { AuthContext } from './AuthContext';
 import { getSongArtistNames, getSongPrimaryArtist } from '../utils/songArtists';
@@ -42,6 +42,24 @@ const mapPlaylist = (p) => ({
   image: optimizeCloudinaryImage(p.bai_hats_detail?.[0]?.duong_dan_hinh_anh, { width: 300, height: 300 }) || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop",
   songCount: p.so_luong_bai_hat || 0
 });
+
+const mapRecentHistory = (historyEntries) => {
+  const seenSongIds = new Set();
+
+  return historyEntries.reduce((songs, entry) => {
+    if (!entry?.song_detail || seenSongIds.has(entry.song_detail.id)) {
+      return songs;
+    }
+
+    seenSongIds.add(entry.song_detail.id);
+    songs.push({
+      ...mapSong(entry.song_detail),
+      historyId: entry.id,
+      listenedAt: entry.thoi_gian_nghe,
+    });
+    return songs;
+  }, []).slice(0, 50);
+};
 
 const enrichPlaylist = async (playlist) => ({
   ...mapPlaylist(playlist),
@@ -88,18 +106,20 @@ export const MusicProvider = ({ children }) => {
     fetchSongs();
   }, []);
 
-  // Fetch playlists and favorites when user logs in
+  // Fetch user library and listening history when user logs in
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
         setLoadingUserMusic(true);
         try {
-            const [playlistsData, favoritesData] = await Promise.all([
+            const [playlistsData, favoritesData, historyData] = await Promise.all([
               playlistService.getMine(),
-              favoriteService.getAll()
+              favoriteService.getAll(),
+              historyService.getAll(),
             ]);
           const normalizedPlaylists = Array.isArray(playlistsData) ? playlistsData : playlistsData?.results || [];
           const normalizedFavorites = Array.isArray(favoritesData) ? favoritesData : favoritesData?.results || [];
+          const normalizedHistory = Array.isArray(historyData) ? historyData : historyData?.results || [];
           setMyPlaylists(await Promise.all(normalizedPlaylists.map(enrichPlaylist)));
           setFavorites(
             await enrichSongsWithDuration(
@@ -107,6 +127,7 @@ export const MusicProvider = ({ children }) => {
               mapSong,
             ),
           );
+          setRecentSongs(mapRecentHistory(normalizedHistory));
         } catch (error) {
           console.error("Failed to fetch user data:", error);
         } finally {
@@ -115,6 +136,7 @@ export const MusicProvider = ({ children }) => {
       } else {
         setMyPlaylists([]);
         setFavorites([]);
+        setRecentSongs([]);
         setLoadingUserMusic(false);
       }
     };
@@ -215,6 +237,17 @@ export const MusicProvider = ({ children }) => {
     try {
       const data = await songService.recordListen(song.id);
       updateSongEverywhere(song.id, { plays: data.luot_nghe });
+
+      if (data.counted && user) {
+        try {
+          const historyData = await historyService.getAll();
+          const normalizedHistory = Array.isArray(historyData) ? historyData : historyData?.results || [];
+          setRecentSongs(mapRecentHistory(normalizedHistory));
+        } catch (historyError) {
+          console.error("Failed to refresh listening history:", historyError);
+        }
+      }
+
       return data;
     } catch (error) {
       console.error("Failed to record listen:", error);
@@ -226,12 +259,6 @@ export const MusicProvider = ({ children }) => {
     setCurrentSong(song);
     setIsPlaying(true);
     markPlaybackSession();
-    
-    // Add to recent
-    setRecentSongs(prev => {
-      const filtered = prev.filter(s => s.id !== song.id);
-      return [song, ...filtered].slice(0, 50); // keep last 50
-    });
 
     if (newQueue) {
       setQueue(newQueue);
@@ -269,11 +296,6 @@ export const MusicProvider = ({ children }) => {
       setCurrentSong(song);
       setIsPlaying(true);
       markPlaybackSession();
-      
-      setRecentSongs(prev => {
-        const filtered = prev.filter(s => s.id !== song.id);
-        return [song, ...filtered].slice(0, 50);
-      });
     }
   };
 
@@ -310,11 +332,6 @@ export const MusicProvider = ({ children }) => {
     setCurrentSong(song);
     setIsPlaying(true);
     markPlaybackSession();
-
-    setRecentSongs(prev => {
-      const filtered = prev.filter(s => s.id !== song.id);
-      return [song, ...filtered].slice(0, 50);
-    });
   };
 
   const playPrev = () => {
@@ -340,11 +357,6 @@ export const MusicProvider = ({ children }) => {
     setCurrentSong(song);
     setIsPlaying(true);
     markPlaybackSession();
-
-    setRecentSongs(prev => {
-      const filtered = prev.filter(s => s.id !== song.id);
-      return [song, ...filtered].slice(0, 50);
-    });
   };
 
   const playAll = (songList) => {
@@ -355,11 +367,6 @@ export const MusicProvider = ({ children }) => {
       setCurrentSong(song);
       setIsPlaying(true);
       markPlaybackSession();
-
-      setRecentSongs(prev => {
-        const filtered = prev.filter(s => s.id !== song.id);
-        return [song, ...filtered].slice(0, 50);
-      });
     }
   };
 
@@ -438,12 +445,22 @@ export const MusicProvider = ({ children }) => {
     }
   };
 
-  const removeFromRecent = (songId) => {
-    setRecentSongs(prev => prev.filter(s => s.id !== songId));
+  const removeFromRecent = async (songId) => {
+    try {
+      await historyService.removeSong(songId);
+      setRecentSongs(prev => prev.filter(s => s.id !== songId));
+    } catch {
+      toast.error("Không thể xóa lịch sử nghe");
+    }
   };
 
-  const clearRecentSongs = () => {
-    setRecentSongs([]);
+  const clearRecentSongs = async () => {
+    try {
+      await historyService.clear();
+      setRecentSongs([]);
+    } catch {
+      toast.error("Không thể xóa lịch sử nghe");
+    }
   };
 
   const addToQueue = (song) => {

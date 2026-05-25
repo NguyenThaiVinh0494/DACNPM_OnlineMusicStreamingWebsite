@@ -49,6 +49,7 @@ export default function Home() {
   const [topics, setTopics] = useState([]);
   const [loadingTopics, setLoadingTopics] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const [vuTruNhacViet, setVuTruNhacViet] = useState([]);
   const [tamTrangHomNay, setTamTrangHomNay] = useState([]);
@@ -60,8 +61,12 @@ export default function Home() {
     let active = true;
     const fetchHomeData = async () => {
       try {
+        setLoadError('');
         const data = await homeService.getHomeData();
         if (!active) return;
+        if (!data || typeof data !== 'object' || !Array.isArray(data.topics)) {
+          throw new Error('Home API did not return the expected JSON payload.');
+        }
 
         setDangDuocYeuThich(data.dangDuocYeuThich || []);
         setTop100(data.top100 || []);
@@ -76,6 +81,9 @@ export default function Home() {
         })));
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu trang chủ:", error);
+        if (active) {
+          setLoadError('Không thể tải dữ liệu trang chủ. Kiểm tra kết nối tới backend rồi tải lại trang.');
+        }
       } finally {
         if (active) {
           setLoadingTopics(false);
@@ -142,6 +150,12 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {loadError ? (
+        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="alert">
+          {loadError}
+        </div>
+      ) : null}
 
       {/* Categories / Topics */}
       <div>

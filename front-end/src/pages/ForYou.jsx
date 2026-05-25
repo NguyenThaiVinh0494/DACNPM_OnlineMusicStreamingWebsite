@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   FiArrowDown,
   FiArrowUp,
-  FiFlag,
   FiHeart,
   FiMoreHorizontal,
   FiMusic,
@@ -336,9 +335,6 @@ export default function ForYou() {
                     className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-md transition-transform hover:scale-110"
                   />
                 )}
-                <div className="mx-auto -mt-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-nct-primary text-xs font-bold text-white dark:border-[#1e1e1e]">
-                  +
-                </div>
               </div>
 
               <button
@@ -374,10 +370,6 @@ export default function ForYou() {
                       type="button"
                     >
                       <FiPlus className="h-4 w-4" /> Thêm vào playlist
-                    </button>
-
-                    <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-white/10" type="button">
-                      <FiFlag className="h-4 w-4" /> Báo cáo
                     </button>
                   </div>
                 ) : null}

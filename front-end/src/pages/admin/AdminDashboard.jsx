@@ -42,7 +42,7 @@ export default function AdminDashboard() {
 
     const fetchData = async () => {
       try {
-        const data = await adminStatsService.getOverview();
+        const data = await adminStatsService.getSummary();
         const nextStats = {
           songs: data.counts?.songs ?? 0,
           albums: data.counts?.albums ?? 0,

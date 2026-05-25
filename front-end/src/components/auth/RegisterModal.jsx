@@ -1,7 +1,6 @@
 import { useState, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi';
-import { FcGoogle } from 'react-icons/fc';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -107,21 +106,10 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
             </span>
           </div>
 
-          <button type="submit" className="w-full bg-nct-primary hover:bg-[#2591c4] dark:bg-cyan-400 dark:hover:bg-cyan-500 text-white dark:text-black font-bold py-3.5 rounded-full transition-colors text-lg mb-8 shadow-[0_0_15px_rgba(45,170,237,0.3)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)] cursor-pointer">
+          <button type="submit" className="w-full bg-nct-primary hover:bg-[#2591c4] dark:bg-cyan-400 dark:hover:bg-cyan-500 text-white dark:text-black font-bold py-3.5 rounded-full transition-colors text-lg shadow-[0_0_15px_rgba(45,170,237,0.3)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)] cursor-pointer">
             {t('register')}
           </button>
         </form>
-
-        <div className="flex items-center gap-4 mb-6">
-          <div className="h-px bg-gray-200 dark:bg-white/10 flex-1"></div>
-          <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">{t('or_register_with')}</span>
-          <div className="h-px bg-gray-200 dark:bg-white/10 flex-1"></div>
-        </div>
-
-        <button className="w-full bg-gray-50 hover:bg-gray-100 dark:bg-[#333333] dark:hover:bg-[#444444] text-gray-900 dark:text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-3 transition-colors border border-gray-200 dark:border-white/5 cursor-pointer">
-          <FcGoogle className="w-6 h-6" />
-          <span className="text-[15px]">Google</span>
-        </button>
       </div>
     </div>,
     document.body

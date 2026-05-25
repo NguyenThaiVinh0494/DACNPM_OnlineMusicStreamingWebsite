@@ -34,7 +34,7 @@
 
 ### 1.1 Tóm tắt dự án
 
-Web nghe nhạc được xây dựng nhằm mục đích mang đến cho người dùng một nền tảng giải trí âm nhạc trực tuyến tiện lợi, nơi họ có thể khám phá, thưởng thức và chia sẻ những bài hát yêu thích mọi lúc, mọi nơi.
+Web nghe nhạc được xây dựng nhằm mục đích mang đến cho người dùng một nền tảng giải trí âm nhạc trực tuyến tiện lợi, nơi họ có thể khám phá và thưởng thức những bài hát yêu thích mọi lúc, mọi nơi.
 
 Chúng tôi cam kết mang lại một trải nghiệm âm nhạc chất lượng cao, thân thiện và dễ sử dụng, nơi người dùng có thể:
 
@@ -44,19 +44,39 @@ Chúng tôi cam kết mang lại một trải nghiệm âm nhạc chất lượn
 * **Trải nghiệm nghe nhạc chất lượng:**
 
   Cung cấp âm thanh chất lượng cao, giao diện trực quan và khả năng phát nhạc mượt mà trên nhiều thiết bị.
-* **Tạo và chia sẻ playlist cá nhân:**
+* **Tạo playlist cá nhân:**
 
-  Người dùng có thể tự tạo danh sách phát theo sở thích và chia sẻ với bạn bè hoặc cộng đồng.
-* **Cá nhân hóa trải nghiệm:**
+  Người dùng có thể tự tạo và quản lý danh sách phát theo sở thích.
+* **Khám phá nội dung:**
 
-  Ứng dụng trí tuệ nhân tạo và thuật toán gợi ý để đề xuất những bài hát, nghệ sĩ và playlist phù hợp với gu âm nhạc của từng người.
-* **Kết nối cộng đồng yêu nhạc:**
+  Người dùng có thể duyệt các nội dung công khai theo thể loại, album và lượt nghe.
+* **Quản lý thư viện cá nhân:**
 
-Cho phép người dùng tương tác, bình luận và theo dõi nghệ sĩ hoặc người dùng khác để mở rộng trải nghiệm âm nhạc.
+  Cho phép người dùng yêu thích bài hát, lưu lịch sử nghe và duy trì playlist riêng.
 
 Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nhạc trực tuyến hàng đầu, giúp bạn tận hưởng và khám phá thế giới âm nhạc theo cách riêng của mình.
 
 ### 1.2 Phạm vi của dự án
+
+#### Điều chỉnh phạm vi bàn giao cuối cùng
+
+Do giới hạn thời gian thực hiện, phiên bản bàn giao hiện tại tập trung vào các chức năng cốt lõi đã triển khai và kiểm thử:
+
+* Đăng ký, đăng nhập, cập nhật hồ sơ và ảnh đại diện.
+* Duyệt thư viện công khai, tìm kiếm, phát nhạc, yêu thích, lịch sử nghe và playlist cá nhân.
+* Trang `For You` gợi ý nội dung công khai từ lịch sử nghe và bài hát yêu thích đã lưu.
+* Quản trị viên quản lý tài khoản, bài hát, album, nghệ sĩ, thể loại, trạng thái công khai/chờ hiển thị và thống kê cơ bản.
+* Bảo vệ nội dung chưa công khai, phân quyền admin và cấu hình triển khai an toàn.
+
+Các chức năng sau **không thuộc phạm vi nghiệm thu phiên bản hiện tại** và được chuyển sang mục phát triển tương lai:
+
+* User upload nhạc; quy trình duyệt/từ chối nội dung do user đóng góp.
+* Chat hỗ trợ Admin - User.
+* Báo cáo (Report) nội dung.
+* Bình luận, theo dõi, chia sẻ mạng xã hội và tương tác cộng đồng nâng cao.
+* Bước khảo sát/lựa chọn nghệ sĩ, thể loại yêu thích ban đầu và thuật toán gợi ý nâng cao cho `For You`.
+
+Các sơ đồ hoặc mô tả chi tiết phía dưới có nhắc đến những chức năng này được giữ làm ý tưởng thiết kế mở rộng, không dùng làm tiêu chí đánh giá phiên bản bàn giao.
 
 **Phạm vi về dịch vụ:**
 
@@ -68,7 +88,7 @@ Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nh
 **Quản lý người dùng**
 
 * Quản lý tài khoản, phân quyền người dùng và admin
-* Xử lý báo cáo, khóa tài khoản vi phạm
+* Quản lý trạng thái và phân quyền tài khoản
 
 **Quản lý nội dung (Music Management)**
 
@@ -94,11 +114,11 @@ Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nh
 
 ---
 
-**Gợi ý nhạc (Recommendation)**
+**Khám phá nội dung (Discovery)**
 
-* Thuật toán đề xuất dựa trên lịch sử nghe, sở thích và hành vi
-* Gợi ý playlist, bài hát, nghệ sĩ phù hợp
-* Hiển thị “Trending”, “Top chart”, “For you”
+* Hiển thị nội dung công khai theo thể loại, lượt nghe và album
+* Hiển thị “Trending” và “Top chart”
+* Hiển thị `For You` dựa trên lịch sử nghe và bài hát yêu thích; không yêu cầu người dùng chọn sở thích ban đầu
 
 ---
 
@@ -106,7 +126,6 @@ Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nh
 
 * Cho phép người dùng tạo, chỉnh sửa và xóa playlist cá nhân
 * Thêm/xóa bài hát vào playlist
-* Chia sẻ playlist với người khác
 
 ---
 
@@ -114,7 +133,6 @@ Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nh
 
 * Tìm kiếm bài hát, nghệ sĩ, album
 * Bộ lọc theo thể loại, xu hướng, độ phổ biến
-* Gợi ý thông minh khi nhập từ khóa
 
 ---
 
@@ -122,15 +140,12 @@ Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nh
 
 * Cập nhật thông tin cá nhân, ảnh đại diện
 * Hiển thị playlist, bài hát yêu thích
-* Theo dõi nghệ sĩ hoặc người dùng khác
 
 ---
 
 **Tương tác (Interaction)**
 
-* Like, yêu thích bài hát
-* Bình luận dưới bài hát hoặc playlist
-* Chia sẻ bài hát lên mạng xã hội
+* Like, yêu thích bài hát và lưu lịch sử nghe
 
 ---
 
@@ -146,7 +161,6 @@ Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nh
 * Ngôn ngữ/Thư viện: ReactJS
 * CSS Framework: Tailwind CSS
 * HTTP Client: Axios
-* Realtime: WebSocket
 
 **Backend:**
 
@@ -154,7 +168,6 @@ Với mục tiêu này, chúng tôi mong muốn trở thành nền tảng âm nh
 * Framework: Django
 * API: Django REST Framework (RESTful API)
 * Xác thực: JWT (JSON Web Token)
-* Realtime: WebSocket (Django Channels)
 
 **Cơ sở dữ liệu:**
 
@@ -205,16 +218,16 @@ Bảng: Các tính năng chính của Website nghe nhạc
 | 3  | Nghe nhạc              | Phát nhạc, tua, shuffle, repeat | User       | Cao         | 1.0         |
 | 4  | Playlist                | Tạo, sửa, xóa playlist         | User       | Cao         | 1.0         |
 | 5  | Yêu thích             | Like/lưu bài hát               | User       | Cao         | 1.0         |
-| 6  | Bình luận             | Comment bài hát                 | User       | Trung bình | 1.1         |
+| 6  | Bình luận             | Phát triển tương lai            | User       | Ngoài phạm vi | Sau 1.0 |
 | 7  | Tìm kiếm              | Tìm bài hát, nghệ sĩ, album  | User       | Cao         | 1.0         |
-| 8  | Gợi ý nhạc           | Đề xuất theo hành vi          | User       | Cao         | 1.0         |
+| 8  | Gợi ý nhạc `For You` | Dựa trên lịch sử nghe/yêu thích | User       | Trung bình | 1.0 |
 | 9  | Quản lý nội dung     | CRUD bài hát, album             | Admin      | Cao         | 1.0         |
 | 10 | Upload nhạc            | Thêm nội dung mới              | Admin      | Cao         | 1.0         |
 | 11 | Quên mật khẩu        | Reset qua email                   | User       | Cao         | 1.0         |
 | 12 | Thống kê              | Lượt nghe, người dùng        | Admin      | Trung bình | 1.1         |
 | 13 | Quản lý tài khoản   | Khoá/mở user                    | Admin      | Cao         | 1.0         |
-| 14 | Thông báo             | Bài mới, playlist               | User       | Trung bình | 1.1         |
-| 15 | Báo cáo nội dung     | Báo cáo vi phạm                | User       | Trung bình | 1.1         |
+| 14 | Thông báo             | Phát triển tương lai            | User       | Ngoài phạm vi | Sau 1.0 |
+| 15 | Báo cáo nội dung     | Phát triển tương lai            | User       | Ngoài phạm vi | Sau 1.0 |
 
 Ma trận tính năng theo người dùng
 
@@ -228,11 +241,8 @@ Ma trận tính năng theo người dùng
 | Nghe nhạc                | ✓   | ✗    |
 | Playlist                  | ✓   | ✗    |
 | Like bài hát            | ✓   | ✗    |
-| Bình luận               | ✓   | ✗    |
 | Tìm kiếm                | ✓   | ✓    |
-| Gợi ý nhạc             | ✓   | ✗    |
-| Thông báo               | ✓   | ✗    |
-| Báo cáo nội dung       | ✓   | ✗    |
+| Gợi ý `For You`         | ✓   | ✗    |
 | Quản lý user            | ✗   | ✓    |
 | Quản lý nhạc           | ✗   | ✓    |
 | Upload nhạc              | ✗   | ✓    |
@@ -291,18 +301,14 @@ graph TD
     U --> U3["Tìm kiếm & Khám phá"]
     U --> U4["Tương tác âm nhạc"]
     U --> U5["Quản lý Playlist"]
-    U --> U6["Đóng góp nội dung"]
-    U --> U7["Chat hỗ trợ"]
 
     A --> A1["Quản lý nội dung chung"]
-    A --> A2["Duyệt nội dung tải lên"]
+    A --> A2["Quản lý trạng thái nội dung"]
     A --> A3["Quản lý danh sách người dùng"]
-    A --> A4["Thống kê & Báo cáo"]
+    A --> A4["Thống kê"]
     A --> A5["Cấu hình hệ thống"]
-    A --> A6["Phản hồi hỗ trợ"]
 
     SysProc --> W1["Xử lý giao diện & Hiển thị"]
-    SysProc --> W2["Thuật toán gợi ý âm nhạc"]
 ```
 
 ##### B. Mô tả chi tiết hệ thống
@@ -319,36 +325,28 @@ graph TD
   - Tìm kiếm âm nhạc theo tên bài hát, nghệ sĩ, album hoặc playlist.
   - Xem danh sách và thông tin chi tiết bài hát, nghệ sĩ, album, playlist.
 - **Tương tác âm nhạc:**
-  - Có thể thích (like) hoặc báo cáo (report) bài hát.
+  - Có thể thích (like) bài hát.
   - Xem lại lịch sử nghe nhạc.
 - **Quản lý Playlist (Danh sách phát):**
   - Tạo mới, chỉnh sửa tên, xóa playlist.
   - Thêm hoặc xóa bài hát khỏi playlist.
-- **Đóng góp nội dung (Upload):**
-  - Có thể tải lên (upload) bài nhạc
-  - Chỉnh sửa hoặc xóa thông tin bài hát, album, playlist mà mình đã đóng góp.
-- **Hỗ trợ:**
-  - Nhận được sự hướng dẫn, hỗ trợ thông qua tính năng chat.
 
 **2. Đối với Quản trị viên (Admin):**
 
-- **Quản lý và Duyệt nội dung:**
-  - Duyệt hoặc từ chối các bài hát, album, playlist do người dùng tải lên
+- **Quản lý nội dung:**
+  - Thiết lập trạng thái công khai hoặc chờ hiển thị của bài hát và album.
   - Có thể thêm, sửa, xóa các bài hát, album, playlist vào hệ thống chung.
 - **Quản lý Người dùng:**
   - Xem danh sách người dùng
   - Khóa / mở khóa hoặc xóa tài khoản khi cần thiết.
-- **Thống kê và Báo cáo:**
+- **Thống kê:**
   - Xem thống kê hệ thống bao gồm lượt nghe, các bài hát thịnh hành, tổng số lượng người dùng.
 - **Cấu hình hệ thống:**
   - Quản lý phân quyền, thực hiện các cài đặt chung cho hệ thống.
-- **Hỗ trợ khách hàng:**
-  - Trả lời, hỗ trợ người dùng và giải quyết thắc mắc, báo cáo qua tính năng chat.
 
 **3. Các tiến trình tự động của hệ thống (System Processes):**
 
 - **Xử lý và hiển thị thông tin:** Phản hồi truy vấn, phân phát dữ liệu bài hát, album, playlist, nghệ sĩ và hiển thị trực quan đến giao diện người dùng.
-- **Thuật toán thông minh:** Tự động phân tích, tính toán và gợi ý các bài hát phù hợp dựa trên chủ đề, xu hướng hoặc thói quen cá nhân hóa của người dùng.
 
 ##### C. Bảng mô tả yêu cầu chức năng
 
@@ -357,18 +355,18 @@ graph TD
 | FR01   | Quản lý tài khoản               | Người dùng                                | Đăng ký, đăng nhập, đăng xuất, xem và chỉnh sửa thông tin cá nhân.      |
 | FR02   | Điều khiển phát nhạc           | Người dùng                                | Phát, dừng nhạc, lặp lại, phát ngẫu nhiên, chuyển tiếp, lùi bài.           |
 | FR03   | Tìm kiếm và khám phá bài hát | Người dùng                                | Tìm kiếm bài hát theo chủ đề, nghệ sĩ, album, playlist.                       |
-| FR04   | Tương tác bài hát              | Người dùng                                | Thích, báo cáo bài hát. Xem lại lịch sử nghe nhạc.                            |
+| FR04   | Tương tác bài hát              | Người dùng                                | Thích bài hát và xem lại lịch sử nghe nhạc.                                   |
 | FR05   | Quản lý Playlist                  | Người dùng                                | Tạo, sửa tên, xóa playlist. Thêm, sửa, xóa bài hát khỏi playlist.            |
-| FR06   | Upload âm nhạc                    | Người dùng                                | Tải lên bài hát mới, chỉnh sửa, xóa thông tin bài do mình đóng góp.      |
+| FR06   | Upload âm nhạc của user          | Người dùng                                | Phát triển tương lai, không thuộc phạm vi bàn giao hiện tại.                 |
 | FR07   | Xem thông tin và điều hướng   | Người dùng                                | Cập nhật và xem thông tin bài hát, danh sách, nghệ sĩ đầy đủ, dễ chịu. |
-| FR08   | Nhận gợi ý nhạc tự động      | Người dùng (Tiến trình hệ thống cấp) | Cập nhật đề xuất bài nhạc theo sự kiện xu hướng hoặc thói quen nghe.      |
-| FR09   | Chat và nhận hỗ trợ             | Người dùng                                | Tương tác trực tiếp qua chat để báo cáo lỗi hoặc nhận hướng dẫn.        |
+| FR08   | Nhận gợi ý nhạc `For You`     | Người dùng                                | Hiển thị bài hát công khai dựa trên lịch sử nghe/yêu thích; không có bước chọn nghệ sĩ hoặc thể loại đầu vào. |
+| FR09   | Chat và nhận hỗ trợ             | Người dùng                                | Phát triển tương lai, không thuộc phạm vi bàn giao hiện tại.                 |
 | FR10   | Quản lý nội dung chung           | Quản trị viên                             | Thêm, sửa, xóa bài gốc, album, playlist vào dữ liệu của hệ thống.           |
-| FR11   | Duyệt nội dung Upload             | Quản trị viên                             | Tiền duyệt hoặc từ chối các bài nhạc do tài khoản User đóng góp.          |
+| FR11   | Trạng thái hiển thị nội dung     | Quản trị viên                             | Quản lý bài hát/album công khai hoặc đang chờ hiển thị trong kho admin.      |
 | FR12   | Quản lý người dùng             | Quản trị viên                             | Xem danh sách tổng quan, khóa hoặc mở khóa tài khoản vi phạm.                 |
 | FR13   | Thống kê số liệu                | Quản trị viên                             | Xem top bài hát, lượt stream, và số lượng User mới đăng ký.                |
 | FR14   | Cấu hình hệ thống               | Quản trị viên                             | Phân quyền tính năng, giới hạn nội dung, cài đặt server gốc.                |
-| FR15   | Hướng dẫn hỗ trợ               | Quản trị viên                             | Nhận tin nhắn chat, phản hồi thắc mắc, giải quyết các báo cáo vi phạm.     |
+| FR15   | Hỗ trợ và xử lý report          | Quản trị viên                             | Phát triển tương lai, không thuộc phạm vi bàn giao hiện tại.                 |
 
 #### 2.4.2 Yêu cầu phi chức năng
 
@@ -408,7 +406,6 @@ graph TD
 
     subgraph API_Gateway
         HTTP["HTTP RESTful API (Axios/Fetch)"]
-        WS["WebSocket - Chat Support"]
     end
 
     subgraph Application_Tier_Server
@@ -451,7 +448,7 @@ Tầng này chịu trách nhiệm hiển thị và tương tác trực tiếp v�
 **b. Tầng Ứng dụng & Xử lý (Application Tier / Server):**
 Đóng vai trò là trung tâm xử lý nghiệp vụ, nhận và phân giải các yêu cầu, được xây dựng dựa trên framework **Django (Python)**.
 
-- **Đặc điểm kiến trúc:** Sử dụng **Django REST Framework (DRF)** để cung cấp các API chuẩn RESTful kết hợp giao tiếp thời gian thực **WebSocket** (đối với tính năng chat).
+- **Đặc điểm kiến trúc:** Sử dụng **Django REST Framework (DRF)** để cung cấp các API RESTful cho ứng dụng React.
 - **Chức năng chính:**
   - **Xử lý nghiệp vụ (Business Logic):** Thực hiện thuật toán tìm kiếm, phân tích xu hướng nghe nhạc, quản trị nội dung và xử lý tương tác (Like, tạo Playlist, duyệt bài hát).
   - **Xác thực và Bảo mật:** Kiểm tra và quản lý định danh người dùng qua cơ chế **JWT (JSON Web Token)**, đảm bảo phân quyền chặt chẽ giữa User thông thường và Admin.
@@ -486,8 +483,8 @@ Chịu trách nhiệm lưu trữ an toàn, tin cậy dữ liệu của hệ th�
 
 | Bậc | Tên tác nhân          | Mô tả vai trò                                                                                                                                                                                                      |
 | :--- | :----------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | Người dùng (User)     | Người sử dụng nền tảng để trải nghiệm âm nhạc. Có quyền tìm kiếm, nghe nhạc và sử dụng các tính năng cá nhân hóa (Tạo Playlist, Thích bài hát, Upload nội dung) khi đã đăng nhập. |
-| 2    | Quản trị viên (Admin) | Người điều hành hệ thống, có thẩm quyền cao nhất để kiểm duyệt nội dung, quản lý người dùng và theo dõi thống kê.                                                                            |
+| 1    | Người dùng (User)     | Người sử dụng nền tảng để tìm kiếm, nghe nhạc, tạo playlist, yêu thích bài hát và xem lịch sử nghe khi đã đăng nhập. |
+| 2    | Quản trị viên (Admin) | Người điều hành hệ thống, quản lý nội dung hệ thống, trạng thái hiển thị, người dùng và thống kê. |
 
 **b. Danh sách Usecase**
 
@@ -496,11 +493,11 @@ Chịu trách nhiệm lưu trữ an toàn, tin cậy dữ liệu của hệ th�
 | UC1    | Xác thực Tài khoản               | User, Admin       |
 | UC2    | Khám phá & Trải nghiệm nhạc     | User              |
 | UC3    | Quản lý & Tương tác Cá nhân   | User              |
-| UC4    | Đóng góp Nội dung Audio          | User              |
+| UC4    | Đóng góp Nội dung Audio - phát triển tương lai | User |
 | UC5    | Quản trị Tổng hợp Hệ thống     | Admin             |
-| UC6    | Kiểm duyệt Nội dung Upload        | Admin             |
-| UC7    | Giao tiếp Chat hỗ trợ             | User, Admin       |
-| UC8    | Nhận Gợi ý Nhạc (Dành cho bạn) | User              |
+| UC6    | Kiểm duyệt nội dung do user gửi - phát triển tương lai | Admin |
+| UC7    | Giao tiếp Chat hỗ trợ - phát triển tương lai | User, Admin |
+| UC8    | Gợi ý nhạc `For You` theo lịch sử/yêu thích | User |
 
 **c. Sơ đồ Usecase**
 
@@ -514,15 +511,10 @@ graph LR
     User --> UC1([Xác thực Tài khoản])
     User --> UC2([Khám phá & Trải nghiệm nhạc])
     User --> UC3([Quản lý & Tương tác Cá nhân])
-    User --> UC4([Đóng góp Nội dung Audio])
-    User --> UC7([Giao tiếp Chat hỗ trợ])
-    User --> UC8([Nhận Gợi ý Nhạc])
-
+    User --> UC8([Gợi ý nhạc For You])
     %% Quản Trị Viên
     Admin --> UC1
     Admin --> UC5([Quản trị Tổng hợp Hệ thống])
-    Admin --> UC6([Kiểm duyệt Nội dung Upload])
-    Admin --> UC7
 ```
 
 #### 2.6.2 Đặc tả Usecase
@@ -572,11 +564,11 @@ graph LR
   * Dữ liệu thư viện cá nhân của tài khoản này độc lập, không bị tài khoản khác thao tác thay đổi.
   * Có giao diện Thư viện giúp theo dõi tất cả Playlist đã lưu.
 
-**4. UC4: Đóng góp Nội dung Audio (Upload)**
+**4. UC4: Đóng góp Nội dung Audio (Phát triển tương lai, không thuộc bản bàn giao)**
 
 * **a. Mô tả và mức độ ưu tiên:**
   * **Mô tả:** Người dùng chủ động chia sẻ nội dung sản phẩm nghệ thuật (Cover, Remix, Sáng tác mới) với cộng đồng qua form tải tệp âm thanh.
-  * **Mức độ ưu tiên:** Cao (High)
+  * **Mức độ ưu tiên:** Sau phiên bản bàn giao
 * **b. Chuỗi kích thích/phản hồi:**| Kích thích (User)                  | Phản hồi (Hệ thống)                                           |
   | :----------------------------------- | :---------------------------------------------------------------- |
   | Chọn mục Upload bài hát          | Cung cấp UI Form cần điền Metada và nút tải file MP3       |
@@ -586,11 +578,11 @@ graph LR
   * Giới hạn về dung lượng và định dạng tải lên cho phép (Max 15MB, chấp nhận định dạng âm thanh chuẩn).
   * Không đưa bài hát mới vào kết quả tìm kiếm cộng đồng khi Admin chưa có quyết định công khai (Approved).
 
-**5. UC6: Kiểm duyệt Nội dung Upload**
+**5. UC6: Kiểm duyệt Nội dung do User gửi (Phát triển tương lai, không thuộc bản bàn giao)**
 
 * **a. Mô tả và mức độ ưu tiên:**
   * **Mô tả:** Công đoạn hậu kiểm của Admin nhằm đảm bảo kho nhạc cộng đồng tuân thủ bản quyền âm nhạc.
-  * **Mức độ ưu tiên:** Cao (High)
+  * **Mức độ ưu tiên:** Sau phiên bản bàn giao
 * **b. Chuỗi kích thích/phản hồi:**| Kích thích (Admin)                        | Phản hồi (Hệ thống)                                                      |
   | :------------------------------------------ | :--------------------------------------------------------------------------- |
   | Vào mục "Danh sách Chờ kiểm duyệt"    | Truy xuất và tải bảng dữ liệu những bài Upload Pending               |
@@ -603,19 +595,18 @@ graph LR
 
 ---
 
-**6. UC8: Nhận Gợi ý Nhạc (Dành cho bạn)**
+**6. UC8: Nhận Gợi ý Nhạc `For You`**
 
 * **a. Mô tả và mức độ ưu tiên:**
-  * **Mô tả:** Hệ thống tự động phân loại và hiển thị danh sách bài hát/Playlist có cùng thể loại hoặc dựa trên lịch sử "Thích" (Like) của người dùng ở tab "Dành cho bạn".
-  * **Mức độ ưu tiên:** Cao (High)
+  * **Mô tả:** Hệ thống hiển thị các bài hát công khai phù hợp với lịch sử nghe và bài hát yêu thích của người dùng ở tab "Dành cho bạn"; nếu chưa có dữ liệu thì dùng danh sách phổ biến.
+  * **Mức độ ưu tiên:** Trung bình (Medium)
 * **b. Chuỗi kích thích/phản hồi:**| Kích thích (User)                        | Phản hồi (Hệ thống)                                                      |
   | :------------------------------------------ | :--------------------------------------------------------------------------- |
-  | Nhấn vào "Dành cho bạn" (Lần đầu đăng nhập)      | Hiển thị Pop-up khảo sát gồm 2 bước: Chọn Thể loại và Chọn Nghệ sĩ yêu thích |
-  | Hoàn thành lựa chọn trên Pop-up khảo sát         | Tự động phát nhạc vô tận (Infinite play) các bài khớp với Thể loại/Nghệ sĩ đó |
-  | Nhấn vào "Dành cho bạn" (Các lần truy cập sau)    | Trích xuất các bài hát khớp với lịch sử Nghe/Like và hiển thị thành danh sách |
+  | Nhấn vào "Dành cho bạn" khi chưa có lịch sử/yêu thích | Hiển thị bài hát công khai phổ biến |
+  | Nhấn vào "Dành cho bạn" sau khi đã nghe/thích bài hát | Trích xuất các bài hát phù hợp với lịch sử nghe/yêu thích và hiển thị thành danh sách |
 * **c. Yêu cầu chức năng:**
-  * Có cơ chế đánh dấu (flag) kiểm tra xem Người dùng đã lưu kết quả Pop-up ở lần đầu hay chưa.
-  * Danh sách gợi ý phải được làm mới (refresh) mỗi ngày để tránh nhàm chán.
+  * Không hiển thị bước khảo sát chọn nghệ sĩ hoặc thể loại yêu thích ban đầu.
+  * Chỉ lấy bài hát có trạng thái công khai.
 
 ### 2.7 Luồng màn hình (Screen flow)
 
@@ -633,11 +624,10 @@ graph TD
     ForYou[Màn hình Dành cho bạn]
     Player[Màn hình Phát nhạc & Lyrics]
     Library[Màn hình Tủ nhạc Của Tui]
-    Upload[Màn hình Upload Nhạc]
 
     Start --> |Điều hướng| Rank
     Start --> |Khám phá| Topic
-    Start --> |Cá nhân hóa| ForYou
+    Start --> |Gợi ý| ForYou
     Start --> |Hành động| Search
     Start --> |Click Đăng nhập| Login
     Rank --> |Chọn bài| Player
@@ -645,7 +635,6 @@ graph TD
     ForYou --> |Chọn bài gợi ý| Player
     Search --> |Chọn KQ bài hát| Player
     Start --> |Truy cập cá nhân| Library
-    Library --> |Đóng góp| Upload
 ```
 
 **b. Sơ đồ luồng màn hình dành cho Quản trị viên (Admin)**
@@ -656,13 +645,11 @@ graph TD
     Dash((Bảng Điều khiển - Dashboard))
     ManageUsers[Màn hình Quản lý Người dùng]
     ManageMusic[Màn hình Quản lý Kho Nhạc]
-    PendingList[Màn hình Duyệt Upload]
     Stats[Màn hình Thống kê]
 
     Login --> |Xác thực Admin| Dash
     Dash --> |Menu Users| ManageUsers
     Dash --> |Menu Music| ManageMusic
-    Dash --> |Menu Pending| PendingList
     Dash --> |Menu Stats| Stats
 ```
 
@@ -677,13 +664,13 @@ graph TD
 |  5  | Chủ đề & Thể loại          | Trình bày dạng danh mục lưới nhằm hướng người dùng chọn nhạc theo trạng thái (Buồn, Chill, Acoustic) hoặc nhịp độ (EDM, Rap).                                         |
 |  6  | Phát nhạc & Lyrics            | Màn hình trung tâm để nghe nhạc. Bao gồm đĩa nhạc xoay tròn, thanh chức năng Timeline và chạy lời nhạc Karaoke đồng bộ.                                                |
 |  7  | Tủ nhạc Của Tui              | Nơi cá nhân hóa lưu lại tự động: Bài hát thường nghe, Playlist tự tạo nội bộ để dễ dàng tìm kiếm lại những bản nhạc yêu thích.                                |
-|  8  | Upload Nhạc                    | Màn hình chứa Form biểu mẫu tải file Audio đa phương tiện (.mp3) đi kèm trường dữ liệu Metadata để đăng lên cộng đồng.                                             |
+|  8  | Upload Nhạc của User (tương lai) | Không thuộc màn hình bàn giao hiện tại; dự kiến cho phép user gửi audio trong phiên bản sau. |
 |  9  | Đăng nhập Admin              | Giao diện đăng nhập bảo mật tách biệt hoàn toàn dành riêng cho đội ngũ Quản trị viên vận hành hệ thống.                                                              |
 | 10 | Bảng Điều khiển - Dashboard | Màn hình tổng quan CMS tập trung trình bày nhanh các thông số chỉ báo tài nguyên và truy cập thời gian thực trên hệ thống.                                             |
 | 11 | Quản lý Người dùng         | Màn hình dạng bảng lưới giúp Admin tra soát, khóa quyền truy cập của các tài khoản thành viên vi phạm quy tắc nền tảng.                                               |
-| 12 | Quản lý Kho Nhạc             | Quản trị nguồn Database của hệ thống, nơi Admin có quyền Sửa/Xóa Media file do user tải lên bị sai lệch thông tin bản quyền.                                             |
-| 13 | Duyệt Upload                   | Màn hình cung cấp công cụ nghe thử để Admin trực tiếp thẩm định qua file Audio đang trong trạng thái Pending do người dùng gửi lên.                                   |
-| 15 | Dành cho bạn (For You)        | Tích hợp Pop-up Khảo sát (Thể loại, Nghệ sĩ) cho New User. Trình bày dạng dòng chảy cuộn (Feed) hiển thị nhóm nhạc tương ứng với gu cá nhân, auto-play liên tục. |
+| 12 | Quản lý Kho Nhạc             | CMS để Admin thêm, sửa, xóa và đặt trạng thái hiển thị nội dung thuộc kho nhạc hệ thống. |
+| 13 | Duyệt Upload của User (tương lai) | Không thuộc màn hình bàn giao hiện tại; dành cho quy trình nội dung do user gửi sau này. |
+| 15 | Dành cho bạn (For You)        | Hiển thị bài hát công khai gợi ý theo lịch sử nghe/yêu thích; không có popup chọn nghệ sĩ hoặc thể loại. |
 | 14 | Thống kê                      | Màn hình báo cáo trực quan với biểu đồ (Pie/Bar Chart) theo dõi xu hướng thể loại nhạc thịnh hành nhất của tháng/năm.                                                 |
 
 #### 2.7.3 Các chức năng không liên quan đến màn hình
@@ -699,8 +686,8 @@ graph TD
 
 | STT | Vai trò (Role)                  | Chức năng hoạt động / Quyền hạn                                                                                                                                                                            |
 | :-: | :------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|  1  | Người dùng (User)             | Khám phá thư viện chung, nghe nhạc. Yêu cầu đăng nhập để được cấp quyền tương tác (Thích/Báo cáo bài hát), thiết lập lưu trữ (Playlist, Lịch sử) và Upload file âm thanh riêng. |
-|  2  | Quản trị viên (Administrator) | Vượt rào truy cập vào khu vực CMS Dashboard. Quản lý toàn bộ master data (sửa, xóa bài nguồn), thẩm định và duyệt Upload của cộng đồng, cấm tài khoản.                                  |
+|  1  | Người dùng (User)             | Khám phá thư viện công khai và nghe nhạc; đăng nhập để yêu thích bài hát, quản lý playlist và lịch sử nghe. |
+|  2  | Quản trị viên (Administrator) | Truy cập CMS Dashboard để quản lý tài khoản và kho nhạc hệ thống, bao gồm trạng thái hiển thị nội dung. |
 
 ---
 

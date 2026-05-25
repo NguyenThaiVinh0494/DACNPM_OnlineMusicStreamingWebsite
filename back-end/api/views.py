@@ -1,5 +1,9 @@
+import hashlib
+
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email
 from datetime import timedelta
 from django.db.models import Case, Count, Exists, F, IntegerField, OuterRef, Q, Sum, Value, When
 from django.db.models.functions import Coalesce, TruncDate
@@ -12,7 +16,7 @@ from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .cloudinary_utils import make_upload_signature, upload_audio_file, upload_image_file
+from .cloudinary_utils import make_upload_signature, upload_image_file
 from .models import Album, BaiHat, DanhSachPhat, LichSuNghe, NgheSi, NguoiDung, TheLoai, YeuThich
 from .serializers import (
     AlbumSerializer,
@@ -26,14 +30,41 @@ from .serializers import (
     YeuThichSerializer,
 )
 
+HOME_CACHE_KEY = 'home:v1'
+ADMIN_STATS_CACHE_KEY = 'admin:stats:v1'
+ADMIN_SUMMARY_CACHE_KEY = 'admin:summary:v1'
+
+
+def invalidate_admin_metrics_cache():
+    cache.delete_many([ADMIN_STATS_CACHE_KEY, ADMIN_SUMMARY_CACHE_KEY])
+
 
 class MultipartEnabledViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    def perform_create(self, serializer):
+        serializer.save()
+        cache.delete(HOME_CACHE_KEY)
+        invalidate_admin_metrics_cache()
+
+    def perform_update(self, serializer):
+        serializer.save()
+        cache.delete(HOME_CACHE_KEY)
+        invalidate_admin_metrics_cache()
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        cache.delete(HOME_CACHE_KEY)
+        invalidate_admin_metrics_cache()
+
+
+def is_admin_user(user):
+    return bool(user and user.is_authenticated and user.vai_tro == 'ADMIN')
+
 
 class IsAdminRole(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and request.user.vai_tro == 'ADMIN')
+        return is_admin_user(request.user)
 
 
 class IsAdminOrReadOnly(BasePermission):
@@ -41,7 +72,7 @@ class IsAdminOrReadOnly(BasePermission):
         if request.method in ('GET', 'HEAD', 'OPTIONS'):
             return True
 
-        return bool(request.user and request.user.is_authenticated and request.user.vai_tro == 'ADMIN')
+        return is_admin_user(request.user)
 
 
 # ============================
@@ -64,23 +95,6 @@ class UploadAnhView(APIView):
         return Response({'url': url}, status=status.HTTP_200_OK)
 
 
-class UploadNhacView(APIView):
-    permission_classes = [IsAdminRole]
-    parser_classes = [MultiPartParser, FormParser]
-
-    def post(self, request):
-        file = request.FILES.get('file')
-        if not file:
-            return Response({'error': 'Không tìm thấy file. Hãy gửi file với key là "file".'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            url = upload_audio_file(file, 'music_streaming/audio')
-        except ValueError as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({'url': url}, status=status.HTTP_200_OK)
-
-
 class CloudinaryUploadSignatureView(APIView):
     permission_classes = [IsAdminRole]
 
@@ -90,7 +104,6 @@ class CloudinaryUploadSignatureView(APIView):
         'album_cover': ('music_streaming/albums', 'image'),
         'artist_image': ('music_streaming/artists', 'image'),
         'topic_image': ('music_streaming/topics', 'image'),
-        'profile_image': ('music_streaming/images', 'image'),
     }
 
     def post(self, request):
@@ -113,6 +126,10 @@ class DangKyView(generics.CreateAPIView):
     queryset = NguoiDung.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = DangKySerializer
+
+    def perform_create(self, serializer):
+        serializer.save()
+        invalidate_admin_metrics_cache()
 
 
 class UserProfileView(APIView):
@@ -147,9 +164,14 @@ class UserProfileView(APIView):
                 return Response({'error': 'Tên người dùng này đã tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
             user.username = new_username
 
-        new_email = request.data.get('email')
-        if new_email and new_email != user.email:
-            if user_model.objects.filter(email=new_email).exists():
+        if 'email' in request.data:
+            new_email = str(request.data.get('email') or '').strip().lower()
+            try:
+                validate_email(new_email)
+            except DjangoValidationError:
+                return Response({'error': 'Email không hợp lệ.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if new_email != user.email and user_model.objects.filter(email__iexact=new_email).exclude(pk=user.pk).exists():
                 return Response({'error': 'Email này đã được sử dụng.'}, status=status.HTTP_400_BAD_REQUEST)
             user.email = new_email
 
@@ -176,6 +198,7 @@ class UserProfileView(APIView):
 
     def delete(self, request):
         request.user.delete()
+        invalidate_admin_metrics_cache()
         return Response({'message': 'Tài khoản đã được xóa vĩnh viễn'}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -186,6 +209,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['username', 'email', 'first_name', 'last_name']
     ordering_fields = ['date_joined', 'username', 'email', 'last_login', 'id']
+
+    def perform_create(self, serializer):
+        serializer.save()
+        invalidate_admin_metrics_cache()
 
     def perform_update(self, serializer):
         instance = self.get_object()
@@ -201,40 +228,61 @@ class AdminUserViewSet(viewsets.ModelViewSet):
                 raise ValidationError({'is_active': ['Bạn không thể tự khóa tài khoản admin đang đăng nhập.']})
 
         serializer.save()
+        invalidate_admin_metrics_cache()
 
     def perform_destroy(self, instance):
         if instance.id == self.request.user.id:
             raise PermissionDenied('Bạn không thể tự xóa tài khoản admin đang đăng nhập.')
 
         instance.delete()
+        invalidate_admin_metrics_cache()
 
 
 class AdminStatsView(APIView):
     permission_classes = [IsAdminRole]
+    CACHE_SECONDS = 60
+
+    @staticmethod
+    def _ranking_song_item(song):
+        return {
+            'id': song.id,
+            'tieu_de': song.tieu_de,
+            'duong_dan_hinh_anh': song.duong_dan_hinh_anh,
+            'luot_nghe': song.luot_nghe,
+            'so_luot_thich': song.so_luot_thich_annotated,
+        }
 
     def get(self, request):
+        cached_payload = cache.get(ADMIN_STATS_CACHE_KEY)
+        if cached_payload is not None:
+            return Response(cached_payload, status=status.HTTP_200_OK)
+
         today = timezone.localdate()
         trend_start_date = today - timedelta(days=13)
         new_user_start_date = today - timedelta(days=29)
 
-        top_songs = list(
-            BaiHat.objects.select_related('id_album').prefetch_related('cac_nghe_si')
-            .filter(trang_thai='PUBLIC')
-            .annotate(so_luot_thich_annotated=Count('duoc_yeu_thich', distinct=True))
-            .order_by('-luot_nghe', '-id')[:10]
+        ranked_songs = BaiHat.objects.filter(trang_thai='PUBLIC').annotate(
+            so_luot_thich_annotated=Count('duoc_yeu_thich', distinct=True),
         )
+        top_songs = list(ranked_songs.order_by('-luot_nghe', '-id')[:10])
         top_liked_songs = list(
-            BaiHat.objects.select_related('id_album').prefetch_related('cac_nghe_si')
-            .filter(trang_thai='PUBLIC')
-            .annotate(so_luot_thich_annotated=Count('duoc_yeu_thich', distinct=True))
-            .order_by('-so_luot_thich_annotated', '-luot_nghe', '-id')[:10]
+            ranked_songs.order_by('-so_luot_thich_annotated', '-luot_nghe', '-id')[:10]
         )
-        total_listens = BaiHat.objects.aggregate(total=Coalesce(Sum('luot_nghe'), Value(0), output_field=IntegerField()))['total']
+        song_summary = BaiHat.objects.aggregate(
+            total_listens=Coalesce(Sum('luot_nghe'), Value(0), output_field=IntegerField()),
+            public=Count('id', filter=Q(trang_thai='PUBLIC')),
+            pending=Count('id', filter=Q(trang_thai='PENDING')),
+        )
+        album_summary = Album.objects.aggregate(
+            public=Count('id', filter=Q(trang_thai='PUBLIC')),
+            pending=Count('id', filter=Q(trang_thai='PENDING')),
+        )
+        total_listens = song_summary['total_listens']
         total_likes = YeuThich.objects.count()
-        public_song_count = BaiHat.objects.filter(trang_thai='PUBLIC').count()
-        pending_song_count = BaiHat.objects.filter(trang_thai='PENDING').count()
-        public_album_count = Album.objects.filter(trang_thai='PUBLIC').count()
-        pending_album_count = Album.objects.filter(trang_thai='PENDING').count()
+        public_song_count = song_summary['public']
+        pending_song_count = song_summary['pending']
+        public_album_count = album_summary['public']
+        pending_album_count = album_summary['pending']
         new_users_30_days = NguoiDung.objects.filter(date_joined__date__gte=new_user_start_date).count()
         average_listens_per_song = round((total_listens or 0) / public_song_count, 1) if public_song_count else 0
         like_rate = round((total_likes / total_listens) * 100, 2) if total_listens else 0
@@ -274,22 +322,14 @@ class AdminStatsView(APIView):
             .order_by('-total_listens', '-total_likes', 'ten_nghe_si')[:5]
         )
 
-        return Response(
-            {
-                'counts': {
-                    'songs': BaiHat.objects.count(),
-                    'albums': Album.objects.count(),
-                    'artists': NgheSi.objects.count(),
-                    'genres': TheLoai.objects.count(),
-                    'users': NguoiDung.objects.count(),
-                },
+        payload = {
                 'totalListens': total_listens or 0,
                 'totalLikes': total_likes,
                 'averageListensPerSong': average_listens_per_song,
                 'likeRate': like_rate,
                 'newUsers30Days': new_users_30_days,
-                'topSongs': BaiHatSerializer(top_songs, many=True, context={'request': request}).data,
-                'topLikedSongs': BaiHatSerializer(top_liked_songs, many=True, context={'request': request}).data,
+                'topSongs': [self._ranking_song_item(song) for song in top_songs],
+                'topLikedSongs': [self._ranking_song_item(song) for song in top_liked_songs],
                 'listenTrend': listen_trend,
                 'genreDistribution': [
                     {
@@ -321,9 +361,36 @@ class AdminStatsView(APIView):
                         'pending': pending_album_count,
                     },
                 },
-            },
-            status=status.HTTP_200_OK,
+            }
+        cache.set(ADMIN_STATS_CACHE_KEY, payload, self.CACHE_SECONDS)
+        return Response(payload, status=status.HTTP_200_OK)
+
+
+class AdminSummaryView(APIView):
+    permission_classes = [IsAdminRole]
+    CACHE_SECONDS = 60
+
+    def get(self, request):
+        cached_payload = cache.get(ADMIN_SUMMARY_CACHE_KEY)
+        if cached_payload is not None:
+            return Response(cached_payload, status=status.HTTP_200_OK)
+
+        song_summary = BaiHat.objects.aggregate(
+            total=Count('id'),
+            total_listens=Coalesce(Sum('luot_nghe'), Value(0), output_field=IntegerField()),
         )
+        payload = {
+            'counts': {
+                'songs': song_summary['total'],
+                'albums': Album.objects.count(),
+                'artists': NgheSi.objects.count(),
+                'genres': TheLoai.objects.count(),
+                'users': NguoiDung.objects.count(),
+            },
+            'totalListens': song_summary['total_listens'],
+        }
+        cache.set(ADMIN_SUMMARY_CACHE_KEY, payload, self.CACHE_SECONDS)
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 # ============================
@@ -332,7 +399,7 @@ class AdminStatsView(APIView):
 class NgheSiViewSet(MultipartEnabledViewSet):
     queryset = NgheSi.objects.all().order_by('ten_nghe_si')
     serializer_class = NgheSiSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter]
     search_fields = ['ten_nghe_si']
 
@@ -340,14 +407,14 @@ class NgheSiViewSet(MultipartEnabledViewSet):
 class TheLoaiViewSet(MultipartEnabledViewSet):
     queryset = TheLoai.objects.all().order_by('ten_the_loai')
     serializer_class = TheLoaiSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter]
     search_fields = ['ten_the_loai']
 
 
 class AlbumViewSet(MultipartEnabledViewSet):
     serializer_class = AlbumSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['tieu_de', 'id_nghe_si__ten_nghe_si']
     ordering_fields = ['ngay_phat_hanh', 'id', 'tong_luot_nghe', 'tong_luot_thich', 'song_count']
@@ -363,16 +430,42 @@ class AlbumViewSet(MultipartEnabledViewSet):
 
     def get_queryset(self):
         queryset = Album.objects.select_related('id_nghe_si').all().order_by('-ngay_phat_hanh', '-id')
+        is_admin = is_admin_user(self.request.user)
         metric_fields = {'tong_luot_nghe', 'tong_luot_thich', 'song_count'}
         ordering_value = self.request.query_params.get('ordering', '')
         needs_metrics = any(item.strip().lstrip('-') in metric_fields for item in ordering_value.split(','))
 
+        if not is_admin:
+            queryset = queryset.filter(trang_thai='PUBLIC')
+
         if needs_metrics:
-            queryset = queryset.annotate(
-                tong_luot_nghe=Coalesce(Sum('bai_hats__luot_nghe'), Value(0), output_field=IntegerField()),
-                tong_luot_thich=Count('bai_hats__duoc_yeu_thich', distinct=True),
-                song_count=Count('bai_hats', distinct=True),
-            )
+            if is_admin:
+                queryset = queryset.annotate(
+                    tong_luot_nghe=Coalesce(Sum('bai_hats__luot_nghe'), Value(0), output_field=IntegerField()),
+                    tong_luot_thich=Count('bai_hats__duoc_yeu_thich', distinct=True),
+                    song_count=Count('bai_hats', distinct=True),
+                )
+            else:
+                queryset = queryset.annotate(
+                    tong_luot_nghe=Coalesce(
+                        Sum('bai_hats__luot_nghe', filter=Q(bai_hats__trang_thai='PUBLIC')),
+                        Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    tong_luot_thich=Count(
+                        'bai_hats__duoc_yeu_thich',
+                        filter=Q(bai_hats__trang_thai='PUBLIC'),
+                        distinct=True,
+                    ),
+                    song_count=Count('bai_hats', filter=Q(bai_hats__trang_thai='PUBLIC'), distinct=True),
+                )
+        elif self.action == 'list':
+            if is_admin:
+                queryset = queryset.annotate(song_count=Count('bai_hats', distinct=True))
+            else:
+                queryset = queryset.annotate(
+                    song_count=Count('bai_hats', filter=Q(bai_hats__trang_thai='PUBLIC'), distinct=True),
+                )
 
         artist_id = self.request.query_params.get('id_nghe_si')
         status_value = self.request.query_params.get('trang_thai')
@@ -385,8 +478,12 @@ class AlbumViewSet(MultipartEnabledViewSet):
             queryset = queryset.filter(trang_thai=status_value)
         if country:
             queryset = queryset.filter(bai_hats__quoc_gia=country)
+            if not is_admin:
+                queryset = queryset.filter(bai_hats__trang_thai='PUBLIC')
         if genre_id:
             queryset = queryset.filter(bai_hats__the_loais__id=genre_id)
+            if not is_admin:
+                queryset = queryset.filter(bai_hats__trang_thai='PUBLIC')
 
         return queryset.distinct()
 
@@ -402,14 +499,22 @@ class AlbumViewSet(MultipartEnabledViewSet):
 
 class HomeView(APIView):
     permission_classes = [AllowAny]
-    CACHE_KEY = 'home:v1'
+    CACHE_KEY = HOME_CACHE_KEY
     CACHE_SECONDS = 120
 
     def _album_queryset(self):
         return Album.objects.select_related('id_nghe_si').annotate(
-            tong_luot_nghe=Coalesce(Sum('bai_hats__luot_nghe'), Value(0), output_field=IntegerField()),
-            tong_luot_thich=Count('bai_hats__duoc_yeu_thich', distinct=True),
-            song_count=Count('bai_hats', distinct=True),
+            tong_luot_nghe=Coalesce(
+                Sum('bai_hats__luot_nghe', filter=Q(bai_hats__trang_thai='PUBLIC')),
+                Value(0),
+                output_field=IntegerField(),
+            ),
+            tong_luot_thich=Count(
+                'bai_hats__duoc_yeu_thich',
+                filter=Q(bai_hats__trang_thai='PUBLIC'),
+                distinct=True,
+            ),
+            song_count=Count('bai_hats', filter=Q(bai_hats__trang_thai='PUBLIC'), distinct=True),
         ).filter(trang_thai='PUBLIC')
 
     def _song_queryset(self):
@@ -466,11 +571,17 @@ class HomeView(APIView):
         payload = {
             'vuTruNhacViet': [
                 self._album_item(album)
-                for album in albums.filter(bai_hats__quoc_gia='Việt Nam').distinct().order_by('-ngay_phat_hanh', '-id')[:5]
+                for album in albums.filter(
+                    bai_hats__trang_thai='PUBLIC',
+                    bai_hats__quoc_gia='Việt Nam',
+                ).distinct().order_by('-ngay_phat_hanh', '-id')[:5]
             ],
             'tamTrangHomNay': [
                 self._album_item(album)
-                for album in albums.filter(bai_hats__the_loais__id=mood_genre_id).distinct().order_by('-tong_luot_nghe', '-id')[:5]
+                for album in albums.filter(
+                    bai_hats__trang_thai='PUBLIC',
+                    bai_hats__the_loais__id=mood_genre_id,
+                ).distinct().order_by('-tong_luot_nghe', '-id')[:5]
             ],
             'top100': [
                 self._album_item(album)
@@ -533,8 +644,11 @@ class DanhSachPhatViewSet(viewsets.ModelViewSet):
     def add_song(self, request, pk=None):
         playlist = self.get_object()
         song_id = request.data.get('song_id')
+        songs = BaiHat.objects.all()
+        if not is_admin_user(request.user):
+            songs = songs.filter(trang_thai='PUBLIC')
         try:
-            song = BaiHat.objects.get(id=song_id)
+            song = songs.get(id=song_id)
         except BaiHat.DoesNotExist:
             return Response({'error': 'Song not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -559,10 +673,18 @@ class YeuThichViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return YeuThich.objects.filter(id_nguoi_dung=self.request.user).order_by('-ngay_thich')
+        queryset = YeuThich.objects.filter(id_nguoi_dung=self.request.user).order_by('-ngay_thich')
+        if not is_admin_user(self.request.user):
+            queryset = queryset.filter(id_bai_hat__trang_thai='PUBLIC')
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(id_nguoi_dung=self.request.user)
+        invalidate_admin_metrics_cache()
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        invalidate_admin_metrics_cache()
 
     @action(detail=False, methods=['post'])
     def toggle(self, request):
@@ -570,8 +692,11 @@ class YeuThichViewSet(viewsets.ModelViewSet):
         if not song_id:
             return Response({'error': 'Vui lòng chọn bài hát.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        songs = BaiHat.objects.all()
+        if not is_admin_user(request.user):
+            songs = songs.filter(trang_thai='PUBLIC')
         try:
-            song = BaiHat.objects.get(id=song_id)
+            song = songs.get(id=song_id)
         except BaiHat.DoesNotExist:
             return Response({'error': 'Song not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -583,6 +708,7 @@ class YeuThichViewSet(viewsets.ModelViewSet):
             YeuThich.objects.create(id_nguoi_dung=request.user, id_bai_hat=song)
             is_favorite = True
 
+        invalidate_admin_metrics_cache()
         return Response(
             {
                 'id_bai_hat': song.id,
@@ -602,16 +728,55 @@ class LichSuNgheViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'delete', 'head', 'options']
 
     def get_queryset(self):
-        return LichSuNghe.objects.filter(id_nguoi_dung=self.request.user).order_by('-thoi_gian_nghe')
+        queryset = LichSuNghe.objects.filter(
+            id_nguoi_dung=self.request.user,
+        ).select_related(
+            'id_bai_hat__id_album',
+            'id_bai_hat__id_nguoi_dang',
+        ).prefetch_related(
+            'id_bai_hat__cac_nghe_si',
+            'id_bai_hat__the_loais',
+        ).order_by('-thoi_gian_nghe')
+        if not is_admin_user(self.request.user):
+            queryset = queryset.filter(id_bai_hat__trang_thai='PUBLIC')
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(id_nguoi_dung=self.request.user)
+        invalidate_admin_metrics_cache()
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        invalidate_admin_metrics_cache()
+
+    @action(detail=False, methods=['delete'])
+    def clear(self, request):
+        LichSuNghe.objects.filter(id_nguoi_dung=request.user).delete()
+        invalidate_admin_metrics_cache()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['delete'])
+    def remove_song(self, request):
+        song_id = request.query_params.get('song_id', '')
+        if not song_id.isdigit():
+            return Response(
+                {'error': 'song_id không hợp lệ.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        LichSuNghe.objects.filter(
+            id_nguoi_dung=request.user,
+            id_bai_hat_id=int(song_id),
+        ).delete()
+        invalidate_admin_metrics_cache()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ============================
 # Bài hát
 # ============================
 class BaiHatViewSet(MultipartEnabledViewSet):
+    LISTEN_COOLDOWN_SECONDS = 30
     serializer_class = BaiHatSerializer
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -620,7 +785,7 @@ class BaiHatViewSet(MultipartEnabledViewSet):
 
     def _base_queryset(self):
         queryset = BaiHat.objects.select_related(
-            'id_album',
+            'id_album__id_nghe_si',
             'id_nguoi_dang',
         ).prefetch_related('cac_nghe_si', 'the_loais').annotate(
             so_luot_thich_annotated=Count('duoc_yeu_thich', distinct=True),
@@ -655,24 +820,10 @@ class BaiHatViewSet(MultipartEnabledViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    def _parse_id_list(self, raw_value):
-        if not raw_value:
-            return []
-
-        values = []
-        for item in raw_value.split(','):
-            item = item.strip()
-            if not item:
-                continue
-            try:
-                values.append(int(item))
-            except ValueError:
-                continue
-
-        return values
-
     def get_queryset(self):
         queryset = self._base_queryset().all().order_by('-id')
+        if not is_admin_user(self.request.user):
+            queryset = queryset.filter(trang_thai='PUBLIC')
 
         status_value = self.request.query_params.get('trang_thai')
         artist_id = self.request.query_params.get('id_nghe_si')
@@ -705,26 +856,41 @@ class BaiHatViewSet(MultipartEnabledViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def _listen_identity(self, request):
+        if request.user.is_authenticated:
+            return f'user:{request.user.pk}'
+
+        remote_address = request.META.get('REMOTE_ADDR', 'anonymous')
+        address_hash = hashlib.sha256(remote_address.encode('utf-8')).hexdigest()[:24]
+        return f'guest:{address_hash}'
+
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def listen(self, request, pk=None):
         song = self.get_object()
-        BaiHat.objects.filter(pk=song.pk).update(luot_nghe=F('luot_nghe') + 1)
+        cache_key = f'listen:{song.pk}:{self._listen_identity(request)}'
+        counted = cache.add(cache_key, True, timeout=self.LISTEN_COOLDOWN_SECONDS)
 
-        if request.user.is_authenticated:
-            LichSuNghe.objects.create(id_nguoi_dung=request.user, id_bai_hat=song)
+        if counted:
+            BaiHat.objects.filter(pk=song.pk).update(luot_nghe=F('luot_nghe') + 1)
 
-        song.refresh_from_db(fields=['luot_nghe'])
-        return Response({'id': song.id, 'luot_nghe': song.luot_nghe}, status=status.HTTP_200_OK)
+            if request.user.is_authenticated:
+                LichSuNghe.objects.create(id_nguoi_dung=request.user, id_bai_hat=song)
+
+            song.refresh_from_db(fields=['luot_nghe'])
+            invalidate_admin_metrics_cache()
+
+        return Response(
+            {'id': song.id, 'luot_nghe': song.luot_nghe, 'counted': counted},
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def recommended(self, request):
         limit = self._get_limit(request)
         public_queryset = self._base_queryset().filter(trang_thai='PUBLIC').distinct()
         user = request.user
-        preferred_artist_ids = self._parse_id_list(request.query_params.get('preferred_artist_ids'))
-        preferred_genre_ids = self._parse_id_list(request.query_params.get('preferred_genre_ids'))
 
-        if not user.is_authenticated and not (preferred_artist_ids or preferred_genre_ids):
+        if not user.is_authenticated:
             return self._serialize_collection(public_queryset.order_by('-luot_nghe', '-id')[:limit])
 
         history_song_ids = []
@@ -756,10 +922,10 @@ class BaiHatViewSet(MultipartEnabledViewSet):
             if genre.id
         }
         album_ids = sorted({song.id_album_id for song in signal_songs if song.id_album_id})
-        artist_ids = sorted(signal_artist_ids.union(preferred_artist_ids))
-        genre_ids = sorted(signal_genre_ids.union(preferred_genre_ids))
+        artist_ids = sorted(signal_artist_ids)
+        genre_ids = sorted(signal_genre_ids)
 
-        if not (signal_song_ids or preferred_artist_ids or preferred_genre_ids):
+        if not signal_song_ids:
             return self._serialize_collection(public_queryset.order_by('-luot_nghe', '-id')[:limit])
 
         recommendations = public_queryset.annotate(
@@ -782,16 +948,6 @@ class BaiHatViewSet(MultipartEnabledViewSet):
                 if album_ids
                 else Value(0, output_field=IntegerField())
             ),
-            preferred_artists=(
-                Count('cac_nghe_si', filter=Q(cac_nghe_si__id__in=preferred_artist_ids), distinct=True)
-                if preferred_artist_ids
-                else Value(0, output_field=IntegerField())
-            ),
-            preferred_genre=(
-                Count('the_loais', filter=Q(the_loais__id__in=preferred_genre_ids), distinct=True)
-                if preferred_genre_ids
-                else Value(0, output_field=IntegerField())
-            ),
             is_favorite=Case(
                 When(id__in=favorite_song_ids, then=Value(1)),
                 default=Value(0),
@@ -805,8 +961,6 @@ class BaiHatViewSet(MultipartEnabledViewSet):
         ).order_by(
             '-is_favorite',
             '-is_recent',
-            '-preferred_artists',
-            '-preferred_genre',
             '-matched_artists',
             '-matched_genre',
             '-matched_album',

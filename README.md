@@ -19,6 +19,38 @@ Dự án bao gồm 2 phần là Back-end và Front-end, bạn cần mở **2 c�
 3. Chạy giao diện người dùng: `npm run dev`
    *(Lưu ý: Nếu gặp lỗi chặn chạy script trên PowerShell, hãy chạy bằng Command Prompt (cmd) hoặc dùng lệnh `cmd /c npm run dev`)*
 
+### Cấu hình môi trường
+
+Trước khi chạy lần đầu, tạo file cấu hình local từ các mẫu và điền thông tin thực tế:
+
+```powershell
+Copy-Item back-end\.env.example back-end\.env
+Copy-Item front-end\.env.example front-end\.env
+```
+
+- Backend bắt buộc có `SECRET_KEY`; không commit giá trị thật lên Git.
+- Local development dùng `DEBUG=True` và whitelist origin của Vite trong `CORS_ALLOWED_ORIGINS`.
+- Production phải đặt `DEBUG=False`, `ALLOWED_HOSTS` theo domain API, `CORS_ALLOWED_ORIGINS`/`CSRF_TRUSTED_ORIGINS` theo domain frontend và một `SECRET_KEY` dài, ngẫu nhiên.
+- Frontend lấy địa chỉ API từ `VITE_API_URL`. Nếu frontend và API được phục vụ cùng domain, có thể dùng `/api/`; nếu khác domain, đặt URL HTTPS đầy đủ trước khi `npm run build`.
+
+Kiểm tra frontend trước khi bàn giao:
+
+```powershell
+cd front-end
+npm run lint
+npm run test
+npm run build
+```
+
+Kiểm tra backend và áp dụng migration trước khi bàn giao database:
+
+```powershell
+cd back-end
+python manage.py migrate
+python manage.py check --deploy
+python manage.py test --keepdb
+```
+
 ### 2. Cách dừng (Thoát)
 
 Để dừng bất kỳ server nào đang chạy (cả Front-end và Back-end):
@@ -36,11 +68,10 @@ Tương tác của các tác nhân user, website, admin với nhau:
   - Người dùng có thể dừng/phát nhạc khi nghe, có thể chọn lặp lại 1 bài hát, có thể chọn phát ngẫu nhiên, có thể chọn phát bài hát tiếp theo/trước đó.
   - Người dùng có thể tìm kiếm theo tên bài hát, theo nghệ sĩ, theo album, theo playlist.
   - Người dùng có thể đăng ký, đăng nhập, đăng xuất.
-  - Người dùng có thể like, báo cáo bài hát.
+  - Người dùng có thể yêu thích bài hát.
   - Người dùng có thể tạo, sửa tên playlist; thêm, sửa, xóa bài hát trong playlist và xóa playlist.
   - Người dùng có thể xem thông tin cá nhân, chỉnh sửa thông tin cá nhân.
   - Người dùng có thể xem lịch sử nghe nhạc.
-  - Người dùng có thể upload, chỉnh sửa, xóa thông tin bài hát, album, playlist của mình.
   - Người dùng có thể xem thông tin nghệ sĩ, bài hát, album, playlist.
   - Người dùng có thể xem danh sách bài hát theo thể loại, quốc gia, năm phát hành.
   - Người dùng có thể xem danh sách bài hát theo nghệ sĩ, album, playlist.
@@ -48,16 +79,21 @@ Tương tác của các tác nhân user, website, admin với nhau:
   - website hiển thị danh sách bài hát, album, playlist.
   - website hiển thị thông tin bài hát, album, playlist.
   - website hiển thị thông tin nghệ sĩ, bài hát, album, playlist.
-  - website gợi ý bài hát theo chủ đề, ca sĩ, xu hướng, lượt nghe cho user.
+  - website hiển thị các danh sách khám phá theo thể loại và lượt nghe.
+  - website hiển thị trang `For You` gợi ý bài hát dựa trên lịch sử nghe và bài hát yêu thích.
 * admin tương tác với website:
-  - Admin có thể duyệt / từ chối bài hát, album, playlist do user upload lên.
-  - Admin có thể thêm, sửa, xóa bài hát, album, playlist trong hệ thống.
+  - Admin có thể thêm, sửa, xóa và đặt trạng thái hiển thị bài hát, album trong hệ thống.
   - Admin có thể quản lý thông tin người dùng (xem danh sách, khóa/mở khóa tài khoản, xóa tài khoản).
   - Admin có thể xem thống kê hệ thống (lượt nghe, bài hát trending, số lượng user).
-  - Admin có thể cấu hình hệ thống (phân quyền, cài đặt chung).
-* admin và user tương tác với nhau qua website:
-  - admin duyệt/từ chối bài hát, album, playlist do user upload lên.
-  - admin hướng dẫn, hỗ trợ user qua tính năng chat.
+  - Admin có thể quản lý phân quyền tài khoản.
+
+Các chức năng dự kiến phát triển trong tương lai, không thuộc phạm vi bàn giao hiện tại:
+
+- User upload nhạc và quy trình admin duyệt nội dung do user đóng góp.
+- Chat hỗ trợ giữa Admin và User.
+- Báo cáo vi phạm nội dung.
+- Bình luận, theo dõi, chia sẻ mạng xã hội và các tương tác cộng đồng nâng cao.
+- Bước khảo sát/lựa chọn nghệ sĩ, thể loại yêu thích ban đầu và thuật toán gợi ý nâng cao cho trang `For You`.
 
 ### Dừng Server
 

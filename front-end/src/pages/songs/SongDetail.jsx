@@ -4,7 +4,7 @@ import LazyImage from "../../components/common/LazyImage";
 import { FiHeart, FiMoreHorizontal, FiPlay, FiChevronDown, FiChevronUp, FiPlus, FiMusic, FiHeadphones } from 'react-icons/fi';
 import { useMusic } from '../../context/MusicContext';
 import { albumService, songService } from '../../api/services';
-import { enrichSongsWithDuration } from '../../utils/duration';
+import { enrichSongsWithDuration, formatSongDuration } from '../../utils/duration';
 import { getSongArtistNames, getSongPrimaryArtist } from '../../utils/songArtists';
 
 export default function SongDetail() {
@@ -340,7 +340,7 @@ export default function SongDetail() {
                 </div>
                 
                 <div className="flex items-center gap-4 relative">
-                  <span className="text-[13px] text-gray-500 dark:text-gray-400 font-bold">{song.duration}</span>
+                  <span className="text-[13px] text-gray-500 dark:text-gray-400 font-bold">{formatSongDuration(song.duration)}</span>
                   
                   {/* Nút 3 chấm (Chỉ hiện khi hover vào group) */}
                   <button 

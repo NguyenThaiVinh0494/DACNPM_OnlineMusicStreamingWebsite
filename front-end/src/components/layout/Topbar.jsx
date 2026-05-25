@@ -11,6 +11,7 @@ import { useClickOutside } from '../../hooks/useClickOutside';
 import { songService, artistService, albumService } from '../../api/services';
 import { getSongArtistNames } from '../../utils/songArtists';
 import { optimizeCloudinaryImage } from '../../utils/media';
+import { formatSongDuration } from '../../utils/duration';
 
 export default function Topbar() {
   const { t } = useTranslation();
@@ -32,17 +33,23 @@ export default function Topbar() {
 
   useClickOutside(searchContainerRef, () => setIsDropdownOpen(false));
 
+  // Handle search input changes to avoid synchronous setState inside useEffect
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (!val.trim()) {
+      setSuggestions({ songs: [], artists: [], albums: [] });
+      setIsDropdownOpen(false);
+    } else {
+      setIsDropdownOpen(true);
+      setLoading(true);
+    }
+  };
+
   // Debounced search suggestion fetch
   useEffect(() => {
     const trimmed = searchQuery.trim();
-    if (!trimmed) {
-      setSuggestions({ songs: [], artists: [], albums: [] });
-      setIsDropdownOpen(false);
-      return;
-    }
-
-    setIsDropdownOpen(true);
-    setLoading(true);
+    if (!trimmed) return;
 
     const delayDebounce = setTimeout(async () => {
       try {
@@ -63,7 +70,7 @@ export default function Topbar() {
           image: optimizeCloudinaryImage(s.duong_dan_hinh_anh, { width: 100, height: 100 }) || "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92d?w=100&h=100&fit=crop",
           audioUrl: s.duong_dan_am_thanh,
           lyrics: s.loi_bai_hat,
-          duration: s.thoi_luong || "04:00"
+          duration: formatSongDuration(s.thoi_luong)
         }));
 
         const mappedArtists = artistsRes.map(a => ({
@@ -105,6 +112,8 @@ export default function Topbar() {
 
   const clearSearch = () => {
     setSearchQuery('');
+    setSuggestions({ songs: [], artists: [], albums: [] });
+    setIsDropdownOpen(false);
   };
 
   return (
@@ -119,7 +128,7 @@ export default function Topbar() {
               id="topbar-search-input"
               type="text"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               onKeyDown={handleSearch}
               onFocus={() => {
                 if (searchQuery.trim()) {

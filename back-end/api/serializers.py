@@ -5,21 +5,19 @@ from .cloudinary_utils import upload_audio_asset, upload_image_file
 from .models import (
     Album,
     BaiHat,
-    BaoCao,
     DanhSachPhat,
     LichSuNghe,
     NgheSi,
     NguoiDung,
     TheLoai,
-    TinNhan,
     YeuThich,
 )
 
 
-class NguoiDungSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = NguoiDung
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'anh_dai_dien', 'vai_tro']
+def request_user_is_admin(context):
+    request = context.get('request')
+    user = getattr(request, 'user', None)
+    return bool(user and user.is_authenticated and user.vai_tro == 'ADMIN')
 
 
 class NguoiDungSummarySerializer(serializers.ModelSerializer):
@@ -29,22 +27,30 @@ class NguoiDungSummarySerializer(serializers.ModelSerializer):
 
 
 class DangKySerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True, allow_blank=False)
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
 
     class Meta:
         model = NguoiDung
         fields = ['username', 'email', 'password']
 
+    def validate_email(self, value):
+        normalized_email = value.strip().lower()
+        if NguoiDung.objects.filter(email__iexact=normalized_email).exists():
+            raise serializers.ValidationError('Email này đã được sử dụng.')
+        return normalized_email
+
     def create(self, validated_data):
         user = NguoiDung.objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),
+            email=validated_data['email'],
             password=validated_data['password'],
         )
         return user
 
 
 class AdminNguoiDungSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True, allow_blank=False)
     password = serializers.CharField(write_only=True, required=False, allow_blank=False, style={'input_type': 'password'})
 
     class Meta:
@@ -65,8 +71,16 @@ class AdminNguoiDungSerializer(serializers.ModelSerializer):
         read_only_fields = ['date_joined', 'last_login']
         extra_kwargs = {
             'anh_dai_dien': {'required': False, 'allow_blank': True},
-            'email': {'required': False, 'allow_blank': True},
         }
+
+    def validate_email(self, value):
+        normalized_email = value.strip().lower()
+        queryset = NguoiDung.objects.filter(email__iexact=normalized_email)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError('Email này đã được sử dụng.')
+        return normalized_email
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -198,7 +212,7 @@ class AlbumSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerializ
     cover_file = serializers.FileField(write_only=True, required=False, allow_null=True)
     id_nghe_si_detail = NgheSiSummarySerializer(source='id_nghe_si', read_only=True)
     song_ids = serializers.PrimaryKeyRelatedField(queryset=BaiHat.objects.all(), many=True, write_only=True, required=False)
-    song_count = serializers.IntegerField(source='bai_hats.count', read_only=True)
+    song_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Album
@@ -212,6 +226,16 @@ class AlbumSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSerializ
         if self.instance is None and not (attrs.get('anh_bia') or attrs.get('cover_file')):
             raise serializers.ValidationError({'cover_file': ['Vui lòng chọn ảnh bìa hoặc nhập URL ảnh.']})
         return attrs
+
+    def get_song_count(self, obj):
+        annotated_count = getattr(obj, 'song_count', None)
+        if annotated_count is not None:
+            return annotated_count
+
+        songs = obj.bai_hats.all()
+        if not request_user_is_admin(self.context):
+            songs = songs.filter(trang_thai='PUBLIC')
+        return songs.count()
 
     def create(self, validated_data):
         song_ids = validated_data.pop('song_ids', [])
@@ -246,7 +270,7 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
         write_only=True,
         required=False,
     )
-    id_album = AlbumSummarySerializer(read_only=True)
+    id_album = serializers.SerializerMethodField()
     id_album_id = NullablePrimaryKeyRelatedField(
         queryset=Album.objects.all(),
         source='id_album',
@@ -303,10 +327,21 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
         }
 
     def get_id_nghe_si(self, obj):
-        first_artist = obj.cac_nghe_si.first()
+        artists = list(obj.cac_nghe_si.all())
+        first_artist = artists[0] if artists else None
         if not first_artist:
             return None
         return NgheSiSummarySerializer(first_artist).data
+
+    def get_id_album(self, obj):
+        album = obj.id_album
+        if not album:
+            return None
+
+        if album.trang_thai != 'PUBLIC' and not request_user_is_admin(self.context):
+            return None
+
+        return AlbumSummarySerializer(album).data
 
     def get_so_luot_thich(self, obj):
         annotated_count = getattr(obj, 'so_luot_thich_annotated', None)
@@ -359,8 +394,8 @@ class BaiHatSerializer(CloudinaryUploadSerializerMixin, serializers.ModelSeriali
 
 
 class DanhSachPhatSerializer(serializers.ModelSerializer):
-    bai_hats_detail = BaiHatSerializer(source='bai_hats', many=True, read_only=True)
-    so_luong_bai_hat = serializers.IntegerField(source='bai_hats.count', read_only=True)
+    bai_hats_detail = serializers.SerializerMethodField()
+    so_luong_bai_hat = serializers.SerializerMethodField()
     ten_chu_so_huu = serializers.CharField(source='id_chu_so_huu.username', read_only=True)
     bai_hats = serializers.PrimaryKeyRelatedField(many=True, queryset=BaiHat.objects.all(), required=False)
 
@@ -369,23 +404,41 @@ class DanhSachPhatSerializer(serializers.ModelSerializer):
         fields = ['id', 'tieu_de', 'id_chu_so_huu', 'ten_chu_so_huu', 'ngay_tao', 'bai_hats', 'bai_hats_detail', 'so_luong_bai_hat']
         read_only_fields = ['id_chu_so_huu', 'ngay_tao']
 
+    def _visible_songs(self, obj):
+        songs = obj.bai_hats.all()
+        if not request_user_is_admin(self.context):
+            songs = songs.filter(trang_thai='PUBLIC')
+        return songs
 
-class BaoCaoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BaoCao
-        fields = '__all__'
+    def validate_bai_hats(self, songs):
+        if not request_user_is_admin(self.context) and any(song.trang_thai != 'PUBLIC' for song in songs):
+            raise serializers.ValidationError('Không thể thêm bài hát chưa được công khai vào playlist.')
+        return songs
+
+    def get_bai_hats_detail(self, obj):
+        return BaiHatSerializer(self._visible_songs(obj), many=True, context=self.context).data
+
+    def get_so_luong_bai_hat(self, obj):
+        return self._visible_songs(obj).count()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['bai_hats'] = [song.id for song in self._visible_songs(instance)]
+        return data
 
 
 class LichSuNgheSerializer(serializers.ModelSerializer):
+    song_detail = BaiHatSerializer(source='id_bai_hat', read_only=True)
+
     class Meta:
         model = LichSuNghe
-        fields = '__all__'
+        fields = ['id', 'id_nguoi_dung', 'id_bai_hat', 'song_detail', 'thoi_gian_nghe']
+        read_only_fields = ['id_nguoi_dung', 'thoi_gian_nghe']
 
-
-class TinNhanSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TinNhan
-        fields = '__all__'
+    def validate_id_bai_hat(self, song):
+        if song.trang_thai != 'PUBLIC' and not request_user_is_admin(self.context):
+            raise serializers.ValidationError('Không thể ghi lịch sử cho bài hát chưa được công khai.')
+        return song
 
 
 class YeuThichSerializer(serializers.ModelSerializer):
@@ -395,3 +448,8 @@ class YeuThichSerializer(serializers.ModelSerializer):
         model = YeuThich
         fields = ['id', 'id_nguoi_dung', 'id_bai_hat', 'song_detail', 'ngay_thich']
         read_only_fields = ['id_nguoi_dung', 'ngay_thich']
+
+    def validate_id_bai_hat(self, song):
+        if song.trang_thai != 'PUBLIC' and not request_user_is_admin(self.context):
+            raise serializers.ValidationError('Không thể yêu thích bài hát chưa được công khai.')
+        return song
