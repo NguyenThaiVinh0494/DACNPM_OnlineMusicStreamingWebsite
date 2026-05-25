@@ -7,7 +7,7 @@ import { useMusic } from "../../context/MusicContext";
 import SongActionMenu from "../../components/common/SongActionMenu";
 import LazyImage from "../../components/common/LazyImage";
 import { artistService, songService, albumService } from "../../api/services";
-import { enrichSongsWithDuration } from "../../utils/duration";
+import { enrichSongsWithDuration, formatSongDuration } from "../../utils/duration";
 
 
 
@@ -81,7 +81,7 @@ function SongRow({ song, index, songList }) {
       </span>
 
       {/* Duration */}
-      <span className="text-sm text-gray-400 dark:text-nct-text-dim text-center">{song.duration}</span>
+      <span className="text-sm text-gray-400 dark:text-nct-text-dim text-center">{formatSongDuration(song.duration)}</span>
 
       {/* More Options */}
       <div className="flex items-center justify-center relative" ref={menuRef}>

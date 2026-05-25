@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSettings, FiGlobe, FiChevronRight, FiCheck, FiLifeBuoy, FiMessageSquare, FiMoon, FiBarChart2 } from "react-icons/fi";
+import { FiSettings, FiGlobe, FiChevronRight, FiCheck, FiMoon, FiBarChart2 } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { AuthContext } from '../../context/AuthContext';

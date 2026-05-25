@@ -142,6 +142,10 @@ export const adminStatsService = {
     const response = await api.get('admin/stats/');
     return response.data;
   },
+  getSummary: async () => {
+    const response = await api.get('admin/summary/');
+    return response.data;
+  },
 };
 
 export const homeService = {
@@ -176,10 +180,6 @@ export const uploadService = {
 // Playlists
 // ============================
 export const playlistService = {
-  getAll: async () => {
-    const response = await api.get('playlists/');
-    return response.data;
-  },
   getMine: async () => {
     const response = await api.get('playlists/mine/');
     return response.data;
@@ -221,9 +221,21 @@ export const favoriteService = {
   toggle: async (songId) => {
     const response = await api.post('favorites/toggle/', { id_bai_hat: songId });
     return response.data;
-  },
-  remove: async (id) => {
-    const response = await api.delete(`favorites/${id}/`);
-    return response.data;
   }
+};
+
+// ============================
+// Listening history
+// ============================
+export const historyService = {
+  getAll: async () => {
+    const response = await api.get('history/');
+    return response.data;
+  },
+  removeSong: async (songId) => {
+    await api.delete('history/remove_song/', { params: { song_id: songId } });
+  },
+  clear: async () => {
+    await api.delete('history/clear/');
+  },
 };

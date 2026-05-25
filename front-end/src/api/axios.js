@@ -1,7 +1,10 @@
 import axios from 'axios';
+import { normalizeApiBaseUrl } from './config';
+
+const apiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
+  baseURL: apiBaseUrl,
 });
 
 let refreshTokenRequest = null;

@@ -62,11 +62,17 @@ Nội dung của tài liệu không đơn thuần chỉ là một tập hợp c�
 
 Tài liệu thiết kế này được coi là xương sống cho toàn bộ quá trình phát triển ứng dụng MusicHub, đóng vai trò bản vẽ đặc tả kỹ thuật tối thượng phục vụ cho việc thi công và lắp ráp các thành phần phần mềm. Vượt xa khỏi những mô tả tính năng bề nổi, phạm vi của tài liệu này đi sâu vào việc phẫu thuật các kiến trúc nền tảng, tạo ra sự gắn kết hữu cơ giữa ý tưởng sáng tạo UI/UX và các thuật toán xử lý dữ liệu phức tạp ở phía sau. Phạm vi bao quát của tài liệu tập trung vào các trụ cột trọng tâm do Tú phụ trách thiết kế:
 
-1. **Thiết kế Hành vi và Tương tác (Behavioral Design)**: Tài liệu sẽ chi tiết hóa các luồng tương tác tuần tự giữa người dùng và các thực thể hệ thống. Thông qua các sơ đồ Sequence, chúng ta sẽ mô hình hóa các quy trình nghiệp vụ nhạy cảm như Xác thực người dùng thông qua mã băm, quy trình đóng gói và truyền tải luồng âm thanh kỹ thuật số (Streaming Flow), và đặc biệt là quy trình kiểm soát nội dung do cộng đồng đóng góp (UGC) – đảm bảo mọi tệp tin được upload đều đi đúng quy trình kiểm duyệt an toàn.
+1. **Thiết kế Hành vi và Tương tác (Behavioral Design)**: Tài liệu chi tiết hóa các luồng tương tác tuần tự giữa người dùng và các thực thể hệ thống, gồm xác thực người dùng, truyền tải luồng âm thanh kỹ thuật số và quản trị kho nhạc. Luồng nội dung do cộng đồng đóng góp (UGC) chỉ được lưu như thiết kế mở rộng trong tương lai.
 2. **Thiết kế Kiến trúc Thành phần (Architectural Composition)**: Phân tách hệ thống thành các module logic độc lập nhưng có mối liên kết chặt chẽ. Tài liệu làm rõ cơ chế Orchestration giữa tầng giao diện ứng dụng trang đơn (SPA) chuẩn ReactJS, tầng logic nghiệp vụ chuẩn RESTful API của Django, và hạ tầng lưu trữ đám mây đặc thù cho tệp Media (Cloudinary). Điều này đảm bảo tính modular hóa, giúp hệ thống dễ dàng thay thế hoặc nâng cấp từng phần mà không ảnh hưởng đến cấu trúc tổng thể.
 3. **Thiết kế Cơ sở Dữ liệu và Lưu trữ (Data & Storage Design)**: Tập trung vào việc xây dựng mô hình dữ liệu quan hệ (ERD) đạt chuẩn 3NF, tối ưu hóa quá trình truy vấn metadata âm nhạc. Phạm vi này bao gồm việc định nghĩa chi tiết các kiểu dữ liệu, ràng buộc khóa ngoại và chiến lược index, đảm bảo hệ thống có thể xử lý đồng thời hàng ngàn yêu cầu truy cập và quản lý kho nhạc khổng lồ một cách hiệu quả và tin cậy.
 
 Ngoài ra, tài liệu còn là công cụ giúp duy trì sự đồng bộ tuyệt đối trong nhóm phát triển. Đây là điểm tựa để phân công công việc chính xác đến từng module, là thước đo để kiểm tra sự tuân thủ các cam kết kỹ thuật ban đầu và là tài sản tri thức vô giá khi hệ thống cần mở rộng sang các giai đoạn tiếp theo (như tích hợp AI gợi ý nhạc hoặc thanh toán trực tuyến).
+
+#### Điều chỉnh phạm vi thiết kế được triển khai
+
+Phiên bản bàn giao hiện thực hóa luồng nghe nhạc, tìm kiếm/khám phá, `For You` gợi ý dựa trên lịch sử nghe/yêu thích, playlist cá nhân, xác thực/hồ sơ và CMS quản trị nội dung/tài khoản/thống kê. Admin có thể tải media để quản lý kho nhạc hệ thống; người dùng phổ thông không upload nhạc.
+
+Các thiết kế về **user upload nhạc**, **duyệt nội dung do user gửi**, **Report**, **chat hỗ trợ**, **tương tác mạng xã hội nâng cao**, **khảo sát chọn nghệ sĩ/thể loại ban đầu** và **thuật toán `For You` nâng cao** được chuyển sang phát triển tương lai.
 
 ### 1.3 Thuật ngữ và các từ viết tắt
 
@@ -122,7 +128,7 @@ Trong bối cảnh bùng nổ của thời đại số hóa, nhu cầu giải tr
 - Các nền tảng này mang lại trải nghiệm tuyệt vời với kho nhạc đồ sộ cùng hệ thống thuật toán gợi ý hành vi cá nhân hóa cao.
 - Tuy nhiên, phần lớn các ứng dụng đang dần thương mại hóa mạnh, yêu cầu người dùng nâng cấp lên tài khoản trả phí (VIP/Premium) để sử dụng các tiện ích cơ bản như: nghe nhạc chất lượng cao (320kbps/lossless), tải nhạc ngoại tuyến, hay phổ biến nhất là nghe nhạc không gián đoạn bởi quảng cáo. Điều này gây khó khăn tiếp cận đối với nhóm đối tượng học sinh, sinh viên hoặc những người có thu nhập thấp.
 
-**2. Khó khăn trong việc giao lưu và chia sẻ âm nhạc từ cộng đồng (User-Generated Content):**
+**2. Định hướng mở rộng nội dung từ cộng đồng (User-Generated Content):**
 
 - Các nền tảng lớn tập trung phân phối bản quyền chính thống từ các nghệ sĩ lớn và công ty giải trí. Do đó, quy trình đưa một tác phẩm lên nền tảng thường rất khắt khe và phức tạp qua các nhà phân phối (Distributors).
 - Những bản nhạc Cover, các luồng remix tự do (Nonstop/Vinahouse), hoặc hoạt động của các nghệ sĩ phòng thu độc lập (Indie/Underground) rất khó khăn để tiếp cận thính giả trực tiếp bằng chính tài khoản của họ.
@@ -134,7 +140,7 @@ Trong bối cảnh bùng nổ của thời đại số hóa, nhu cầu giải tr
 - Quản lý băng thông (Bandwidth Management): Việc lưu trữ hàng chục ngàn file Media âm thanh có thể bòn rút và làm tê liệt server truyền thống một cách nhanh chóng. Thị trường hiện nay ưa chuộng sử dụng các kho lưu trữ đám mây bên thứ ba (như Cloudinary, AWS S3) để phân tải tệp kỹ thuật số, giảm áp lực mạng cho máy chủ nghiệp vụ nội bộ.
 
 **=> Kết luận:**
-Từ những nhận định trên, việc xây dựng một **Website nghe nhạc trực tuyến** đi theo hướng tiếp cận mở: vừa cung cấp các tiện ích cốt lõi của một Music Player mượt mà (SPA web), vừa xây dựng môi trường cho phép **cộng đồng tự do đóng góp Upload file âm thanh** (dưới sự kiểm duyệt của Admin), đi kèm mã nguồn vận hành độc lập là hoàn toàn có tính thực tiễn cao, giúp thu hút nhóm ngách người dùng có nhu cầu cá nhân hóa bộ sưu tập âm nhạc của riêng họ.
+Trong phạm vi bàn giao, hệ thống tập trung cung cấp các tiện ích cốt lõi của một Music Player mượt mà (SPA web) và công cụ CMS để Admin quản lý kho nhạc. Mô hình cộng đồng đóng góp audio được giữ làm định hướng mở rộng sau khi sản phẩm lõi ổn định.
 
 ### 2.2 Mục tiêu tổng quát (General Objectives)
 
@@ -143,8 +149,8 @@ Dựa trên kết quả từ quá trình khảo sát hiện trạng và định 
 **1. Xây dựng môi trường Âm nhạc mở, Miễn phí (Free-to-Use Platform):**
 Phát triển một nền tảng âm nhạc có khả năng cung cấp đầy đủ các nhu cầu giải trí và tiện ích cốt lõi nhất (như nghe nhạc chất lượng cao, phát nhạc nền liên tục, tự do tạo lập Playlist) hoàn toàn miễn phí, hướng đến tệp khách hàng tiềm năng là học sinh, sinh viên.
 
-**2. Phát triển Cộng đồng chia sẻ nội dung độc lập (User-Generated Content):**
-Tạo ra một không gian tương tác mà ở đó, người dùng không chỉ đóng vai trò là "thính giả" (Listener) mà còn là "người sáng tạo" (Creator). Website sẽ cung cấp công cụ cho phép cá nhân tự do tải lên (Upload) các file audio (.mp3), chia sẻ những bản nhạc Indie, Cover, Remix độc quyền của họ đến cộng đồng một cách trực tiếp và nhanh chóng nhất.
+**2. Hoàn thiện thư viện và trải nghiệm nghe cá nhân:**
+Tạo môi trường để người dùng tìm kiếm, phát nhạc, yêu thích nội dung và quản lý playlist/lịch sử nghe; việc cho phép cộng đồng upload audio là định hướng tương lai.
 
 **3. Tối ưu hóa Trải nghiệm Người dùng (UX/UI Optimization):**
 
@@ -152,7 +158,7 @@ Tạo ra một không gian tương tác mà ở đó, người dùng không ch�
 - **Về mặt trải nghiệm âm thanh:** Áp dụng mô hình Single Page Application (SPA) trên Frontend để đảm bảo luồng phát nhạc (Audio Player) diễn ra liên tục, liền mạch, không bao giờ bị đứt quãng khi người dùng thao tác chuyển đổi qua lại giữa các trang.
 
 **4. Thiết lập Hệ thống Quản trị (CMS) mạnh mẽ, an toàn:**
-Vì dự án đi theo hướng mở cho phép người dùng tự tải nhạc, mục tiêu then chốt là phải trang bị cho Quản trị viên (Admin) một hệ thống bảng điều khiển (Dashboard) toàn diện. Hệ thống này phải có khả năng kiểm duyệt nội dung chờ duyệt (Pending Uploads) dễ dàng bằng công cụ nghe thử nội tuyến, nhằm loại trừ kịp thời các nội dung vi phạm bản quyền hay quy chuẩn đạo đức trước khi hòa vào kho nhạc chung.
+Trang bị cho Quản trị viên (Admin) bảng điều khiển để thêm, sửa, xóa nội dung kho nhạc và quản lý trạng thái công khai/chờ hiển thị, đồng thời quản lý tài khoản người dùng.
 
 **5. Đảm bảo Kiến trúc linh hoạt và Khả năng mở rộng (Scalability):**
 Thiết kế kiến trúc hệ thống 3 lớp (3-Tier) phân tách rõ ràng giữa Logic xử lý (Backend) và Lưu trữ tĩnh (Cloud Storage chuyên biệt cho Audio/Image). Mục tiêu là hệ thống phải chịu tải tốt, tiết kiệm băng thông và dễ dàng nâng cấp (scale-up) thêm các máy chủ trong tương lai khi cộng đồng phát triển mà không phải đập bỏ mã nguồn cũ.
@@ -164,9 +170,9 @@ Thiết kế kiến trúc hệ thống 3 lớp (3-Tier) phân tách rõ ràng gi
 **1. Mục tiêu về Chức năng nghiệp vụ (Functional Objectives):**
 
 - **Module Nghe Nhạc:** Hoàn thiện trình phát nội tuyến (Audio Player) với đầy đủ các tính năng điều khiển cơ bản (Phát/Dừng, Chuyển tiếp/Lùi bài, Lặp lại (Loop) thông minh, Trộn bài (Shuffle)) và chức năng hiển thị lời nhạc đồng bộ.
-- **Module Tìm kiếm & Khám phá:** Cung cấp Live-search và Bảng xếp hạng. Đặc biệt, xây dựng trang **Dành cho bạn (For You)** để nhóm ngẫu nhiên hoặc đề xuất các bài hát cùng chung Thể loại/Ca sĩ dựa trên lịch sử của User.
+- **Module Tìm kiếm & Khám phá:** Cung cấp tìm kiếm, các danh sách khám phá nội dung công khai và trang `For You` dựa trên lịch sử nghe/yêu thích.
 - **Module Cá nhân hóa:** Thiết kế không gian "Tủ nhạc Góc Tui" cho phép người dùng tự do thêm mới, sửa tên Playlist riêng biệt và lưu trữ nhanh danh sách các "Bài hát yêu thích".
-- **Module Đóng góp & Kiểm duyệt (UGC):** Hoàn thiện luồng quy trình: Người dùng phổ thông tạo Form đính kèm và uplaod Audio file (.mp3) -> Admin nhận tín hiệu Pending -> Quản trị viên sử dụng bảng điều khiển CMS để nghe thử nội tuyến rồi quyết định Bấm "Duyệt" (Public) hoặc "Từ chối" (Reject).
+- **Module Quản trị nội dung:** Admin thêm media vào kho nhạc hệ thống và thiết lập trạng thái hiển thị; nội dung chưa công khai không được trả về cho user.
 
 **2. Mục tiêu về Chỉ tiêu Kỹ thuật (Technical & Security Objectives):**
 
@@ -191,30 +197,34 @@ Dự án Website Nghe Nhạc Trực Tuyến tập trung giải quyết các bài
 
 **2. Đối tượng phục vụ:**
 
-- **Thính giả & Cộng đồng (User):** Cung cấp môi trường tiêu thụ âm nhạc miễn phí, không rào cản thao tác. Mở rộng cho một phần đối tượng là các Creator nghiệp dư có nhu cầu đăng tải (Upload) file `.mp3` độc quyền của cá nhân họ.
+- **Thính giả (User):** Cung cấp môi trường nghe nhạc, tìm kiếm, yêu thích, lịch sử nghe và playlist cá nhân.
 - **Ban Quản trị (Admin):** Cán bộ vận hành hệ thống, sử dụng quyền lực tối cao để làm sạch nội dung, đình chỉ thành viên vi phạm quy chuẩn ứng xử.
 
-**3. Khối lượng chức năng dự kiến đưa vào phát triển (In-scope):**
+**3. Khối lượng chức năng triển khai trong phiên bản bàn giao (In-scope):**
 
-- Hệ thống Gợi ý nhạc cơ bản (Recommendation) hiển thị ở trang Dành cho bạn.
 - Triển khai bộ máy Audio Player hoàn chỉnh (Phát, Tạm dừng, Trộn bài, Lặp lại).
 - Triển khai Cơ sở dữ liệu và API xử lý Thư viện nhạc cá nhân (Yêu thích nhạc, Tạo Danh sách phát - Playlist).
-- Kiến trúc đẩy tệp lớn (Media Storage) tích hợp qua hạ tầng đám mây phân tán lưu trữ (Cloudinary).
+- Tìm kiếm, khám phá nội dung công khai, lịch sử nghe và thống kê cơ bản.
+- Trang `For You` lấy tín hiệu từ lịch sử nghe và bài hát yêu thích, với danh sách phổ biến làm mặc định.
+- Kiến trúc đẩy tệp lớn (Media Storage) cho nội dung do Admin quản lý và ảnh đại diện, tích hợp qua Cloudinary.
 - Hệ thống phân quyền truy cập thông qua mã bảo mật JSON Web Token (JWT).
-- Biểu mẫu chức năng cho phép Upload và nền tảng Kiểm duyệt nội dung (Approve / Reject) dùng riêng cho Admin.
+- Biểu mẫu CMS cho Admin thêm/sửa/xóa và đặt trạng thái hiển thị bài hát, album, nghệ sĩ, thể loại.
 
 **4. Giới hạn hoặc Các yếu tố nằm ngoài phạm vi (Out of Scope):**
 
 - **Ứng dụng trên Điện thoại (Mobile Native App):** Dự án không bao gồm việc code và phát hành phiên bản App độc lập phân phối thông qua CH Play (Android) hay App Store (iOS) ở Phase 1.
 - **Cổng Thanh Toán (Payment Gateways):** Hệ thống bỏ qua hoàn toàn việc giao dịch thương mại, không có chức năng yêu cầu thẻ tín dụng, nạp gói Premium hay bán nhạc. 100% Music Catalog được cung cấp hoàn toàn phi lợi nhuận.
-- **Kiểm duyệt Bản quyền tự động:** Bên cạnh việc không có Thuật toán AI bắt bản quyền (Audio Fingerprinting), hệ thống cũng **chưa sử dụng Trí tuệ Nhân tạo (Machine Learning/AI)** phức tạp để gợi ý nhạc. Module Gợi ý (For You) ở Phase 1 chỉ chạy bằng thuật toán Cơ sở dữ liệu thông thường (lọc theo Tag/Genre giống nhau).
+- **Kiểm duyệt Bản quyền tự động:** Hệ thống không có thuật toán AI bắt bản quyền (Audio Fingerprinting).
 - **Nền tảng Video (Music Videos):** Hệ thống không hỗ trợ băng thông chiếu và truyền tải MV ca nhạc nặng (định dạng mp4/mkv), chỉ giới hạn luồng phát thanh Audio thuần túy.
+- **Tính năng cộng đồng và cá nhân hóa nâng cao:** User upload nhạc, report, chat hỗ trợ, bình luận/theo dõi/chia sẻ xã hội, bước chọn nghệ sĩ/thể loại ban đầu và thuật toán `For You` nâng cao không thuộc phiên bản bàn giao.
 
 **5. Định hướng mở rộng trong dài hạn (Future Expansion):**
 
 - Chuyển đổi giao thức bảo vệ để nâng cấp tài khoản người dùng, tích hợp các bộ thư viện tính tiền của VNPay / ZaloPay.
-- Nghiên cứu áp dụng Trí tuệ Nhân tạo và Học Máy (Machine Learning) để huấn luyện tập dữ liệu (Listen Logs) nhằm nâng cấp thuật toán Auto-Recommendation (Gợi ý bài hát thông minh) cạnh tranh trực tiếp với các chợ nhạc lớn, thay thế cho luồng Gợi ý cơ bản của Giai đoạn 1.
+- Nghiên cứu áp dụng Trí tuệ Nhân tạo và Học Máy (Machine Learning) để nâng cấp cơ chế gợi ý `For You` hiện có.
 - Gắn kết cổng thời gian thực (Real-time Socket) để xây dựng cộng đồng nghe chung, cho phép chat và thảo luận trực tuyến bên dưới Player.
+- Xây dựng quy trình user đóng góp nhạc, kiểm duyệt nội dung gửi lên và xử lý báo cáo vi phạm.
+- Hoàn thiện tương tác cộng đồng như bình luận, theo dõi và chia sẻ mạng xã hội.
 
 ---
 
@@ -226,8 +236,8 @@ Biểu đồ Usecase dưới đây mô hình hóa sự tương tác trực quan 
 
 **1. Các tác nhân tham gia (Actors):**
 
-- **Người Dùng (User):** Tác nhân sử dụng dịch vụ để trải nghiệm âm nhạc. Khi có tài khoản định danh, truy cập trọn vẹn đặc quyền thao tác với các dịch vụ cá nhân hóa (Tạo Playlist, Yêu thích) và tham gia hệ sinh thái Upload tệp Audio vào thư viện mở.
-- **Quản Trị Viên (Admin):** Cán bộ vận hành điều phối máy chủ, có thẩm quyền can thiệp vào các tệp Database cốt lõi. Chịu trách nhiệm trực tiếp đối với luồng phê duyệt nhạc Upload, quản lý Users và duy trì môi trường bản quyền.
+- **Người Dùng (User):** Tác nhân trải nghiệm âm nhạc; khi đăng nhập có thể tạo playlist, yêu thích và xem lịch sử nghe.
+- **Quản Trị Viên (Admin):** Tác nhân quản lý kho nhạc hệ thống, trạng thái hiển thị nội dung, tài khoản và thống kê.
 
 **2. Sơ đồ mô hình hóa Usecase tổng quát:**
 
@@ -241,15 +251,10 @@ graph LR
     User --> UC1([Xác thực Tài khoản])
     User --> UC2([Khám phá & Trải nghiệm nhạc])
     User --> UC3([Quản lý & Tương tác Cá nhân])
-    User --> UC4([Đóng góp Nội dung Audio])
-    User --> UC7([Giao tiếp Chat hỗ trợ])
-    User --> UC8([Nhận Gợi ý Nhạc])
-
+    User --> UC8([Gợi ý For You từ lịch sử/yêu thích])
     %% Quản Trị Viên
     Admin --> UC1
     Admin --> UC5([Quản trị Tổng hợp Hệ thống])
-    Admin --> UC6([Kiểm duyệt Nội dung Upload])
-    Admin --> UC7
 ```
 
 **3. Khái quát các Use case nghiệp vụ (Ánh xạ từ Tài liệu SRS):**
@@ -257,11 +262,11 @@ graph LR
 - **UC1 - Xác thực Tài khoản:** Đăng ký, Đăng nhập và Quên mật khẩu qua Email.
 - **UC2 - Khám phá & Trải nghiệm nhạc:** Tìm kiếm (Search), Nhấn phát nhạc (Stream Player), Truy cập thư viện Chủ đề / Top 100.
 - **UC3 - Tương tác Cá nhân:** Thả tim (Like/Unlike), Tạo cấu trúc và chỉnh sửa Playlist riêng rẽ.
-- **UC4 - Đóng góp nội dung Music:** Điền thông tin cơ sở (Metada) và tải lên file âm thanh (`.mp3`). Theo dõi tình trạng chờ duyệt.
+- **UC4 - Đóng góp nội dung Music (tương lai):** Điền metadata và tải lên file âm thanh (`.mp3`); không thuộc bản bàn giao.
 - **UC5 - Quản trị Tổng hợp:** Module quản lý danh sách Users truy cập và Thống kê các chỉ số tăng trưởng bài nhạc chung do Admin thao tác.
-- **UC6 - Kiểm duyệt Hậu kiểm:** Giao diện cho Admin trích xuất các file Audio đang nằm ở danh sách Pending (chờ), nghe thử trực tiếp để bấm **Duyệt (Approve)** hoặc **Không hợp lệ (Reject)**.
-- **UC7 - Chat Hỗ trợ:** Cổng giao tiếp thời gian thực giải đáp thắc mắc giữa User và Admin.
-- **UC8 - Nhận Gợi ý Nhạc:** Máy chủ tính toán danh sách nhạc/Mix theo gu của thính giả trả về giao diện 'Dành cho bạn'.
+- **UC6 - Kiểm duyệt nội dung do User gửi (tương lai):** Không thuộc bản bàn giao hiện tại.
+- **UC7 - Chat Hỗ trợ (tương lai):** Không thuộc bản bàn giao hiện tại.
+- **UC8 - Nhận Gợi ý Nhạc `For You`:** Dùng lịch sử nghe/yêu thích; bước khảo sát nghệ sĩ/thể loại là hướng phát triển tương lai.
 
 ### 3.2 Biểu đồ Activity (Activity Diagram)
 
@@ -363,7 +368,7 @@ flowchart TD
     I3 --> End3
 ```
 
-#### 4. UC4: Đóng góp Nội dung Audio (Quy trình Upload MP3)
+#### 4. UC4: Đóng góp Nội dung Audio (Phát triển tương lai, không thuộc bản bàn giao)
 
 ```mermaid
 flowchart TD
@@ -428,7 +433,7 @@ flowchart TD
     G5 --> End5
 ```
 
-#### 6. UC6: Kiểm duyệt Sản phẩm (Duyệt Pending Uploads)
+#### 6. UC6: Kiểm duyệt Sản phẩm do User đóng góp (Phát triển tương lai, không thuộc bản bàn giao)
 
 ```mermaid
 flowchart TD
@@ -459,7 +464,7 @@ flowchart TD
     H6 --> End6
 ```
 
-#### 7. UC7: Giao tiếp & Hỗ trợ (Live-chat Web socket)
+#### 7. UC7: Giao tiếp & Hỗ trợ (Phát triển tương lai, không thuộc bản bàn giao)
 
 ```mermaid
 flowchart TD
@@ -488,23 +493,21 @@ flowchart TD
     G7 --> End7
 ```
 
-#### 8. UC8: Thuật toán Gợi ý Nhạc (Cold-Start Newbie)
+#### 8. UC8: Gợi ý Nhạc `For You` theo lịch sử/yêu thích
 
 ```mermaid
 flowchart TD
     subgraph Lane1 ["Làn 1: Tác nhân / Người Dùng"]
         Start8(("Bắt đầu"))
         A8["Bấm vào tab Menu Dành cho Bạn"]
-        D8["Nhận Modal Pop-up hỏi Thể loại / Nghệ sĩ thích"]
-        E8["Tick chọn vào các mục yêu cầu và Nhấn Xác nhận"]
         H8["Tận hưởng Feed nhạc tự động cuộn Auto-play"]
     end
 
     subgraph Lane2 ["Làn 2: Hệ thống Website"]
         B8["Thực hiện Check lịch sử Dữ liệu Log Tài khoản"]
         C8{"Đã có Log Nhạc?"}
-        F8["Nhận Dataset khảo sát, cập nhật File Profile Account"]
-        G8["Thuật toán truy xuất CSDL lập Mảng đối số khớp Tags"]
+        F8["Dùng danh sách công khai phổ biến làm mặc định"]
+        G8["Truy xuất dữ liệu từ lịch sử nghe và bài hát yêu thích"]
         I8["Render giao diện Dòng chảy âm nhạc trả kết quả Audio"]
         End8((("Kết thúc")))
     end
@@ -512,11 +515,9 @@ flowchart TD
     Start8 --> A8
     A8 --> B8
     B8 --> C8
-    C8 -->|"Tài khoản Newbie / Lần đầu"| D8
-    D8 --> E8
-    E8 --> F8
-    F8 --> G8
-    C8 -->|"Tài khoản Cũ - Có Log"| G8
+    C8 -->|"Chưa có dữ liệu"| F8
+    F8 --> I8
+    C8 -->|"Có lịch sử / yêu thích"| G8
     G8 --> I8
     I8 --> H8
     H8 --> End8
@@ -526,7 +527,7 @@ flowchart TD
 
 #### 3.3.1 Sơ đồ
 
-Biểu đồ Lớp (Class Diagram) dưới đây được thiết kế để định hình cấu trúc dữ liệu tĩnh của toàn bộ hệ thống Website Nghe nhạc. Sơ đồ mô tả đầy đủ các Thuộc tính (Attributes), Phương thức (Methods) và Tầm vực truy cập (`+` Public, `-` Private, `#` Protected).
+Biểu đồ Lớp (Class Diagram) dưới đây định hình cấu trúc dữ liệu của hệ thống Website Nghe nhạc. Các phần tử upload do user là phần dự phòng cho phát triển tương lai; bản bàn giao chỉ dùng Admin để tạo/quản lý nội dung kho nhạc và dùng lịch sử/yêu thích cho `For You`.
 
 ```mermaid
 classDiagram
@@ -548,13 +549,13 @@ classDiagram
         -date NgayThamGia
         +CapNhatHoSo() bool
         +TaoDanhSachPhat() Playlist
-        +UploadBaiHat(File) bool
         +ThichBaiHat(int SongID) void
     }
 
     class QuanTriVien {
         -string CapDo_Quyen
         -date LanCuoiDangNhap
+        +ThemBaiHat(File) bool
         +DuyetBaiHat(int SongID) bool
         +TuChoiBaiHat(int SongID) void
         +KhoaTaiKhoan(int UserID) bool
@@ -614,7 +615,7 @@ classDiagram
     TaiKhoan <|-- QuanTriVien : Kế thừa
     NguoiDung "1" *-- "*" DanhSachPhat : Sở hữu (Composition)
     DanhSachPhat "1" o-- "*" BaiHat : Bao gồm (Aggregation)
-    NguoiDung "1" --> "*" BaiHat : Tải lên (Upload)
+    QuanTriVien "1" --> "*" BaiHat : Quản lý kho nhạc
     NgheSi "1" --> "*" BaiHat : Biểu diễn
     TheLoai "1" --> "*" BaiHat : Phân loại 
     NguoiDung "1" --> "*" LichSuTuongTac : Tạo ra
@@ -635,7 +636,7 @@ Sơ đồ thể hiện rõ nét cấu trúc của 8 Lớp (Classes) cốt lõi c
 * **Mối quan hệ Phụ thuộc (Dependency - Nét đứt):**
   * Đối tượng `QuanTriVien` (Admin) không sở hữu bài hát nhưng các hành động nghiệp vụ của Admin (`DuyetBaiHat()`, `TuChoiBaiHat()`) sẽ trực tiếp làm thay đổi thuộc tính `TrangThai_Duyet` của thực thể `BaiHat`.
 * **Lớp tương tác trung gian (Association Logic):**
-  * Lớp `LichSuTuongTac` sinh ra nhằm lưu vết hành vi của User (nghe bài nào, thả tim khi nào, bỏ qua khi nào). Lớp này cung cấp Metadata Data khổng lồ cực kỳ quan trọng cho tính năng phân tích **Thuật toán Gợi ý Nhạc (For You Recommendation)**.
+  * Lớp `LichSuTuongTac` lưu vết lịch sử nghe của User để hiển thị mục nghe gần đây và tạo tín hiệu cơ bản cho trang `For You`; các mô hình gợi ý nâng cao là định hướng tương lai.
 
 ---
 
@@ -707,7 +708,7 @@ sequenceDiagram
     LOG->>API: Cập nhật lượt nghe vào Cơ sở dữ liệu
 ```
 
-**3.4.3 Luồng Đóng góp và Kiểm duyệt (UGC Upload Flow)**
+**3.4.3 Luồng Đóng góp và Kiểm duyệt (Phát triển tương lai, không thuộc bản bàn giao)**
 
 * **Mô tả:** Quy trình cho phép người dùng (Creator) tải lên bài hát mới và quy trình kiểm duyệt nội dung của Admin.
 * **Tác nhân:** Người dùng (Creator), Admin, Cloudinary.
@@ -793,7 +794,7 @@ sequenceDiagram
     API-->>GD: Thông báo "Đã thêm vào danh sách phát"
 ```
 
-**3.4.6 Luồng Báo cáo và Xử lý Vi phạm (Reporting & Admin Flow)**
+**3.4.6 Luồng Báo cáo và Xử lý Vi phạm (Phát triển tương lai, không thuộc bản bàn giao)**
 
 * **Mô tả:** Cơ chế cho phép cộng đồng giám sát nội dung, đảm bảo môi trường âm nhạc lành mạnh và tuân thủ bản quyền.
 * **Tác nhân:** Người dùng, Backend API, Admin.
@@ -821,7 +822,7 @@ sequenceDiagram
     API-->>ADM: Hoàn tất xử lý
 ```
 
-**3.4.7 Luồng Giao tiếp Live-chat (Support Chat Flow)**
+**3.4.7 Luồng Giao tiếp Live-chat (Phát triển tương lai, không thuộc bản bàn giao)**
 
 * **Mô tả:** Luồng dữ liệu thời gian thực (Real-time) cho phép người dùng nhận hỗ trợ trực tiếp từ đội ngũ Admin.
 * **Tác nhân:** Người dùng, Admin, Socket.io Server.
@@ -933,7 +934,9 @@ Hệ thống sử dụng cơ sở dữ liệu quan hệ MySQL, được thiết 
 * **Hệ sinh thái Tài khoản & Định danh**: Quản lý toàn bộ thông tin định danh, hồ sơ cá nhân và phân quyền hành động của người dùng, đảm bảo tính bảo mật và cá nhân hóa tối đa.
 * **Thư viện Metadata Âm nhạc**: Lưu trữ cấu trúc phân cấp phức tạp giữa Bài hát, Nghệ sĩ, Album và Thể loại, tạo nên một mạng lưới nội dung phong phú và dễ dàng truy xuất.
 * **Hệ thống Tương tác & Hành vi**: Ghi nhận các điểm chạm cảm xúc của người dùng như lượt yêu thích, danh sách phát tự tạo và lịch sử nghe nhạc thời gian thực.
-* **Kiểm soát & Quản trị**: Lưu vết các báo cáo vi phạm, nội dung đóng góp từ cộng đồng và các kênh giao tiếp hỗ trợ, giúp duy trì sự lành mạnh của nền tảng.
+* **Kiểm soát & Quản trị**: Quản lý trạng thái hiển thị của nội dung kho nhạc và quyền tài khoản trong phiên bản bàn giao.
+
+Các bảng báo cáo và tin nhắn được giữ trong thiết kế dữ liệu như phần mở rộng dự phòng, không có luồng API/giao diện thuộc phạm vi nghiệm thu hiện tại.
 
 ### 4.2 Biểu đồ ER (Entity-Relationship Diagram) [Cập nhật]
 
@@ -986,7 +989,7 @@ erDiagram
 | id_nghe_si         | INT             | FK to tbl_nghe_si    | Nghệ sĩ trình bày     |
 | id_album           | INT             | FK to tbl_album      | Thuộc Album (nếu có)   |
 | id_the_loai        | INT             | FK to tbl_the_loai   | Thể loại                |
-| id_nguoi_dang      | INT             | FK to tbl_nguoi_dung | Người upload            |
+| id_nguoi_dang      | INT             | FK to tbl_nguoi_dung | Admin tạo nội dung trong bản bàn giao; dự phòng user upload sau này |
 
 **3. Bảng: tbl_album (Quản lý Album nhạc)**
 
@@ -1025,7 +1028,7 @@ erDiagram
 | ten_the_loai   | VARCHAR(100)    | NN          | Tên thể loại |
 | mo_ta_the_loai | TEXT            | NULL        | Mô tả         |
 
-**7. Bảng: tbl_bao_cao (Quản lý báo cáo vi phạm)**
+**7. Bảng: tbl_bao_cao (Thiết kế tương lai, không thuộc bản bàn giao)**
 
 | Trường         | Kiểu dữ liệu | Ràng buộc               | Mô tả                 |
 | :--------------- | :-------------- | :------------------------ | :---------------------- |
@@ -1045,7 +1048,7 @@ erDiagram
 | id_bai_hat     | INT             | FK to tbl_bai_hat         | Bài hát đã nghe |
 | thoi_gian_nghe | TIMESTAMP       | DEFAULT CURRENT_TIMESTAMP | Lúc nghe           |
 
-**9. Bảng: tbl_tin_nhan (Chat hỗ trợ)**
+**9. Bảng: tbl_tin_nhan (Thiết kế tương lai, không thuộc bản bàn giao)**
 
 | Trường      | Kiểu dữ liệu | Ràng buộc               | Mô tả                   |
 | :------------ | :-------------- | :------------------------ | :------------------------ |

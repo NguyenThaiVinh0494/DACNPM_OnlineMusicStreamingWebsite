@@ -1,4 +1,4 @@
-import { startTransition, useDeferredValue, useEffect, useRef, useState } from 'react';
+import { startTransition, useCallback, useDeferredValue, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
   FiAlertCircle,
@@ -78,7 +78,6 @@ const UPLOAD_TYPE_BY_FIELD = {
 };
 const IMAGE_LIMIT_BYTES = 8 * 1024 * 1024;
 const AUDIO_LIMIT_BYTES = 25 * 1024 * 1024;
-const CATALOG_KEYS = ['songs', 'albums', 'artists', 'genres'];
 const CATALOG_CACHE_TTL_MS = 60_000;
 const catalogCache = {
   songs: [],
@@ -107,6 +106,13 @@ const ENTITY_DEPENDENCIES = {
   genres: ['songs'],
 };
 
+const MUTATION_STALE_KEYS = {
+  songs: [],
+  albums: ['songs'],
+  artists: ['songs', 'albums'],
+  genres: ['songs'],
+};
+
 function isCatalogKeyFresh(key) {
   return Date.now() - (catalogCache.fetchedAt[key] || 0) < CATALOG_CACHE_TTL_MS;
 }
@@ -124,10 +130,38 @@ function getCachedCatalogSnapshot() {
   };
 }
 
-function invalidateCatalogCache(keys = CATALOG_KEYS) {
+function markCatalogCacheStale(keys) {
   keys.forEach((key) => {
-    catalogCache[key] = [];
     catalogCache.fetchedAt[key] = 0;
+  });
+}
+
+function upsertCachedItem(key, item) {
+  const existingIndex = catalogCache[key].findIndex((existing) => existing.id === item.id);
+  if (existingIndex === -1) {
+    catalogCache[key] = [item, ...catalogCache[key]];
+  } else {
+    catalogCache[key] = catalogCache[key].map((existing) => (existing.id === item.id ? item : existing));
+  }
+  catalogCache.fetchedAt[key] = Date.now();
+}
+
+function removeCachedItem(key, id) {
+  catalogCache[key] = catalogCache[key].filter((item) => item.id !== id);
+  catalogCache.fetchedAt[key] = Date.now();
+}
+
+function syncCachedAlbumSongs(album, songIds = []) {
+  if (!hasCatalogKeyData('songs') && !catalogCache.songs.length) return;
+
+  const selectedIds = new Set(songIds.map((songId) => String(songId)));
+  catalogCache.songs = catalogCache.songs.map((song) => {
+    const belongsToAlbum = song.id_album?.id === album.id;
+    const shouldBelongToAlbum = selectedIds.has(String(song.id));
+
+    if (shouldBelongToAlbum) return { ...song, id_album: album };
+    if (belongsToAlbum) return { ...song, id_album: null };
+    return song;
   });
 }
 
@@ -531,19 +565,24 @@ async function uploadPendingFiles(entity, values) {
     genres: [['topic_image_file', 'anh_the_loai']],
   };
 
-  for (const [fileField, urlField] of fieldMap[entity] || []) {
-    const file = values[fileField];
-    if (!file) continue;
+  const completedUploads = await Promise.all(
+    (fieldMap[entity] || [])
+      .filter(([fileField]) => values[fileField])
+      .map(async ([fileField, urlField]) => {
+        const signatureData = await uploadService.getSignature(UPLOAD_TYPE_BY_FIELD[fileField]);
+        const uploaded = await uploadService.uploadToCloudinary(values[fileField], signatureData);
+        return { fileField, urlField, uploaded };
+      }),
+  );
 
-    const signatureData = await uploadService.getSignature(UPLOAD_TYPE_BY_FIELD[fileField]);
-    const uploaded = await uploadService.uploadToCloudinary(file, signatureData);
+  completedUploads.forEach(({ fileField, urlField, uploaded }) => {
     nextValues[urlField] = uploaded.secure_url;
     nextValues[fileField] = null;
 
     if (fileField === 'audio_file' && uploaded.duration) {
       nextValues.thoi_luong = Math.round(uploaded.duration).toString();
     }
-  }
+  });
 
   return nextValues;
 }
@@ -1405,10 +1444,6 @@ export default function ManageMusic({
   const loadRequestIdRef = useRef(0);
 
   useEffect(() => {
-    loadCatalog(activeTab);
-  }, [activeTab]);
-
-  useEffect(() => {
     previewRef.current = previews;
   }, [previews]);
 
@@ -1419,7 +1454,7 @@ export default function ManageMusic({
     };
   }, []);
 
-  async function loadCatalog(tabKey = activeTab, { force = false } = {}) {
+  const loadCatalog = useCallback(async (tabKey = activeTab, { force = false } = {}) => {
     const requestId = ++loadRequestIdRef.current;
     const primaryKey = tabKey;
     const supportingKeys = (ENTITY_DEPENDENCIES[tabKey] || []).filter((key) => force || !isCatalogKeyFresh(key));
@@ -1480,7 +1515,15 @@ export default function ManageMusic({
         });
       }
     });
-  }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      loadCatalog(activeTab);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeTab, loadCatalog]);
 
   function replacePreview(nextPreviewOrUpdater) {
     setPreviews((prev) => {
@@ -1585,29 +1628,32 @@ export default function ManageMusic({
     try {
       const uploadReadyValues = await uploadPendingFiles(entity, formValues);
       const payload = buildFormData(entity, uploadReadyValues);
+      let savedItem;
 
       if (entity === 'songs') {
-        if (mode === 'create') await songService.create(payload);
-        else await songService.update(item.id, payload);
+        savedItem = mode === 'create' ? await songService.create(payload) : await songService.update(item.id, payload);
       }
 
       if (entity === 'albums') {
-        if (mode === 'create') await albumService.create(payload);
-        else await albumService.update(item.id, payload);
+        savedItem = mode === 'create' ? await albumService.create(payload) : await albumService.update(item.id, payload);
       }
 
       if (entity === 'artists') {
-        if (mode === 'create') await artistService.create(payload);
-        else await artistService.update(item.id, payload);
+        savedItem = mode === 'create' ? await artistService.create(payload) : await artistService.update(item.id, payload);
       }
 
       if (entity === 'genres') {
-        if (mode === 'create') await genreService.create(payload);
-        else await genreService.update(item.id, payload);
+        savedItem = mode === 'create' ? await genreService.create(payload) : await genreService.update(item.id, payload);
       }
 
-      invalidateCatalogCache();
-      await loadCatalog(activeTab, { force: true });
+      upsertCachedItem(entity, savedItem);
+      if (entity === 'albums') {
+        syncCachedAlbumSongs(savedItem, uploadReadyValues.song_ids);
+      }
+      markCatalogCacheStale(MUTATION_STALE_KEYS[entity]);
+      startTransition(() => {
+        setCatalog(getCachedCatalogSnapshot());
+      });
       closeModal();
       toast.success(mode === 'create' ? 'Đã tạo thành công.' : 'Đã cập nhật thành công.');
     } catch (error) {
@@ -1635,8 +1681,14 @@ export default function ManageMusic({
       if (entity === 'artists') await artistService.delete(item.id);
       if (entity === 'genres') await genreService.delete(item.id);
 
-      invalidateCatalogCache();
-      await loadCatalog(activeTab, { force: true });
+      removeCachedItem(entity, item.id);
+      if (entity === 'albums') {
+        syncCachedAlbumSongs(item);
+      }
+      markCatalogCacheStale(MUTATION_STALE_KEYS[entity]);
+      startTransition(() => {
+        setCatalog(getCachedCatalogSnapshot());
+      });
       toast.success(`Đã xóa ${entityLabel}.`);
     } catch (error) {
       toast.error(extractErrorMessage(error));
@@ -1818,7 +1870,7 @@ export default function ManageMusic({
         <div className="rounded-[28px] border border-white/70 bg-white/95 px-6 py-20 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col items-center justify-center gap-4 text-slate-400">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
-            <p>Đang tải thư viện quản trị...</p>
+            <p>Đang tải dữ liệu...</p>
           </div>
         </div>
       ) : visibleItems.length === 0 ? (

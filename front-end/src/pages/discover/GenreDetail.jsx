@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { FiPlay, FiMoreHorizontal, FiArrowLeft, FiMusic, FiDownload, FiPlus, FiShare2, FiFlag, FiFacebook, FiLink, FiChevronDown } from "react-icons/fi";
+import { FiPlay, FiMoreHorizontal, FiArrowLeft, FiMusic, FiDownload, FiPlus, FiChevronDown } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { useMusic } from "../../context/MusicContext";
 import { genreService, songService } from "../../api/services";
-import { enrichSongsWithDuration } from "../../utils/duration";
+import { enrichSongsWithDuration, formatSongDuration } from "../../utils/duration";
 import { getSongArtistNames } from "../../utils/songArtists";
 import LazyImage from "../../components/common/LazyImage";
 
@@ -207,7 +207,7 @@ export default function GenreDetail() {
               {/* Duration & Actions */}
               <div className="flex items-center gap-4">
                 <span className="text-[13px] text-gray-500 dark:text-gray-400 font-bold w-12 text-right hidden sm:block">
-                  {song.duration || '--:--'}
+                  {formatSongDuration(song.duration)}
                 </span>
 
                 {/* More Options */}
@@ -259,32 +259,6 @@ export default function GenreDetail() {
                         <span>Thêm vào playlist</span>
                       </button>
 
-                      {/* Share */}
-                      <div className="relative group/share w-full">
-                        <button className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 text-[14px] font-semibold transition-colors">
-                          <div className="flex items-center gap-3">
-                            <FiShare2 className="text-lg" />
-                            <span>Chia sẻ</span>
-                          </div>
-                          <FiChevronDown className="text-sm opacity-50 -rotate-90" />
-                        </button>
-                        <div className="absolute right-full top-0 mr-1 hidden group-hover/share:block w-56 bg-white dark:bg-gray-800 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-2xl border border-gray-100 dark:border-white/10 z-50 overflow-hidden py-2">
-                          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 text-[13px] font-semibold transition-colors">
-                            <FiFacebook className="text-lg" />
-                            <span>Facebook</span>
-                          </button>
-                          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 text-[13px] font-semibold transition-colors">
-                            <FiLink className="text-lg" />
-                            <span>Sao chép đường dẫn</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Report */}
-                      <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 text-[14px] font-semibold transition-colors">
-                        <FiFlag className="text-lg" />
-                        <span>Báo cáo</span>
-                      </button>
                     </div>
                   )}
                 </div>

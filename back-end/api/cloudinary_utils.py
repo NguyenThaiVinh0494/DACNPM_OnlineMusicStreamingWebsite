@@ -67,11 +67,6 @@ def upload_audio_asset(file, folder):
         raise ValueError(f'Lỗi upload audio lên Cloudinary: {exc}') from exc
 
 
-def upload_audio_file(file, folder):
-    result = upload_audio_asset(file, folder)
-    return result['secure_url']
-
-
 def make_upload_signature(folder, resource_type):
     config = cloudinary.config()
     if not config.cloud_name or not config.api_key or not config.api_secret:

@@ -33,6 +33,10 @@ function normalizeDuration(rawDuration) {
   return null;
 }
 
+export function formatSongDuration(rawDuration) {
+  return normalizeDuration(rawDuration) || '--:--';
+}
+
 export async function resolveSongDuration(rawDuration, audioUrl) {
   const normalized = normalizeDuration(rawDuration);
   if (normalized) {
