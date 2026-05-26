@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
@@ -14,11 +14,16 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionInProgress = useRef(false);
 
   if (!isOpen) return null;
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (submissionInProgress.current) {
+      return;
+    }
     if (!username || !email || !password || !confirmPassword) {
       toast.error('Vui lòng nhập đầy đủ thông tin!');
       return;
@@ -27,9 +32,17 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
       toast.error('Mật khẩu xác nhận không khớp!');
       return;
     }
-    const success = await register({ username, email, password });
-    if (success) {
-      onClose();
+
+    submissionInProgress.current = true;
+    setIsSubmitting(true);
+    try {
+      const success = await register({ username, email, password });
+      if (success) {
+        onClose();
+      }
+    } finally {
+      submissionInProgress.current = false;
+      setIsSubmitting(false);
     }
   };
 
@@ -106,8 +119,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
             </span>
           </div>
 
-          <button type="submit" className="w-full bg-nct-primary hover:bg-[#2591c4] dark:bg-cyan-400 dark:hover:bg-cyan-500 text-white dark:text-black font-bold py-3.5 rounded-full transition-colors text-lg shadow-[0_0_15px_rgba(45,170,237,0.3)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)] cursor-pointer">
-            {t('register')}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-nct-primary hover:bg-[#2591c4] dark:bg-cyan-400 dark:hover:bg-cyan-500 disabled:opacity-60 disabled:cursor-not-allowed text-white dark:text-black font-bold py-3.5 rounded-full transition-colors text-lg shadow-[0_0_15px_rgba(45,170,237,0.3)] dark:shadow-[0_0_15px_rgba(34,211,238,0.2)] cursor-pointer"
+          >
+            {isSubmitting ? 'Đang đăng ký...' : t('register')}
           </button>
         </form>
       </div>
