@@ -7,6 +7,8 @@ const api = axios.create({
   baseURL: apiBaseUrl,
 });
 
+export const AUTH_CLEARED_EVENT = 'auth:cleared';
+
 let refreshTokenRequest = null;
 
 function persistAccessToken(accessToken) {
@@ -29,6 +31,10 @@ function clearAuthData() {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('user_info');
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(AUTH_CLEARED_EVENT));
+  }
 }
 
 async function refreshAccessToken() {

@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect } from 'react';
 import { authService } from '../api/services';
-import axios from '../api/axios';
+import axios, { AUTH_CLEARED_EVENT } from '../api/axios';
 import toast from 'react-hot-toast';
 
 export const AuthContext = createContext();
@@ -83,6 +83,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    const handleAuthCleared = () => {
+      setUser(null);
+    };
+    const handleAuthStorageChange = (event) => {
+      const authStorageKeys = ['access_token', 'refresh_token', 'user_info'];
+      if (authStorageKeys.includes(event.key) && !localStorage.getItem('access_token')) {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener(AUTH_CLEARED_EVENT, handleAuthCleared);
+    window.addEventListener('storage', handleAuthStorageChange);
+
     // useEffect giờ chỉ dùng để dọn dẹp (side-effect) nếu token đã hết hạn
     // và lấy thông tin user mới nhất
     const token = localStorage.getItem('access_token');
@@ -115,6 +128,11 @@ export const AuthProvider = ({ children }) => {
         }).catch(err => console.error("Failed to fetch fresh user info", err));
       }
     }
+
+    return () => {
+      window.removeEventListener(AUTH_CLEARED_EVENT, handleAuthCleared);
+      window.removeEventListener('storage', handleAuthStorageChange);
+    };
   }, []);
 
   const login = async (username, password, options = {}) => {
