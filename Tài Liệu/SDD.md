@@ -72,7 +72,7 @@ Ngoài ra, tài liệu còn là công cụ giúp duy trì sự đồng bộ tuy�
 
 Phiên bản bàn giao hiện thực hóa luồng nghe nhạc, tìm kiếm/khám phá, `For You` gợi ý dựa trên lịch sử nghe/yêu thích, playlist cá nhân, xác thực/hồ sơ và CMS quản trị nội dung/tài khoản/thống kê. Admin có thể tải media để quản lý kho nhạc hệ thống; người dùng phổ thông không upload nhạc.
 
-Các thiết kế về **user upload nhạc**, **duyệt nội dung do user gửi**, **Report**, **chat hỗ trợ**, **tương tác mạng xã hội nâng cao**, **khảo sát chọn nghệ sĩ/thể loại ban đầu** và **thuật toán `For You` nâng cao** được chuyển sang phát triển tương lai.
+Các thiết kế về **đăng nhập bên thứ ba (Google login)**, **xác thực OTP/quên mật khẩu qua email**, **user upload nhạc**, **duyệt nội dung do user gửi**, **Report**, **chat hỗ trợ**, **tương tác mạng xã hội nâng cao**, **khảo sát chọn nghệ sĩ/thể loại ban đầu** và **thuật toán `For You` nâng cao** được chuyển sang phát triển tương lai.
 
 ### 1.3 Thuật ngữ và các từ viết tắt
 
@@ -216,7 +216,7 @@ Dự án Website Nghe Nhạc Trực Tuyến tập trung giải quyết các bài
 - **Cổng Thanh Toán (Payment Gateways):** Hệ thống bỏ qua hoàn toàn việc giao dịch thương mại, không có chức năng yêu cầu thẻ tín dụng, nạp gói Premium hay bán nhạc. 100% Music Catalog được cung cấp hoàn toàn phi lợi nhuận.
 - **Kiểm duyệt Bản quyền tự động:** Hệ thống không có thuật toán AI bắt bản quyền (Audio Fingerprinting).
 - **Nền tảng Video (Music Videos):** Hệ thống không hỗ trợ băng thông chiếu và truyền tải MV ca nhạc nặng (định dạng mp4/mkv), chỉ giới hạn luồng phát thanh Audio thuần túy.
-- **Tính năng cộng đồng và cá nhân hóa nâng cao:** User upload nhạc, report, chat hỗ trợ, bình luận/theo dõi/chia sẻ xã hội, bước chọn nghệ sĩ/thể loại ban đầu và thuật toán `For You` nâng cao không thuộc phiên bản bàn giao.
+- **Tính năng cộng đồng và cá nhân hóa nâng cao:** Đăng nhập Google, xác thực OTP/quên mật khẩu qua email, user upload nhạc, report, chat hỗ trợ, bình luận/theo dõi/chia sẻ xã hội, bước chọn nghệ sĩ/thể loại ban đầu và thuật toán `For You` nâng cao không thuộc phiên bản bàn giao.
 
 **5. Định hướng mở rộng trong dài hạn (Future Expansion):**
 
@@ -532,111 +532,128 @@ Biểu đồ Lớp (Class Diagram) dưới đây định hình cấu trúc dữ 
 ```mermaid
 classDiagram
     %% Định nghĩa các Lớp (Classes)
-    class TaiKhoan {
-        #int ID
-        #string TenDangNhap
-        #string MatKhau
-        #string Email
-        #bool TrangThai_HoatDong
+    class NguoiDung {
+        +int id
+        +string username
+        +string email
+        +string password
+        +string first_name
+        +string last_name
+        +string anh_dai_dien
+        +string vai_tro
+        +bool is_active
+        +datetime date_joined
+        +datetime last_login
         +DangNhap() bool
         +DangXuat() void
-        +KhoiPhucMatKhau() bool
-    }
-
-    class NguoiDung {
-        -string HoTen
-        -string AvatarURL
-        -date NgayThamGia
         +CapNhatHoSo() bool
-        +TaoDanhSachPhat() Playlist
-        +ThichBaiHat(int SongID) void
-    }
-
-    class QuanTriVien {
-        -string CapDo_Quyen
-        -date LanCuoiDangNhap
-        +ThemBaiHat(File) bool
-        +DuyetBaiHat(int SongID) bool
-        +TuChoiBaiHat(int SongID) void
-        +KhoaTaiKhoan(int UserID) bool
-        +XuatBaoCaoThongKe() JSON
+        +XoaTaiKhoan() bool
     }
 
     class BaiHat {
-        -int ID
-        -string TenBaiHat
-        -string FileAudio_URL
-        -string AnhBia_URL
-        -string TrangThai_Duyet
-        -int LuotNghe
-        -date NgayTaiLen
+        +int id
+        +string tieu_de
+        +string duong_dan_am_thanh
+        +string duong_dan_hinh_anh
+        +string loi_bai_hat
+        +int thoi_luong
+        +int luot_nghe
+        +string quoc_gia
+        +int nam_phat_hanh
+        +string trang_thai
         +PhatNhac() Stream
         +TangLuotNghe() void
         +CapNhatTrangThai(string status) void
-        +LayThongTinChiTiet() JSON
     }
 
-    class DanhSachPhat {
-        -int ID
-        -string TenDanhSach
-        -string MoTa
-        -date NgayTao
-        +ThemBaiHat(int SongID) bool
-        +XoaBaiHat(int SongID) bool
-        +PhatToanBo() StreamQueue
+    class Album {
+        +int id
+        +string tieu_de
+        +string anh_bia
+        +string trang_thai
+        +date ngay_phat_hanh
     }
 
     class NgheSi {
-        -int ID
-        -string TenNgheSi
-        -string TieuSu
-        -string HinhAnh_URL
+        +int id
+        +string ten_nghe_si
+        +string tieu_su
+        +string anh_nghe_si
         +LayDanhSachBaiHat() List~BaiHat~
         +CapNhatThongTin() void
     }
 
     class TheLoai {
-        -int ID
-        -string TenTheLoai
-        -string MoTa_TheLoai
+        +int id
+        +string ten_the_loai
+        +string mo_ta_the_loai
+        +string anh_the_loai
         +LayBaiHatTheoTheLoai() List~BaiHat~
     }
 
-    class LichSuTuongTac {
-        -int ID
-        -string LoaiTuongTac
-        -date ThoiGian
-        +GhiNhanLichSu() void
-        +XuatLichSuNghe() List
+    class DanhSachPhat {
+        +int id
+        +string tieu_de
+        +datetime ngay_tao
+        +ThemBaiHat(int SongID) bool
+        +XoaBaiHat(int SongID) bool
+    }
+
+    class LichSuNghe {
+        +int id
+        +datetime thoi_gian_nghe
+    }
+
+    class YeuThich {
+        +int id
+        +datetime ngay_thich
+    }
+
+    class BaoCao {
+        +int id
+        +string ly_do
+        +string trang_thai_xu_ly
+        +datetime ngay_bao_cao
+    }
+
+    class TinNhan {
+        +int id
+        +string noi_dung
+        +datetime thoi_gian_gui
     }
 
     %% Thiết lập Mối quan hệ (Relationships)
-    TaiKhoan <|-- NguoiDung : Kế thừa
-    TaiKhoan <|-- QuanTriVien : Kế thừa
-    NguoiDung "1" *-- "*" DanhSachPhat : Sở hữu (Composition)
-    DanhSachPhat "1" o-- "*" BaiHat : Bao gồm (Aggregation)
-    QuanTriVien "1" --> "*" BaiHat : Quản lý kho nhạc
-    NgheSi "1" --> "*" BaiHat : Biểu diễn
-    TheLoai "1" --> "*" BaiHat : Phân loại 
-    NguoiDung "1" --> "*" LichSuTuongTac : Tạo ra
-    LichSuTuongTac "*" --> "1" BaiHat : Tham chiếu đến
-    QuanTriVien ..> BaiHat : Kiểm duyệt (Dependency)
+    NguoiDung "1" *-- "*" DanhSachPhat : "sở hữu (Composition)"
+    NguoiDung "1" --> "*" LichSuNghe : "tạo ra"
+    NguoiDung "1" --> "*" YeuThich : "thực hiện"
+    NguoiDung "1" --> "*" BaiHat : "đăng tải"
+    NguoiDung "1" --> "*" BaoCao : "gửi"
+    NguoiDung "1" --> "*" TinNhan : "giao tiếp"
+
+    NgheSi "1" --> "*" Album : "phát hành"
+    NgheSi "*" o-- "*" BaiHat : "trình bày (Many-to-Many via tbl_bai_hat_nghe_si)"
+    TheLoai "*" o-- "*" BaiHat : "phân loại (Many-to-Many via tbl_bai_hat_the_loai)"
+    Album "1" o-- "*" BaiHat : "chứa"
+    
+    DanhSachPhat "*" o-- "*" BaiHat : "bao gồm (Many-to-Many via tbl_chi_tiet_playlist)"
+    LichSuNghe "*" --> "1" BaiHat : "lưu vết"
+    YeuThich "*" --> "1" BaiHat : "yêu thích"
+    BaoCao "*" --> "1" BaiHat : "báo cáo vi phạm"
 ```
 
 #### 3.3.2 Mô tả chi tiết Sơ đồ Lớp
 
-Sơ đồ thể hiện rõ nét cấu trúc của 8 Lớp (Classes) cốt lõi cũng như các **mối quan hệ ràng buộc** phức tạp để đảm bảo tính toàn vẹn của Dữ liệu Hệ thống:
+Sơ đồ thể hiện rõ nét cấu trúc của 10 Lớp (Classes) cốt lõi cũng như các **mối quan hệ ràng buộc** phức tạp để đảm bảo tính toàn vẹn của Dữ liệu Hệ thống:
 
-* **Lớp Kế thừa (Inheritance - Mũi tên tam giác trắng):**
-  * Lớp `NguoiDung` và `QuanTriVien` được thừa kế toàn bộ thuộc tính cơ sở (ID, Tên đăng nhập, Mật khẩu, Email) và phương thức (Đăng nhập, Quên MK) từ lớp cha trung tâm là `TaiKhoan`. Giúp tối ưu hóa và không phải viết lại Code xác thực (Authentication).
+* **Mối quan hệ Phân vai trò (Role-based separation):**
+  * Lớp `NguoiDung` đại diện cho cả tài khoản người dùng bình thường và quản trị viên, phân tách quyền hạn bằng thuộc tính `vai_tro` ('USER' hoặc 'ADMIN'). Điều này tối ưu hóa việc quản lý xác thực tập trung và quản lý tài khoản qua Django Auth.
 * **Mối quan hệ Cấu thành (Composition - Hình thoi đen):**
-  * Thể hiện sự gắn kết sống còn giữa `NguoiDung` và `DanhSachPhat` (Playlist). Dựa trên biểu đồ, nếu một tài khoản Người dùng bị Ban hoặc xóa khỏi Cơ sở Dữ liệu, hệ thống buộc phải Drop toàn bộ các Playlist cá nhân do họ tạo ra để tránh sinh ra dữ liệu rác (Orphan Data).
-* **Mối quan hệ Kết hợp (Aggregation - Hình thoi trắng):**
-  * Thể hiện mối quan hệ lỏng lẻo giữa `DanhSachPhat` và `BaiHat`. Một Playlist chứa nhiều Bài hát, nhưng nếu Playlist bị người dùng bấm lệnh "Xóa", thì bản thân các tệp Bài hát (Media Files) vẫn tồn tại độc lập và nguyên vẹn trong Kho lưu trữ chung của hệ thống.
-* **Mối quan hệ Phụ thuộc (Dependency - Nét đứt):**
-  * Đối tượng `QuanTriVien` (Admin) không sở hữu bài hát nhưng các hành động nghiệp vụ của Admin (`DuyetBaiHat()`, `TuChoiBaiHat()`) sẽ trực tiếp làm thay đổi thuộc tính `TrangThai_Duyet` của thực thể `BaiHat`.
-* **Lớp tương tác trung gian (Association Logic):**
-  * Lớp `LichSuTuongTac` lưu vết lịch sử nghe của User để hiển thị mục nghe gần đây và tạo tín hiệu cơ bản cho trang `For You`; các mô hình gợi ý nâng cao là định hướng tương lai.
+  * Thể hiện sự gắn kết sống còn giữa `NguoiDung` và `DanhSachPhat` (Playlist). Dựa trên biểu đồ, nếu một tài khoản Người dùng bị xóa khỏi Cơ sở Dữ liệu, hệ thống buộc phải xóa toàn bộ các Playlist cá nhân do họ tạo ra (`on_delete=models.CASCADE` ở khóa ngoại) để tránh sinh ra dữ liệu rác.
+* **Mối quan hệ Kết hợp và Nhiều-Nhiều (Aggregation & Many-to-Many - Hình thoi trắng/Liên kết Nhiều-Nhiều):**
+  * Một Playlist (`DanhSachPhat`) chứa nhiều Bài hát (`BaiHat`) thông qua bảng liên kết Nhiều-Nhiều `tbl_chi_tiet_playlist`. Nếu xóa Playlist thì tệp Bài hát vẫn tồn tại nguyên vẹn trong hệ thống.
+  * Các mối quan hệ biểu diễn giữa `NgheSi` và `BaiHat` (qua `tbl_bai_hat_nghe_si`), cũng như phân loại giữa `TheLoai` và `BaiHat` (qua `tbl_bai_hat_the_loai`) đều được quản lý dưới dạng Nhiều - Nhiều, cho phép một bài hát thuộc về nhiều thể loại và được trình bày bởi nhiều ca sĩ khác nhau.
+* **Mối quan hệ Tham chiếu Tương tác:**
+  * Lớp `LichSuNghe` và `YeuThich` ghi nhận lịch sử tương tác giữa người dùng và bài hát, tham chiếu trực tiếp đến `NguoiDung` và `BaiHat`. Các bản ghi này phục vụ chức năng gợi ý nhạc cá nhân hóa ở tab `For You`.
 
 ---
 
@@ -963,117 +980,137 @@ erDiagram
 
 **1. Bảng: tbl_nguoi_dung (Quản lý tài khoản và người dùng)**
 
-| Trường      | Kiểu dữ liệu | Ràng buộc               | Mô tả                       |
-| :------------ | :-------------- | :------------------------ | :---------------------------- |
-| id_nguoi_dung | INT             | PK, AI                    | Mã định danh duy nhất     |
-| ten_dang_nhap | VARCHAR(50)     | UNIQUE, NN                | Tên đăng nhập             |
-| email         | VARCHAR(100)    | UNIQUE, NN                | Email người dùng           |
-| mat_khau      | VARCHAR(255)    | NN                        | Mật khẩu (đã băm Bcrypt) |
-| ho_ten        | VARCHAR(100)    | NULL                      | Họ và tên đầy đủ       |
-| anh_dai_dien  | TEXT            | Default: 'def.jpg'        | Link ảnh đại diện         |
-| vai_tro       | ENUM            | 'USER', 'ADMIN'           | Phân cấp quyền hạn        |
-| ngay_tham_gia | TIMESTAMP       | DEFAULT CURRENT_TIMESTAMP | Ngày tham gia                |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã định danh duy nhất (khóa chính) |
+| username | VARCHAR(150) | UNIQUE, NN | Tên đăng nhập |
+| email | VARCHAR(254) | UNIQUE, NN | Email người dùng |
+| password | VARCHAR(128) | NN | Mật khẩu (đã băm bảo mật qua Django Auth PBKDF2/Bcrypt) |
+| first_name | VARCHAR(150) | NULL | Tên |
+| last_name | VARCHAR(150) | NULL | Họ và tên đệm |
+| anh_dai_dien | VARCHAR(500) | Default: 'def.jpg' | Link ảnh đại diện (lưu trên Cloudinary) |
+| vai_tro | VARCHAR(10) | 'USER', 'ADMIN' (Default: 'USER') | Phân cấp quyền hạn tài khoản |
+| is_active | BOOLEAN | Default: 1 | Trạng thái hoạt động (1: Hoạt động, 0: Bị khóa) |
+| date_joined | DATETIME | DEFAULT CURRENT_TIMESTAMP | Ngày đăng ký tài khoản |
+| last_login | DATETIME | NULL | Thời điểm đăng nhập cuối cùng |
 
 **2. Bảng: tbl_bai_hat (Quản lý thông tin bài hát)**
 
-| Trường           | Kiểu dữ liệu | Ràng buộc          | Mô tả                   |
-| :----------------- | :-------------- | :------------------- | :------------------------ |
-| id_bai_hat         | INT             | PK, AI               | Mã bài hát             |
-| tieu_de            | VARCHAR(255)    | NN                   | Tiêu đề bài hát      |
-| duong_dan_am_thanh | TEXT            | NN                   | Link stream               |
-| duong_dan_hinh_anh | TEXT            | NN                   | Ảnh bìa                 |
-| luot_nghe          | INT             | Default: 0           | Tổng lượt nghe         |
-| quoc_gia           | VARCHAR(50)     | NULL                 | Quốc gia phát hành     |
-| nam_phat_hanh      | INT             | NULL                 | Năm phát hành          |
-| trang_thai         | ENUM            | 'PENDING', 'PUBLIC'  | Trạng thái kiểm duyệt |
-| id_nghe_si         | INT             | FK to tbl_nghe_si    | Nghệ sĩ trình bày     |
-| id_album           | INT             | FK to tbl_album      | Thuộc Album (nếu có)   |
-| id_the_loai        | INT             | FK to tbl_the_loai   | Thể loại                |
-| id_nguoi_dang      | INT             | FK to tbl_nguoi_dung | Admin tạo nội dung trong bản bàn giao; dự phòng user upload sau này |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã bài hát |
+| tieu_de | VARCHAR(255) | NN | Tiêu đề bài hát |
+| duong_dan_am_thanh | VARCHAR(500) | NN | Link stream file nhạc (Cloudinary) |
+| duong_dan_hinh_anh | VARCHAR(500) | NN | Link hình ảnh bìa bài hát (Cloudinary) |
+| loi_bai_hat | TEXT | NULL | Lời bài hát (Karaoke/Lyrics) |
+| thoi_luong | INT UNSIGNED | NULL | Thời lượng bài hát (giây) |
+| luot_nghe | INT | Default: 0 | Tổng lượt phát nhạc |
+| quoc_gia | VARCHAR(50) | NULL | Quốc gia phát hành |
+| nam_phat_hanh | INT | NULL | Năm phát hành |
+| trang_thai | VARCHAR(10) | 'PENDING', 'PUBLIC' (Default: 'PENDING') | Trạng thái hiển thị nhạc |
+| id_album_id | INT | FK to tbl_album, NULL | Mã album trực thuộc (nếu có) |
+| id_nguoi_dang_id | INT | FK to tbl_nguoi_dung, NN | Admin chèn nhạc (người đăng nội dung) |
 
 **3. Bảng: tbl_album (Quản lý Album nhạc)**
 
-| Trường       | Kiểu dữ liệu | Ràng buộc         | Mô tả                      |
-| :------------- | :-------------- | :------------------ | :--------------------------- |
-| id_album       | INT             | PK, AI              | Mã album                    |
-| tieu_de        | VARCHAR(255)    | NN                  | Tên album                   |
-| anh_bia        | TEXT            | NN                  | Hình ảnh đại diện album |
-| id_nghe_si     | INT             | FK to tbl_nghe_si   | Nghệ sĩ sở hữu           |
-| trang_thai     | ENUM            | 'PENDING', 'PUBLIC' | Trạng thái duyệt          |
-| ngay_phat_hanh | DATE            | NULL                | Ngày phát hành album      |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã album |
+| tieu_de | VARCHAR(255) | NN | Tên album |
+| anh_bia | VARCHAR(500) | NN | Hình ảnh đại diện album (Cloudinary) |
+| id_nghe_si_id | INT | FK to tbl_nghe_si, NN | Nghệ sĩ chính của album |
+| trang_thai | VARCHAR(10) | 'PENDING', 'PUBLIC' (Default: 'PENDING') | Trạng thái hiển thị album |
+| ngay_phat_hanh | DATE | NULL | Ngày phát hành album |
 
 **4. Bảng: tbl_nghe_si (Thông tin nghệ sĩ)**
 
-| Trường    | Kiểu dữ liệu | Ràng buộc | Mô tả                    |
-| :---------- | :-------------- | :---------- | :------------------------- |
-| id_nghe_si  | INT             | PK, AI      | Mã nghệ sĩ              |
-| ten_nghe_si | VARCHAR(150)    | NN          | Tên ca sĩ/nhóm nhạc    |
-| tieu_su     | TEXT            | NULL        | Thông tin tiểu sử       |
-| anh_nghe_si | TEXT            | NULL        | Ảnh đại diện nghệ sĩ |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã nghệ sĩ |
+| ten_nghe_si | VARCHAR(150) | NN | Tên ca sĩ/nhóm nhạc |
+| tieu_su | TEXT | NULL | Tiểu sử nghệ sĩ |
+| anh_nghe_si | VARCHAR(500) | NULL | Ảnh đại diện của nghệ sĩ (Cloudinary) |
 
 **5. Bảng: tbl_danh_sach_phat (Quản lý Playlist)**
 
-| Trường          | Kiểu dữ liệu | Ràng buộc               | Mô tả         |
-| :---------------- | :-------------- | :------------------------ | :-------------- |
-| id_danh_sach_phat | INT             | PK, AI                    | Mã playlist    |
-| tieu_de           | VARCHAR(255)    | NN                        | Tên Playlist   |
-| id_chu_so_huu     | INT             | FK to tbl_nguoi_dung      | Người tạo    |
-| ngay_tao          | TIMESTAMP       | DEFAULT CURRENT_TIMESTAMP | Thời gian tạo |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã playlist |
+| tieu_de | VARCHAR(255) | NN | Tên Playlist |
+| id_chu_so_huu_id | INT | FK to tbl_nguoi_dung, NN | Người dùng sở hữu playlist |
+| ngay_tao | DATETIME | DEFAULT CURRENT_TIMESTAMP | Thời gian tạo |
 
 **6. Bảng: tbl_the_loai (Danh mục thể loại nhạc)**
 
-| Trường       | Kiểu dữ liệu | Ràng buộc | Mô tả         |
-| :------------- | :-------------- | :---------- | :-------------- |
-| id_the_loai    | INT             | PK, AI      | Mã thể loại  |
-| ten_the_loai   | VARCHAR(100)    | NN          | Tên thể loại |
-| mo_ta_the_loai | TEXT            | NULL        | Mô tả         |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã thể loại |
+| ten_the_loai | VARCHAR(100) | NN | Tên thể loại |
+| mo_ta_the_loai | TEXT | NULL | Mô tả thể loại nhạc |
+| anh_the_loai | VARCHAR(500) | NULL | Link ảnh bìa của thể loại (Cloudinary) |
 
 **7. Bảng: tbl_bao_cao (Thiết kế tương lai, không thuộc bản bàn giao)**
 
-| Trường         | Kiểu dữ liệu | Ràng buộc               | Mô tả                 |
-| :--------------- | :-------------- | :------------------------ | :---------------------- |
-| id_bao_cao       | INT             | PK, AI                    | Mã báo cáo           |
-| id_nguoi_dung    | INT             | FK to tbl_nguoi_dung      | Người báo cáo       |
-| id_bai_hat       | INT             | FK to tbl_bai_hat         | Bài hát bị báo cáo |
-| ly_do            | TEXT            | NN                        | Lý do vi phạm         |
-| trang_thai_xu_ly | ENUM            | 'WAITING', 'DONE'         | Tình trạng xử lý    |
-| ngay_bao_cao     | TIMESTAMP       | DEFAULT CURRENT_TIMESTAMP | Thời điểm báo cáo  |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã báo cáo |
+| id_nguoi_dung_id | INT | FK to tbl_nguoi_dung, NN | Người dùng báo cáo |
+| id_bai_hat_id | INT | FK to tbl_bai_hat, NN | Bài hát bị báo cáo |
+| ly_do | TEXT | NN | Lý do vi phạm |
+| trang_thai_xu_ly | VARCHAR(10) | 'WAITING', 'DONE' (Default: 'WAITING') | Tình trạng xử lý |
+| ngay_bao_cao | DATETIME | DEFAULT CURRENT_TIMESTAMP | Thời điểm báo cáo |
 
 **8. Bảng: tbl_lich_su_nghe (Lịch sử nghe nhạc)**
 
-| Trường       | Kiểu dữ liệu | Ràng buộc               | Mô tả             |
-| :------------- | :-------------- | :------------------------ | :------------------ |
-| id_lich_su     | INT             | PK, AI                    | Mã bản ghi        |
-| id_nguoi_dung  | INT             | FK to tbl_nguoi_dung      | Người nghe        |
-| id_bai_hat     | INT             | FK to tbl_bai_hat         | Bài hát đã nghe |
-| thoi_gian_nghe | TIMESTAMP       | DEFAULT CURRENT_TIMESTAMP | Lúc nghe           |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã lịch sử |
+| id_nguoi_dung_id | INT | FK to tbl_nguoi_dung, NN | Người nghe nhạc |
+| id_bai_hat_id | INT | FK to tbl_bai_hat, NN | Bài hát đã nghe |
+| thoi_gian_nghe | DATETIME | DEFAULT CURRENT_TIMESTAMP | Lúc bắt đầu nghe |
 
 **9. Bảng: tbl_tin_nhan (Thiết kế tương lai, không thuộc bản bàn giao)**
 
-| Trường      | Kiểu dữ liệu | Ràng buộc               | Mô tả                   |
-| :------------ | :-------------- | :------------------------ | :------------------------ |
-| id_tin_nhan   | INT             | PK, AI                    | Mã tin nhắn             |
-| id_nguoi_gui  | INT             | FK to tbl_nguoi_dung      | Người gửi (User/Admin) |
-| id_nguoi_nhan | INT             | FK to tbl_nguoi_dung      | Người nhận             |
-| noi_dung      | TEXT            | NN                        | Nội dung chat            |
-| thoi_gian_gui | TIMESTAMP       | DEFAULT CURRENT_TIMESTAMP | Thời điểm gửi         |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã tin nhắn |
+| id_nguoi_gui_id | INT | FK to tbl_nguoi_dung, NN | Người gửi |
+| id_nguoi_nhan_id | INT | FK to tbl_nguoi_dung, NN | Người nhận |
+| noi_dung | TEXT | NN | Nội dung chat |
+| thoi_gian_gui | DATETIME | DEFAULT CURRENT_TIMESTAMP | Thời điểm gửi |
 
-**10. Bảng: tbl_chi_tiet_playlist (Bảng trung gian)**
+**10. Bảng: tbl_chi_tiet_playlist (Bảng trung gian liên kết danh sách phát và bài hát)**
 
-| Trường          | Kiểu dữ liệu | Ràng buộc              | Mô tả               |
-| :---------------- | :-------------- | :----------------------- | :-------------------- |
-| id_chi_tiet       | INT             | PK, AI                   | Mã bản ghi          |
-| id_danh_sach_phat | INT             | FK to tbl_danh_sach_phat | Tham chiếu Playlist  |
-| id_bai_hat        | INT             | FK to tbl_bai_hat        | Tham chiếu Bài hát |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã bản ghi |
+| danhsachphat_id | INT | FK to tbl_danh_sach_phat, NN | Tham chiếu tới Playlist |
+| baihat_id | INT | FK to tbl_bai_hat, NN | Tham chiếu tới Bài hát |
 
 **11. Bảng: tbl_yeu_thich (Lưu trữ bài hát yêu thích)**
 
-| Trường      | Kiểu dữ liệu | Ràng buộc               | Mô tả                  |
-| :------------ | :-------------- | :------------------------ | :----------------------- |
-| id_yeu_thich  | INT             | PK, AI                    | Mã bản ghi             |
-| id_nguoi_dung | INT             | FK to tbl_nguoi_dung      | Người thích           |
-| id_bai_hat    | INT             | FK to tbl_bai_hat         | Bài hát được thích |
-| ngay_thich    | TIMESTAMP       | DEFAULT CURRENT_TIMESTAMP | Lúc nhấn thích        |
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã bản ghi |
+| id_nguoi_dung_id | INT | FK to tbl_nguoi_dung, NN | Người dùng thích nhạc |
+| id_bai_hat_id | INT | FK to tbl_bai_hat, NN | Bài hát được thích (Unique với user) |
+| ngay_thich | DATETIME | DEFAULT CURRENT_TIMESTAMP | Lúc nhấn thích |
+
+**12. Bảng: tbl_bai_hat_nghe_si (Bảng trung gian liên kết Nhiều-Nhiều giữa Bài hát và Nghệ sĩ)**
+
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã bản ghi |
+| baihat_id | INT | FK to tbl_bai_hat, NN | Mã bài hát |
+| nghesi_id | INT | FK to tbl_nghe_si, NN | Mã nghệ sĩ trình bày |
+
+**13. Bảng: tbl_bai_hat_the_loai (Bảng trung gian liên kết Nhiều-Nhiều giữa Bài hát và Thể loại)**
+
+| Trường | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| id | INT | PK, AI | Mã bản ghi |
+| baihat_id | INT | FK to tbl_bai_hat, NN | Mã bài hát |
+| theloai_id | INT | FK to tbl_the_loai, NN | Mã thể loại nhạc |
 
 ---
 
