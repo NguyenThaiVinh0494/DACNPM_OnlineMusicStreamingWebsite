@@ -85,163 +85,241 @@ function StatCard({ icon: Icon, label, value, accent }) {
   );
 }
 
+function ModalTextField({ label, icon: Icon, required, className = '', ...props }) {
+  return (
+    <label className={`block space-y-2 ${className}`}>
+      <span className="text-sm font-semibold text-slate-700">
+        {label}
+        {required ? <span className="ml-1 text-rose-500">*</span> : null}
+      </span>
+      <div className="relative">
+        {Icon ? (
+          <Icon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        ) : null}
+        <input
+          {...props}
+          className={`h-12 w-full rounded-2xl border border-slate-200 bg-white ${Icon ? 'pl-11' : 'pl-4'} pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
+        />
+      </div>
+    </label>
+  );
+}
+
+function SegmentedField({ label, value, options, onChange, disabled }) {
+  return (
+    <div className="block space-y-2">
+      <span className="text-sm font-semibold text-slate-700">{label}</span>
+      <div className="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1">
+        {options.map((option) => {
+          const Icon = option.icon;
+          const active = value === option.value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              disabled={disabled}
+              className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm font-bold outline-none transition ${
+                active
+                  ? 'bg-white text-slate-950 shadow-sm'
+                  : 'text-slate-500 hover:bg-white/70 hover:text-slate-800'
+              } disabled:cursor-not-allowed disabled:opacity-55`}
+            >
+              <Icon className="h-4 w-4" />
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function UserModal({ state, values, saving, formError, onClose, onChange, onSubmit, isSelfEdit }) {
   if (!state.open) return null;
 
   const isCreate = state.mode === 'create';
+  const modalTitle = isCreate ? 'Tạo tài khoản mới' : 'Cập nhật người dùng';
+  const submitLabel = saving ? 'Đang lưu...' : isCreate ? 'Tạo tài khoản' : 'Lưu thay đổi';
+  const fullName = [values.first_name, values.last_name].filter(Boolean).join(' ').trim() || values.username || 'Người dùng';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-8 backdrop-blur-sm">
-      <div className="w-full max-w-3xl overflow-hidden rounded-[36px] border border-white/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.96),rgba(244,247,251,0.96))] shadow-[0_30px_120px_rgba(15,23,42,0.30)]">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-7 py-6">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-500">Admin Studio</p>
-            <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
-              {isCreate ? 'Tạo tài khoản mới' : 'Cập nhật người dùng'}
-            </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Quản lý hồ sơ, trạng thái và quyền admin ngay trong dashboard.
-            </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-3 py-6 backdrop-blur-sm sm:px-4 sm:py-8">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-modal-title"
+        className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.98),rgba(244,247,251,0.98))] shadow-[0_30px_120px_rgba(15,23,42,0.30)] sm:rounded-[36px]"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-5 sm:px-7 sm:py-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+              <FiUsers className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-500">Admin Studio</p>
+              <h3 id="user-modal-title" className="mt-1 truncate text-2xl font-black tracking-tight text-slate-900">
+                {modalTitle}
+              </h3>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-500 transition hover:text-slate-900"
+            aria-label="Đóng"
+            className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-500 outline-none transition hover:border-slate-300 hover:text-slate-900 focus:ring-4 focus:ring-cyan-50"
           >
             <FiX className="h-5 w-5" />
           </button>
         </div>
 
-        <form noValidate onSubmit={onSubmit} className="space-y-5 px-7 py-6">
+        <form noValidate onSubmit={onSubmit} className="max-h-[calc(92vh-88px)] overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
           {formError ? (
-            <div className="flex items-start gap-3 rounded-[24px] border border-rose-100 bg-rose-50 px-4 py-3 text-rose-700">
+            <div className="mb-5 flex items-start gap-3 rounded-[24px] border border-rose-100 bg-rose-50 px-4 py-3 text-rose-700">
               <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <p className="text-sm font-medium">{formError}</p>
             </div>
           ) : null}
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Tên đăng nhập</span>
-              <input
-                type="text"
-                value={values.username}
-                onChange={(event) => onChange('username', event.target.value)}
-                placeholder="ví dụ: admin.nct"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
-              />
-            </label>
+          <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+            <div className="space-y-5">
+              <div className="grid gap-5 md:grid-cols-2">
+                <ModalTextField
+                  label="Tên đăng nhập"
+                  icon={FiUser}
+                  required
+                  type="text"
+                  value={values.username}
+                  onChange={(event) => onChange('username', event.target.value)}
+                  placeholder="ví dụ: admin.nct"
+                />
 
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Email</span>
-              <input
-                type="email"
-                value={values.email}
-                onChange={(event) => onChange('email', event.target.value)}
-                placeholder="admin@example.com"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
-              />
-            </label>
-          </div>
+                <ModalTextField
+                  label="Email"
+                  icon={FiMail}
+                  type="email"
+                  value={values.email}
+                  onChange={(event) => onChange('email', event.target.value)}
+                  placeholder="admin@example.com"
+                />
+              </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Tên</span>
-              <input
-                type="text"
-                value={values.first_name}
-                onChange={(event) => onChange('first_name', event.target.value)}
-                placeholder="Nguyễn"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
-              />
-            </label>
+              <div className="grid gap-5 md:grid-cols-2">
+                <ModalTextField
+                  label="Tên"
+                  icon={FiUser}
+                  type="text"
+                  value={values.first_name}
+                  onChange={(event) => onChange('first_name', event.target.value)}
+                  placeholder="Nguyễn"
+                />
 
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Họ</span>
-              <input
-                type="text"
-                value={values.last_name}
-                onChange={(event) => onChange('last_name', event.target.value)}
-                placeholder="An"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
-              />
-            </label>
-          </div>
+                <ModalTextField
+                  label="Họ"
+                  icon={FiUser}
+                  type="text"
+                  value={values.last_name}
+                  onChange={(event) => onChange('last_name', event.target.value)}
+                  placeholder="An"
+                />
+              </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">
-                {isCreate ? 'Mật khẩu' : 'Mật khẩu mới'}
-              </span>
-              <input
-                type="password"
-                value={values.password}
-                onChange={(event) => onChange('password', event.target.value)}
-                placeholder={isCreate ? 'Bắt buộc' : 'Bỏ trống nếu không đổi'}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
-              />
-            </label>
+              <div className="grid gap-5 md:grid-cols-2">
+                <ModalTextField
+                  label={isCreate ? 'Mật khẩu' : 'Mật khẩu mới'}
+                  icon={FiLock}
+                  required={isCreate}
+                  type="password"
+                  value={values.password}
+                  onChange={(event) => onChange('password', event.target.value)}
+                  placeholder={isCreate ? 'Bắt buộc' : 'Bỏ trống nếu không đổi'}
+                />
 
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Avatar URL</span>
-              <input
-                type="url"
-                value={values.anh_dai_dien}
-                onChange={(event) => onChange('anh_dai_dien', event.target.value)}
-                placeholder="https://..."
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
-              />
-            </label>
-          </div>
+                <ModalTextField
+                  label="Avatar URL"
+                  icon={FiUser}
+                  type="url"
+                  value={values.anh_dai_dien}
+                  onChange={(event) => onChange('anh_dai_dien', event.target.value)}
+                  placeholder="https://..."
+                />
+              </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Vai trò</span>
-              <select
-                value={values.vai_tro}
-                onChange={(event) => onChange('vai_tro', event.target.value)}
-                disabled={isSelfEdit}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50 disabled:cursor-not-allowed disabled:bg-slate-100"
-              >
-                <option value="USER">User</option>
-                <option value="ADMIN">Admin</option>
-              </select>
-            </label>
+              <div className="grid gap-5 md:grid-cols-2">
+                <SegmentedField
+                  label="Vai trò"
+                  value={values.vai_tro}
+                  disabled={isSelfEdit}
+                  onChange={(nextValue) => onChange('vai_tro', nextValue)}
+                  options={[
+                    { value: 'USER', label: 'User', icon: FiUser },
+                    { value: 'ADMIN', label: 'Admin', icon: FiShield },
+                  ]}
+                />
 
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Trạng thái tài khoản</span>
-              <select
-                value={values.is_active ? 'ACTIVE' : 'LOCKED'}
-                onChange={(event) => onChange('is_active', event.target.value === 'ACTIVE')}
-                disabled={isSelfEdit}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50 disabled:cursor-not-allowed disabled:bg-slate-100"
-              >
-                <option value="ACTIVE">Hoạt động</option>
-                <option value="LOCKED">Đã khóa</option>
-              </select>
-            </label>
+                <SegmentedField
+                  label="Trạng thái tài khoản"
+                  value={values.is_active ? 'ACTIVE' : 'LOCKED'}
+                  disabled={isSelfEdit}
+                  onChange={(nextValue) => onChange('is_active', nextValue === 'ACTIVE')}
+                  options={[
+                    { value: 'ACTIVE', label: 'Hoạt động', icon: FiUnlock },
+                    { value: 'LOCKED', label: 'Đã khóa', icon: FiLock },
+                  ]}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mx-auto flex h-28 w-28 items-center justify-center overflow-hidden rounded-[28px] bg-slate-100 text-slate-400">
+                {values.anh_dai_dien ? (
+                  <img src={values.anh_dai_dien} alt={fullName} className="h-full w-full object-cover" />
+                ) : (
+                  <FiUser className="h-10 w-10" />
+                )}
+              </div>
+              <div className="mt-4 text-center">
+                <p className="truncate text-base font-black text-slate-900">{fullName}</p>
+                <p className="mt-1 truncate text-sm font-medium text-slate-500">{values.email || 'Chưa có email'}</p>
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <span className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700">
+                  <FiShield className="h-3.5 w-3.5" />
+                  {values.vai_tro === 'ADMIN' ? 'Admin' : 'User'}
+                </span>
+                <span className={`inline-flex items-center justify-center gap-1.5 rounded-2xl px-3 py-2 text-xs font-bold ${
+                  values.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                }`}>
+                  {values.is_active ? <FiCheckCircle className="h-3.5 w-3.5" /> : <FiLock className="h-3.5 w-3.5" />}
+                  {values.is_active ? 'Hoạt động' : 'Đã khóa'}
+                </span>
+              </div>
+            </div>
           </div>
 
           {isSelfEdit ? (
-            <div className="rounded-[24px] border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-              Bạn đang chỉnh sửa chính mình. Quyền admin và trạng thái tài khoản bị khóa để tránh tự gỡ quyền hoặc tự khóa phiên hiện tại.
+            <div className="mt-5 flex items-start gap-3 rounded-[24px] border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>Bạn đang chỉnh sửa chính mình. Quyền admin và trạng thái tài khoản bị khóa để tránh tự gỡ quyền hoặc tự khóa phiên hiện tại.</p>
             </div>
           ) : null}
 
-          <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+          <div className="sticky bottom-0 -mx-5 mt-7 flex items-center justify-end gap-3 border-t border-slate-100 bg-white/90 px-5 py-5 backdrop-blur sm:-mx-7 sm:px-7">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
+              className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-600 outline-none transition hover:border-slate-300 hover:text-slate-900 focus:ring-4 focus:ring-slate-100"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white outline-none transition hover:bg-slate-800 focus:ring-4 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? 'Đang lưu...' : isCreate ? 'Tạo tài khoản' : 'Lưu thay đổi'}
+              {isCreate ? <FiPlus className="h-4 w-4" /> : <FiEdit2 className="h-4 w-4" />}
+              {submitLabel}
             </button>
           </div>
         </form>

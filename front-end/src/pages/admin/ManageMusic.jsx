@@ -2,7 +2,7 @@ import { startTransition, useCallback, useDeferredValue, useEffect, useRef, useS
 import toast from 'react-hot-toast';
 import {
   FiAlertCircle,
-  FiCheckCircle,
+  FiCheck,
   FiDisc,
   FiEdit2,
   FiFilter,
@@ -611,26 +611,155 @@ function InputField({ label, required, ...props }) {
       </span>
       <input
         {...props}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
+        className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
       />
     </label>
   );
 }
 
-function SelectField({ label, children, required, ...props }) {
+function StatusPicker({ label, value, onChange }) {
   return (
-    <label className="block space-y-2">
+    <div className="block space-y-2">
+      <span className="text-sm font-semibold text-slate-700">{label}</span>
+      <div className="grid grid-cols-2 gap-2 rounded-[28px] border border-slate-200 bg-white p-2 shadow-sm">
+        {STATUS_OPTIONS.map((option) => {
+          const active = value === option.value;
+          const Icon = option.value === 'PUBLIC' ? FiCheck : FiAlertCircle;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl px-3 text-sm font-bold outline-none transition ${
+                active
+                  ? 'bg-slate-950 text-white shadow-sm'
+                  : 'bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-700'
+              } focus:ring-4 focus:ring-cyan-50`}
+            >
+              <Icon className="h-4 w-4" />
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SingleSelectPicker({
+  label,
+  required,
+  options,
+  value,
+  onChange,
+  placeholder,
+  searchPlaceholder,
+  emptyText,
+  icon: Icon = FiTag,
+  allowClear = true,
+}) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm.trim().toLowerCase());
+  const selectedOption = options.find((option) => option.value.toString() === value?.toString());
+  const filteredOptions = options.filter((option) => {
+    if (!deferredSearchTerm) return true;
+    return [option.label, option.subtitle].some((text) => text?.toLowerCase().includes(deferredSearchTerm));
+  });
+
+  return (
+    <div className="block space-y-2">
       <span className="text-sm font-semibold text-slate-700">
         {label}
         {required ? <span className="ml-1 text-rose-500">*</span> : null}
       </span>
-      <select
-        {...props}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
-      >
-        {children}
-      </select>
-    </label>
+      <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl bg-slate-50/80 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-cyan-600 shadow-sm">
+                <Icon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className={`truncate text-sm font-bold ${selectedOption ? 'text-slate-800' : 'text-slate-400'}`}>
+                  {selectedOption?.label || placeholder}
+                </p>
+                {selectedOption?.subtitle ? (
+                  <p className="mt-0.5 truncate text-xs text-slate-400">{selectedOption.subtitle}</p>
+                ) : null}
+              </div>
+            </div>
+            {allowClear && selectedOption ? (
+              <button
+                type="button"
+                onClick={() => onChange('')}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:border-rose-200 hover:text-rose-600"
+              >
+                Bỏ chọn
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 transition focus-within:border-cyan-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-cyan-50">
+          <FiSearch className="h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder={options.length ? searchPlaceholder : emptyText}
+            disabled={!options.length}
+            className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div className="mt-4 max-h-56 space-y-2 overflow-y-auto pr-1">
+          {filteredOptions.length ? (
+            filteredOptions.slice(0, 20).map((option) => {
+              const active = option.value.toString() === value?.toString();
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(option.value);
+                    setSearchTerm('');
+                  }}
+                  className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+                    active
+                      ? 'border-cyan-200 bg-cyan-50'
+                      : 'border-slate-200 bg-slate-50/80 hover:border-cyan-300 hover:bg-cyan-50'
+                  }`}
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl shadow-sm ${
+                      active ? 'bg-cyan-500 text-white' : 'bg-white text-cyan-600'
+                    }`}>
+                      {active ? <FiCheck className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-700">{option.label}</p>
+                      {option.subtitle ? <p className="truncate text-xs text-slate-400">{option.subtitle}</p> : null}
+                    </div>
+                  </div>
+                  {active ? (
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-cyan-700 shadow-sm">
+                      Đã chọn
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-slate-600">Không có lựa chọn phù hợp</p>
+              <p className="mt-1 text-xs text-slate-400">{emptyText}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -859,64 +988,99 @@ function SongTagPicker({ label, songs, values, onChange, artistId }) {
 }
 
 function MultiSelectDropdown({ label, options, values, onChange }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm.trim().toLowerCase());
+  const selectedValues = new Set(values);
+  const selectedOptions = options.filter((option) => selectedValues.has(option.value));
+  const suggestedOptions = options.filter((option) => {
+    if (selectedValues.has(option.value)) return false;
+    if (!deferredSearchTerm) return true;
+    return option.label.toLowerCase().includes(deferredSearchTerm);
+  });
 
   const toggleOption = (value) => {
     if (values.includes(value)) {
       onChange(values.filter(v => v !== value));
     } else {
       onChange([...values, value]);
+      setSearchTerm('');
     }
   };
 
-  const selectedLabels = options
-    .filter(opt => values.includes(opt.value))
-    .map(opt => opt.label)
-    .join(', ');
-
   return (
-    <div className="block space-y-2 relative" ref={containerRef}>
+    <div className="block space-y-2">
       <span className="text-sm font-semibold text-slate-700">{label}</span>
-      <div 
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus-within:border-cyan-400 focus-within:ring-4 focus-within:ring-cyan-50 cursor-pointer flex justify-between items-center"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span className="truncate">{selectedLabels || 'Không gán thể loại'}</span>
-        <svg className="h-4 w-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-      
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg max-h-60 overflow-y-auto">
-          {options.map((opt) => (
-            <div 
-              key={opt.value}
-              className="flex items-center px-4 py-2 hover:bg-slate-50 cursor-pointer"
-              onClick={() => toggleOption(opt.value)}
-            >
-              <input 
-                type="checkbox" 
-                className="mr-3 h-4 w-4 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500"
-                checked={values.includes(opt.value)}
-                onChange={() => {}} 
-              />
-              <span className="text-sm text-slate-700">{opt.label}</span>
+      <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl bg-slate-50/80 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <FiTag className="h-4 w-4 text-cyan-500" />
+              <span>Thể loại đã chọn</span>
             </div>
-          ))}
+            <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-700">
+              {selectedOptions.length}
+            </span>
+          </div>
+
+          <div className="mt-3 flex min-h-[44px] flex-wrap gap-2">
+            {selectedOptions.length ? (
+              selectedOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => toggleOption(option.value)}
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+                >
+                  <span>{option.label}</span>
+                  <FiX className="h-3.5 w-3.5" />
+                </button>
+              ))
+            ) : (
+              <p className="text-sm text-slate-400">Chưa gán thể loại cho bài hát.</p>
+            )}
+          </div>
         </div>
-      )}
+
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 transition focus-within:border-cyan-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-cyan-50">
+          <FiSearch className="h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder={options.length ? 'Tìm thể loại để thêm vào bài hát' : 'Chưa có thể loại nào trong hệ thống'}
+            disabled={!options.length}
+            className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div className="mt-4 max-h-56 space-y-2 overflow-y-auto pr-1">
+          {suggestedOptions.length ? (
+            suggestedOptions.slice(0, 20).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => toggleOption(option.value)}
+                className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-left transition hover:border-cyan-300 hover:bg-cyan-50"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="rounded-2xl bg-white p-2 text-cyan-600 shadow-sm">
+                    <FiTag className="h-4 w-4" />
+                  </div>
+                  <p className="truncate text-sm font-semibold text-slate-700">{option.label}</p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-cyan-600 shadow-sm">
+                  Thêm
+                </span>
+              </button>
+            ))
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-slate-600">Không có thể loại phù hợp</p>
+              <p className="mt-1 text-xs text-slate-400">Thử từ khóa khác hoặc tạo thể loại mới ở trang quản trị thể loại.</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -930,7 +1094,7 @@ function TextareaField({ label, required, ...props }) {
       </span>
       <textarea
         {...props}
-        className="min-h-[120px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50"
+        className="min-h-[120px] w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
       />
     </label>
   );
@@ -966,7 +1130,6 @@ function UploadField({
         </div>
         <div>
           <p className="text-sm font-semibold text-slate-700">Chọn file từ máy</p>
-          <p className="mt-1 text-xs text-slate-400">Hỗ trợ upload trực tiếp lên Cloudinary từ form này</p>
         </div>
         <input type="file" accept={accept} className="hidden" onChange={onChange} />
       </label>
@@ -992,6 +1155,20 @@ function UploadField({
   );
 }
 
+function FormSection({ icon: Icon, title, children }) {
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+          <Icon className="h-4 w-4" />
+        </div>
+        <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-700">{title}</h4>
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function EntityModal({
   modalState,
   formValues,
@@ -1010,6 +1187,12 @@ function EntityModal({
   const isSong = entity === 'songs';
   const isAlbum = entity === 'albums';
   const isArtist = entity === 'artists';
+  const EntityIcon = {
+    songs: FiMusic,
+    albums: FiDisc,
+    artists: FiUser,
+    genres: FiFolderPlus,
+  }[entity];
   const title = mode === 'create'
     ? {
         songs: 'Thêm bài hát',
@@ -1023,26 +1206,37 @@ function EntityModal({
         artists: 'Cập nhật nghệ sĩ',
         genres: 'Cập nhật thể loại',
       }[entity];
+  const submitLabel = saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo mới' : 'Lưu thay đổi';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-8 backdrop-blur-sm">
-      <div className="max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-[36px] border border-white/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.96),rgba(244,247,251,0.96))] shadow-[0_30px_120px_rgba(15,23,42,0.30)]">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-7 py-6">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-500">Admin Studio</p>
-            <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-900">{title}</h3>
-            <p className="mt-1 text-sm text-slate-500">Chọn file và metadata trong cùng một biểu mẫu, submit một lần duy nhất.</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-3 py-6 backdrop-blur-sm sm:px-4 sm:py-8">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="entity-modal-title"
+        className="max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.98),rgba(244,247,251,0.98))] shadow-[0_30px_120px_rgba(15,23,42,0.30)] sm:rounded-[36px]"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-5 sm:px-7 sm:py-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+              <EntityIcon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-500">Admin Studio</p>
+              <h3 id="entity-modal-title" className="mt-1 truncate text-2xl font-black tracking-tight text-slate-900">{title}</h3>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-500 transition hover:text-slate-900"
+            aria-label="Đóng"
+            className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-500 outline-none transition hover:border-slate-300 hover:text-slate-900 focus:ring-4 focus:ring-cyan-50"
           >
             <FiX className="h-5 w-5" />
           </button>
         </div>
 
-        <form noValidate onSubmit={onSubmit} className="max-h-[calc(92vh-96px)] overflow-y-auto px-7 py-6">
+        <form noValidate onSubmit={onSubmit} className="max-h-[calc(92vh-88px)] overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
           {formAlert ? (
             <div className="mb-5 flex items-start gap-3 rounded-[24px] border border-rose-100 bg-rose-50 px-4 py-3 text-rose-700">
               <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -1050,11 +1244,11 @@ function EntityModal({
             </div>
           ) : null}
 
-          <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="space-y-5">
-              {isSong ? (
-                <>
-                  <div className="grid gap-5 md:grid-cols-2">
+          {isSong ? (
+            <div className="space-y-7">
+              <div className="grid gap-7 xl:grid-cols-[1fr_360px]">
+                <FormSection icon={FiMusic} title="Thông tin bài hát">
+                  <div className="grid gap-5 md:grid-cols-[1fr_260px]">
                     <InputField
                       label="Tên bài hát"
                       required
@@ -1062,59 +1256,27 @@ function EntityModal({
                       onChange={(event) => onValueChange('tieu_de', event.target.value)}
                       placeholder="Ví dụ: Mưa Tháng Sáu"
                     />
-                    <SelectField
+                    <StatusPicker
                       label="Trạng thái"
                       value={formValues.trang_thai}
-                      onChange={(event) => onValueChange('trang_thai', event.target.value)}
-                    >
-                      {STATUS_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </SelectField>
+                      onChange={(nextValue) => onValueChange('trang_thai', nextValue)}
+                    />
                   </div>
 
                   <div className="grid gap-5 md:grid-cols-2">
-                    <ArtistTagPicker
-                      label="Ca sĩ thể hiện"
-                      required
-                      artists={catalog.artists}
-                      values={formValues.id_nghe_si_ids}
-                      onChange={(selectedValues) => onValueChange('id_nghe_si_ids', selectedValues)}
+                    <InputField
+                      label="Quốc gia"
+                      value={formValues.quoc_gia}
+                      onChange={(event) => onValueChange('quoc_gia', event.target.value)}
+                      placeholder="Việt Nam"
                     />
-                    <SelectField
-                      label="Album"
-                      value={formValues.id_album_id}
-                      onChange={(event) => onValueChange('id_album_id', event.target.value)}
-                    >
-                      <option value="">Không gán album</option>
-                      {catalog.albums.map((album) => (
-                        <option key={album.id} value={album.id}>{album.tieu_de}</option>
-                      ))}
-                    </SelectField>
-                  </div>
-
-                  <div className="grid gap-5 md:grid-cols-2">
-                    <MultiSelectDropdown
-                      label="Thể loại"
-                      options={catalog.genres.map(g => ({ value: g.id.toString(), label: g.ten_the_loai }))}
-                      values={formValues.the_loai_ids}
-                      onChange={(selectedValues) => onValueChange('the_loai_ids', selectedValues)}
+                    <InputField
+                      label="Năm phát hành"
+                      type="number"
+                      value={formValues.nam_phat_hanh}
+                      onChange={(event) => onValueChange('nam_phat_hanh', event.target.value)}
+                      placeholder="2026"
                     />
-                    <div className="space-y-5">
-                      <InputField
-                        label="Quốc gia"
-                        value={formValues.quoc_gia}
-                        onChange={(event) => onValueChange('quoc_gia', event.target.value)}
-                        placeholder="Việt Nam"
-                      />
-                      <InputField
-                        label="Năm phát hành"
-                        type="number"
-                        value={formValues.nam_phat_hanh}
-                        onChange={(event) => onValueChange('nam_phat_hanh', event.target.value)}
-                        placeholder="2026"
-                      />
-                    </div>
                   </div>
 
                   <TextareaField
@@ -1123,98 +1285,9 @@ function EntityModal({
                     onChange={(event) => onValueChange('loi_bai_hat', event.target.value)}
                     placeholder="Nhập lời bài hát nếu có..."
                   />
-                </>
-              ) : null}
+                </FormSection>
 
-              {isAlbum ? (
-                <>
-                  <div className="grid gap-5 md:grid-cols-2">
-                    <InputField
-                      label="Tên album"
-                      required
-                      value={formValues.tieu_de}
-                      onChange={(event) => onValueChange('tieu_de', event.target.value)}
-                      placeholder="Ví dụ: Những Mùa Yêu"
-                    />
-                    <SelectField
-                      label="Nghệ sĩ"
-                      required
-                      value={formValues.id_nghe_si}
-                      onChange={(event) => onValueChange('id_nghe_si', event.target.value)}
-                    >
-                      <option value="">Chọn nghệ sĩ</option>
-                      {catalog.artists.map((artist) => (
-                        <option key={artist.id} value={artist.id}>{artist.ten_nghe_si}</option>
-                      ))}
-                    </SelectField>
-                  </div>
-                  <SongTagPicker
-                    label="Bài hát trong album"
-                    songs={catalog.songs}
-                    values={formValues.song_ids}
-                    onChange={(selectedValues) => onValueChange('song_ids', selectedValues)}
-                    artistId={formValues.id_nghe_si}
-                  />
-                  <div className="grid gap-5 md:grid-cols-2">
-                    <InputField
-                      label="Ngày phát hành"
-                      type="date"
-                      value={formValues.ngay_phat_hanh}
-                      onChange={(event) => onValueChange('ngay_phat_hanh', event.target.value)}
-                    />
-                    <SelectField
-                      label="Trạng thái"
-                      value={formValues.trang_thai}
-                      onChange={(event) => onValueChange('trang_thai', event.target.value)}
-                    >
-                      {STATUS_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </SelectField>
-                  </div>
-                </>
-              ) : null}
-
-              {isArtist ? (
-                <>
-                  <InputField
-                    label="Tên nghệ sĩ"
-                    required
-                    value={formValues.ten_nghe_si}
-                    onChange={(event) => onValueChange('ten_nghe_si', event.target.value)}
-                    placeholder="Ví dụ: Bùi Trường Linh"
-                  />
-                  <TextareaField
-                    label="Tiểu sử"
-                    value={formValues.tieu_su}
-                    onChange={(event) => onValueChange('tieu_su', event.target.value)}
-                    placeholder="Mô tả ngắn về nghệ sĩ..."
-                  />
-                </>
-              ) : null}
-
-              {!isSong && !isAlbum && !isArtist ? (
-                <>
-                  <InputField
-                    label="Tên thể loại"
-                    required
-                    value={formValues.ten_the_loai}
-                    onChange={(event) => onValueChange('ten_the_loai', event.target.value)}
-                    placeholder="Ví dụ: Chill, Ballad, Tâm trạng"
-                  />
-                  <TextareaField
-                    label="Mô tả"
-                    value={formValues.mo_ta_the_loai}
-                    onChange={(event) => onValueChange('mo_ta_the_loai', event.target.value)}
-                    placeholder="Mô tả ngắn cho thể loại..."
-                  />
-                </>
-              ) : null}
-            </div>
-
-            <div className="space-y-5">
-              {isSong ? (
-                <>
+                <FormSection icon={FiUploadCloud} title="Tệp & hình ảnh">
                   <UploadField
                     label="Ảnh bài hát"
                     required={mode === 'create'}
@@ -1237,82 +1310,194 @@ function EntityModal({
                     audioMeta={previews.audioMeta}
                     onChange={(event) => onFileChange('audio_file', event.target.files?.[0] || null)}
                   />
-                </>
-              ) : null}
-
-              {isAlbum ? (
-                <UploadField
-                  label="Ảnh bìa album"
-                  required={mode === 'create'}
-                  hint="Tỷ lệ vuông hiển thị đẹp hơn"
-                  accept="image/*"
-                  icon={FiDisc}
-                  previewUrl={previews.imageUrl}
-                  previewLabel={previews.imageLabel}
-                  previewMeta={previews.imageMeta}
-                  onChange={(event) => onFileChange('cover_file', event.target.files?.[0] || null)}
-                />
-              ) : null}
-
-              {isArtist ? (
-                <UploadField
-                  label="Ảnh nghệ sĩ"
-                  required={mode === 'create'}
-                  hint="Ảnh chân dung hoặc avatar"
-                  accept="image/*"
-                  icon={FiUser}
-                  previewUrl={previews.imageUrl}
-                  previewLabel={previews.imageLabel}
-                  previewMeta={previews.imageMeta}
-                  onChange={(event) => onFileChange('artist_image_file', event.target.files?.[0] || null)}
-                />
-              ) : null}
-
-              {!isSong && !isAlbum && !isArtist ? (
-                <UploadField
-                  label="Ảnh thể loại"
-                  required={mode === 'create'}
-                  hint="Ảnh đại diện cho thể loại/mood"
-                  accept="image/*"
-                  icon={FiFolderPlus}
-                  previewUrl={previews.imageUrl}
-                  previewLabel={previews.imageLabel}
-                  previewMeta={previews.imageMeta}
-                  onChange={(event) => onFileChange('topic_image_file', event.target.files?.[0] || null)}
-                />
-              ) : null}
-
-              <div className="rounded-[28px] border border-slate-200 bg-white/90 p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
-                    <FiCheckCircle className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800">Quy trình mới</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">
-                      Không cần Postman, không cần dán URL vào DBeaver. File được gửi thẳng từ form, backend tự upload lên Cloudinary rồi lưu metadata trong một request.
-                    </p>
-                  </div>
-                </div>
+                </FormSection>
               </div>
-            </div>
-          </div>
 
-          <div className="mt-7 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
+              <FormSection icon={FiUsers} title="Ca sĩ, album và thể loại">
+                <div className="grid gap-5 xl:grid-cols-2">
+                  <ArtistTagPicker
+                    label="Ca sĩ thể hiện"
+                    required
+                    artists={catalog.artists}
+                    values={formValues.id_nghe_si_ids}
+                    onChange={(selectedValues) => onValueChange('id_nghe_si_ids', selectedValues)}
+                  />
+                  <SingleSelectPicker
+                    label="Album"
+                    value={formValues.id_album_id}
+                    onChange={(nextValue) => onValueChange('id_album_id', nextValue)}
+                    options={catalog.albums.map((album) => ({
+                      value: album.id.toString(),
+                      label: album.tieu_de,
+                      subtitle: album.id_nghe_si_detail?.ten_nghe_si || 'Chưa gán nghệ sĩ',
+                    }))}
+                    placeholder="Không gán album"
+                    searchPlaceholder="Tìm album để gán cho bài hát"
+                    emptyText="Chưa có album nào trong hệ thống"
+                    icon={FiDisc}
+                  />
+                </div>
+                <MultiSelectDropdown
+                  label="Thể loại"
+                  options={catalog.genres.map(g => ({ value: g.id.toString(), label: g.ten_the_loai }))}
+                  values={formValues.the_loai_ids}
+                  onChange={(selectedValues) => onValueChange('the_loai_ids', selectedValues)}
+                />
+              </FormSection>
+            </div>
+          ) : null}
+
+          {isAlbum ? (
+            <div className="space-y-7">
+              <div className="grid gap-7 xl:grid-cols-[1fr_360px]">
+                <FormSection icon={FiDisc} title="Thông tin album">
+                  <InputField
+                    label="Tên album"
+                    required
+                    value={formValues.tieu_de}
+                    onChange={(event) => onValueChange('tieu_de', event.target.value)}
+                    placeholder="Ví dụ: Những Mùa Yêu"
+                  />
+                  <SingleSelectPicker
+                    label="Nghệ sĩ"
+                    required
+                    value={formValues.id_nghe_si}
+                    onChange={(nextValue) => onValueChange('id_nghe_si', nextValue)}
+                    options={catalog.artists.map((artist) => ({
+                      value: artist.id.toString(),
+                      label: artist.ten_nghe_si,
+                      subtitle: artist.tieu_su || 'Nghệ sĩ trong hệ thống',
+                    }))}
+                    placeholder="Chọn nghệ sĩ"
+                    searchPlaceholder="Tìm nghệ sĩ cho album"
+                    emptyText="Chưa có nghệ sĩ nào trong hệ thống"
+                    icon={FiUser}
+                    allowClear={false}
+                  />
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <InputField
+                      label="Ngày phát hành"
+                      type="date"
+                      value={formValues.ngay_phat_hanh}
+                      onChange={(event) => onValueChange('ngay_phat_hanh', event.target.value)}
+                    />
+                    <StatusPicker
+                      label="Trạng thái"
+                      value={formValues.trang_thai}
+                      onChange={(nextValue) => onValueChange('trang_thai', nextValue)}
+                    />
+                  </div>
+                </FormSection>
+
+                <FormSection icon={FiImage} title="Ảnh bìa">
+                  <UploadField
+                    label="Ảnh bìa album"
+                    required={mode === 'create'}
+                    accept="image/*"
+                    icon={FiDisc}
+                    previewUrl={previews.imageUrl}
+                    previewLabel={previews.imageLabel}
+                    previewMeta={previews.imageMeta}
+                    onChange={(event) => onFileChange('cover_file', event.target.files?.[0] || null)}
+                  />
+                </FormSection>
+              </div>
+
+              <FormSection icon={FiMusic} title="Bài hát trong album">
+                <SongTagPicker
+                  label="Danh sách bài hát"
+                  songs={catalog.songs}
+                  values={formValues.song_ids}
+                  onChange={(selectedValues) => onValueChange('song_ids', selectedValues)}
+                  artistId={formValues.id_nghe_si}
+                />
+              </FormSection>
+            </div>
+          ) : null}
+
+          {!isSong && !isAlbum ? (
+            <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="space-y-5">
+                {isArtist ? (
+                  <FormSection icon={FiUser} title="Thông tin nghệ sĩ">
+                    <InputField
+                      label="Tên nghệ sĩ"
+                      required
+                      value={formValues.ten_nghe_si}
+                      onChange={(event) => onValueChange('ten_nghe_si', event.target.value)}
+                      placeholder="Ví dụ: Bùi Trường Linh"
+                    />
+                    <TextareaField
+                      label="Tiểu sử"
+                      value={formValues.tieu_su}
+                      onChange={(event) => onValueChange('tieu_su', event.target.value)}
+                      placeholder="Mô tả ngắn về nghệ sĩ..."
+                    />
+                  </FormSection>
+                ) : (
+                  <FormSection icon={FiFolderPlus} title="Thông tin thể loại">
+                    <InputField
+                      label="Tên thể loại"
+                      required
+                      value={formValues.ten_the_loai}
+                      onChange={(event) => onValueChange('ten_the_loai', event.target.value)}
+                      placeholder="Ví dụ: Chill, Ballad, Tâm trạng"
+                    />
+                    <TextareaField
+                      label="Mô tả"
+                      value={formValues.mo_ta_the_loai}
+                      onChange={(event) => onValueChange('mo_ta_the_loai', event.target.value)}
+                      placeholder="Mô tả ngắn cho thể loại..."
+                    />
+                  </FormSection>
+                )}
+              </div>
+
+              <FormSection icon={FiUploadCloud} title="Hình ảnh">
+                {isArtist ? (
+                  <UploadField
+                    label="Ảnh nghệ sĩ"
+                    required={mode === 'create'}
+                    hint="Ảnh chân dung hoặc avatar"
+                    accept="image/*"
+                    icon={FiUser}
+                    previewUrl={previews.imageUrl}
+                    previewLabel={previews.imageLabel}
+                    previewMeta={previews.imageMeta}
+                    onChange={(event) => onFileChange('artist_image_file', event.target.files?.[0] || null)}
+                  />
+                ) : (
+                  <UploadField
+                    label="Ảnh thể loại"
+                    required={mode === 'create'}
+                    hint="Ảnh đại diện cho thể loại/mood"
+                    accept="image/*"
+                    icon={FiFolderPlus}
+                    previewUrl={previews.imageUrl}
+                    previewLabel={previews.imageLabel}
+                    previewMeta={previews.imageMeta}
+                    onChange={(event) => onFileChange('topic_image_file', event.target.files?.[0] || null)}
+                  />
+                )}
+              </FormSection>
+            </div>
+          ) : null}
+
+          <div className="sticky bottom-0 -mx-5 mt-7 flex items-center justify-end gap-3 border-t border-slate-100 bg-white/90 px-5 py-5 backdrop-blur sm:-mx-7 sm:px-7">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
+              className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-600 outline-none transition hover:border-slate-300 hover:text-slate-900 focus:ring-4 focus:ring-slate-100"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white outline-none transition hover:bg-slate-800 focus:ring-4 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <FiUploadCloud className="h-4 w-4" />
-              {saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo mới' : 'Lưu thay đổi'}
+              {submitLabel}
             </button>
           </div>
         </form>
@@ -1419,7 +1604,6 @@ export default function ManageMusic({
   initialEntity = 'songs',
   hideTabs = false,
   pageTitle,
-  pageDescription,
 }) {
   const [catalog, setCatalog] = useState(() => getCachedCatalogSnapshot());
   const [loading, setLoading] = useState(true);
@@ -1734,13 +1918,6 @@ export default function ManageMusic({
     artists: 'Quản lý nghệ sĩ',
     genres: 'Quản lý thể loại',
   }[activeTab];
-  const resolvedPageDescription = pageDescription || {
-    songs: 'Thêm, sửa và duyệt bài hát với khả năng chọn nhiều ca sĩ cho một bài.',
-    albums: 'Quản lý album riêng biệt, vẫn gắn với một nghệ sĩ chính.',
-    artists: 'Quản lý nghệ sĩ, ảnh đại diện và tiểu sử.',
-    genres: 'Quản lý thể loại gồm ảnh, tên và mô tả.',
-  }[activeTab];
-
   return (
     <div className="space-y-6">
       <div className="overflow-hidden rounded-[32px] bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.20),transparent_38%),linear-gradient(135deg,#0f172a,#1e293b_48%,#0f172a)] px-7 py-7 text-white shadow-[0_22px_80px_rgba(15,23,42,0.28)]">
@@ -1748,7 +1925,6 @@ export default function ManageMusic({
           <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.32em] text-cyan-300">Upload Workspace</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight">{resolvedPageTitle}</h2>
-            <p className="mt-3 text-sm leading-7 text-slate-300">{resolvedPageDescription}</p>
           </div>
 
           <button
