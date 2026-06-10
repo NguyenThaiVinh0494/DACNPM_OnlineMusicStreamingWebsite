@@ -613,6 +613,15 @@ class EmailAuthenticationApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
 
+    def test_login_rejects_username_identifier(self):
+        response = self.client.post(
+            reverse('api_login'),
+            {'username': 'account-owner', 'password': 'secret123'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_profile_rejects_duplicate_email_and_normalizes_new_email(self):
         other_user = self.user_model.objects.create_user(
             username='other-member',
@@ -636,6 +645,38 @@ class EmailAuthenticationApiTests(APITestCase):
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
         other_user.refresh_from_db()
         self.assertEqual(other_user.email, 'other.new@example.com')
+
+    def test_profile_rejects_incomplete_password_change(self):
+        self.client.force_authenticate(user=self.user)
+
+        old_password_only_response = self.client.put(
+            reverse('api_user_profile'),
+            {'old_password': 'secret123'},
+            format='json',
+        )
+        new_password_only_response = self.client.put(
+            reverse('api_user_profile'),
+            {'new_password': 'changed123'},
+            format='json',
+        )
+
+        self.assertEqual(old_password_only_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(new_password_only_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('secret123'))
+
+    def test_profile_changes_password_with_current_password(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.put(
+            reverse('api_user_profile'),
+            {'old_password': 'secret123', 'new_password': 'changed123'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('changed123'))
 
     def test_profile_delete_removes_user_without_deleting_uploaded_songs(self):
         artist = NgheSi.objects.create(ten_nghe_si='Account Artist')

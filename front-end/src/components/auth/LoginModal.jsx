@@ -9,20 +9,31 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
   const { t } = useTranslation();
   const { login } = useContext(AuthContext);
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   if (!isOpen) return null;
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!username || !password) {
+    const emailAddress = email.trim();
+    if (!emailAddress || !password) {
       toast.error('Vui lòng nhập đầy đủ thông tin!');
       return;
     }
 
-    const success = await login(username, password);
-    if (success) {
+    const loggedInUser = await login(emailAddress, password);
+
+    if (loggedInUser?.vai_tro === 'ADMIN') {
+      const adminDashboardTab = window.open('/admin', '_blank');
+      if (adminDashboardTab) {
+        adminDashboardTab.focus();
+      } else {
+        window.location.assign('/admin');
+      }
+    }
+
+    if (loggedInUser) {
       onClose();
     }
   };
@@ -43,9 +54,10 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
           <div>
             <input 
               type="email" 
-              placeholder="Nhập email của bạn"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder={t('enter_email')}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               className="w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400 transition-all border border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400"
             />
           </div>
@@ -56,6 +68,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
               placeholder={t('enter_password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               className="w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400 transition-all border border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400 pr-12"
             />
             <button 

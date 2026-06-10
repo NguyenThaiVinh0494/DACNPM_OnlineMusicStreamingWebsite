@@ -5,6 +5,17 @@ import { AuthContext } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from '../../api/axios';
 
+function getProfileErrorMessage(error) {
+  const data = error.response?.data;
+  if (!data) return 'Có lỗi xảy ra khi cập nhật thông tin.';
+  if (typeof data === 'string') return data;
+  if (data.error) return data.error;
+  if (data.detail) return data.detail;
+
+  const firstFieldError = Object.values(data).flat().find(Boolean);
+  return firstFieldError || 'Có lỗi xảy ra khi cập nhật thông tin.';
+}
+
 export default function ProfileModal({ isOpen, onClose }) {
   const { user, logout, setUser } = useContext(AuthContext);
   // Khởi tạo state với giá trị mặc định của user
@@ -45,7 +56,14 @@ export default function ProfileModal({ isOpen, onClose }) {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    if (newPassword && newPassword !== confirmPassword) {
+
+    const wantsPasswordChange = Boolean(oldPassword || newPassword || confirmPassword);
+    if (wantsPasswordChange && (!oldPassword || !newPassword || !confirmPassword)) {
+      toast.error('Vui lòng nhập đầy đủ mật khẩu cũ, mật khẩu mới và xác nhận mật khẩu.');
+      return;
+    }
+
+    if (wantsPasswordChange && newPassword !== confirmPassword) {
       toast.error('Nhập lại mật khẩu mới không khớp!');
       return;
     }
@@ -56,11 +74,11 @@ export default function ProfileModal({ isOpen, onClose }) {
         first_name: firstName,
         last_name: lastName,
         anh_dai_dien: avatarUrl,
-        username,
-        email,
+        username: username.trim(),
+        email: email.trim(),
       };
 
-      if (oldPassword && newPassword) {
+      if (wantsPasswordChange) {
         payload.old_password = oldPassword;
         payload.new_password = newPassword;
       }
@@ -87,8 +105,7 @@ export default function ProfileModal({ isOpen, onClose }) {
       
       onClose();
     } catch (error) {
-      const errorMsg = error.response?.data?.error || 'Có lỗi xảy ra khi cập nhật thông tin.';
-      toast.error(errorMsg);
+      toast.error(getProfileErrorMessage(error));
       console.error(error);
     } finally {
       setIsUpdating(false);

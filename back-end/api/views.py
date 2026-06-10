@@ -183,7 +183,9 @@ class UserProfileView(APIView):
 
         old_password = request.data.get('old_password')
         new_password = request.data.get('new_password')
-        if old_password and new_password:
+        if old_password or new_password:
+            if not old_password or not new_password:
+                return Response({'error': 'Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới.'}, status=status.HTTP_400_BAD_REQUEST)
             if not user.check_password(old_password):
                 return Response({'error': 'Mật khẩu cũ không chính xác.'}, status=status.HTTP_400_BAD_REQUEST)
             user.set_password(new_password)
@@ -199,6 +201,7 @@ class UserProfileView(APIView):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'anh_dai_dien': user.anh_dai_dien,
+                'vai_tro': user.vai_tro,
             },
         }, status=status.HTTP_200_OK)
 
