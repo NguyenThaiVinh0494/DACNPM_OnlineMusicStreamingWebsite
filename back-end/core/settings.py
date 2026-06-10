@@ -111,11 +111,14 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),         
         'HOST': os.getenv('DB_HOST'),    
         'PORT': os.getenv('DB_PORT', '20282'),
-        'OPTIONS': {
-            'ssl': {'ssl_mode': 'REQUIRED'} 
-        }
     }
 }
+
+DB_SSL_MODE = os.getenv('DB_SSL_MODE', 'REQUIRED').strip().upper()
+if DB_SSL_MODE not in {'', '0', 'FALSE', 'NONE', 'DISABLED'}:
+    DATABASES['default']['OPTIONS'] = {
+        'ssl': {'ssl_mode': DB_SSL_MODE}
+    }
 
 
 
@@ -160,7 +163,6 @@ STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'api.NguoiDung'
 AUTHENTICATION_BACKENDS = [
     'api.backends.EmailOrUsernameModelBackend',
-    'django.contrib.auth.backends.ModelBackend',
 ]
 CORS_ALLOW_ALL_ORIGINS = env_bool('CORS_ALLOW_ALL_ORIGINS', False)
 if CORS_ALLOW_ALL_ORIGINS and not DEBUG:

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-from django.db.models import Q
-from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned, ValidationError
+from django.core.validators import validate_email
 
 User = get_user_model()
 
@@ -15,7 +15,12 @@ class EmailOrUsernameModelBackend(ModelBackend):
             return None
 
         try:
-            user = User.objects.get(Q(username=identifier) | Q(email__iexact=identifier))
+            validate_email(identifier)
+        except ValidationError:
+            return None
+
+        try:
+            user = User.objects.get(email__iexact=identifier)
         except User.DoesNotExist:
             return None
         except MultipleObjectsReturned:

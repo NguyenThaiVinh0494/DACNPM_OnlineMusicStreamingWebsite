@@ -128,25 +128,21 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const data = await authService.login(username, password);
+      const data = await authService.login(username.trim(), password);
       
       // Gọi API lấy thông tin user thực sự
       const userRes = await axios.get('/users/me/', {
         headers: { Authorization: `Bearer ${data.access}` }
       });
       
-      persistAuthData({ ...data, user: userRes.data });
+      const loggedInUser = persistAuthData({ ...data, user: userRes.data });
       
       toast.success('Đăng nhập thành công!');
 
-      if (userRes.data.vai_tro === 'ADMIN') {
-        window.open('/admin', '_blank');
-      }
-
-      return true;
+      return loggedInUser;
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Đăng nhập thất bại. Kiểm tra tài khoản/mật khẩu!');
-      return false;
+      return null;
     }
   };
 
@@ -155,7 +151,7 @@ export const AuthProvider = ({ children }) => {
       await authService.register(userData);
       toast.success('Đăng ký thành công! Đang tự động đăng nhập...');
       // Tự động đăng nhập luôn sau khi đăng ký thành công
-      return await login(userData.username, userData.password);
+      return await login(userData.email, userData.password);
     } catch (error) {
       const errorMsg = error.response?.data?.username?.[0] || 
                        error.response?.data?.email?.[0] || 
