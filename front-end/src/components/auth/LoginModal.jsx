@@ -29,7 +29,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
       if (adminDashboardTab) {
         adminDashboardTab.focus();
       } else {
-        window.location.assign('/admin');
+        toast.error('Trình duyệt đã chặn tab admin mới. Hãy cho phép popup cho trang này rồi đăng nhập lại.');
       }
     }
 
