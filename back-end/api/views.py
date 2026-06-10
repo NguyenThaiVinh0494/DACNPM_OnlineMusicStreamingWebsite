@@ -39,6 +39,12 @@ def invalidate_admin_metrics_cache():
     cache.delete_many([ADMIN_STATS_CACHE_KEY, ADMIN_SUMMARY_CACHE_KEY])
 
 
+def delete_user_account(user):
+    user.delete()
+    cache.delete(HOME_CACHE_KEY)
+    invalidate_admin_metrics_cache()
+
+
 class MultipartEnabledViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
@@ -197,9 +203,8 @@ class UserProfileView(APIView):
         }, status=status.HTTP_200_OK)
 
     def delete(self, request):
-        request.user.delete()
-        invalidate_admin_metrics_cache()
-        return Response({'message': 'Tài khoản đã được xóa vĩnh viễn'}, status=status.HTTP_204_NO_CONTENT)
+        delete_user_account(request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AdminUserViewSet(viewsets.ModelViewSet):
@@ -234,8 +239,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         if instance.id == self.request.user.id:
             raise PermissionDenied('Bạn không thể tự xóa tài khoản admin đang đăng nhập.')
 
-        instance.delete()
-        invalidate_admin_metrics_cache()
+        delete_user_account(instance)
 
 
 class AdminStatsView(APIView):

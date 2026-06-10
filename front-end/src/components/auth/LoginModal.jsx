@@ -21,13 +21,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
       return;
     }
 
-    const adminTab = window.open('', '_blank');
-    if (adminTab && !adminTab.closed) {
-      adminTab.document.title = 'Đang mở Admin Dashboard...';
-      adminTab.document.body.innerHTML = '<div style="font-family: system-ui; padding: 24px; color: #0f172a;">Đang xác thực tài khoản admin...</div>';
-    }
-
-    const success = await login(username, password, { adminTab });
+    const success = await login(username, password);
     if (success) {
       onClose();
     }

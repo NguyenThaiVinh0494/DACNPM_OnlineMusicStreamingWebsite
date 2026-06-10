@@ -637,6 +637,55 @@ class EmailAuthenticationApiTests(APITestCase):
         other_user.refresh_from_db()
         self.assertEqual(other_user.email, 'other.new@example.com')
 
+    def test_profile_delete_removes_user_without_deleting_uploaded_songs(self):
+        artist = NgheSi.objects.create(ten_nghe_si='Account Artist')
+        uploaded_song = BaiHat.objects.create(
+            tieu_de='Account Song',
+            duong_dan_am_thanh='https://example.com/account-song.mp3',
+            duong_dan_hinh_anh='https://example.com/account-song.jpg',
+            trang_thai='PUBLIC',
+            id_nguoi_dang=self.user,
+        )
+        uploaded_song.cac_nghe_si.add(artist)
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.delete(reverse('api_user_profile'))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(self.user_model.objects.filter(pk=self.user.pk).exists())
+        uploaded_song.refresh_from_db()
+        self.assertIsNone(uploaded_song.id_nguoi_dang_id)
+
+    def test_admin_delete_user_removes_user_without_deleting_uploaded_songs(self):
+        admin = self.user_model.objects.create_user(
+            username='account-admin',
+            email='account-admin@example.com',
+            password='secret123',
+            vai_tro='ADMIN',
+        )
+        target_user = self.user_model.objects.create_user(
+            username='delete-target',
+            email='delete-target@example.com',
+            password='secret123',
+        )
+        artist = NgheSi.objects.create(ten_nghe_si='Admin Delete Artist')
+        uploaded_song = BaiHat.objects.create(
+            tieu_de='Admin Delete Song',
+            duong_dan_am_thanh='https://example.com/admin-delete-song.mp3',
+            duong_dan_hinh_anh='https://example.com/admin-delete-song.jpg',
+            trang_thai='PUBLIC',
+            id_nguoi_dang=target_user,
+        )
+        uploaded_song.cac_nghe_si.add(artist)
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.delete(reverse('admin-users-detail', kwargs={'pk': target_user.pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(self.user_model.objects.filter(pk=target_user.pk).exists())
+        uploaded_song.refresh_from_db()
+        self.assertIsNone(uploaded_song.id_nguoi_dang_id)
+
     def test_legacy_ambiguous_identifier_returns_authentication_failure(self):
         backend = EmailOrUsernameModelBackend()
 
