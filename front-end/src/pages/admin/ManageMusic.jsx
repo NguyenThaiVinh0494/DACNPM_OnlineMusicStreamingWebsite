@@ -1920,29 +1920,41 @@ export default function ManageMusic({
   }[activeTab];
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-[32px] bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.20),transparent_38%),linear-gradient(135deg,#0f172a,#1e293b_48%,#0f172a)] px-7 py-7 text-white shadow-[0_22px_80px_rgba(15,23,42,0.28)]">
+      <div className="overflow-hidden rounded-[34px] border border-white/80 bg-[radial-gradient(circle_at_top_left,_rgba(45,170,237,0.24),transparent_34%),linear-gradient(135deg,#ffffff,#eef7ff_48%,#f8fbff)] p-6 text-slate-950 shadow-[0_22px_70px_rgba(45,170,237,0.14)]">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.32em] text-cyan-300">Upload Workspace</p>
-            <h2 className="mt-3 text-3xl font-black tracking-tight">{resolvedPageTitle}</h2>
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-sky-700">
+              {(() => {
+                const ActiveIcon = currentTabMeta?.icon || FiMusic;
+                return <ActiveIcon className="h-3.5 w-3.5" />;
+              })()}
+              Admin Studio
+            </div>
+            <h2 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">{resolvedPageTitle}</h2>
           </div>
 
-          <button
-            type="button"
-            onClick={() => openModal(activeTab, 'create')}
-            className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-cyan-50"
-          >
-            <FiPlus className="h-4 w-4" />
-            {activeTab === 'songs' ? 'Thêm bài hát' : activeTab === 'albums' ? 'Thêm album' : activeTab === 'artists' ? 'Thêm nghệ sĩ' : 'Thêm thể loại'}
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="rounded-2xl border border-white/80 bg-white/65 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-xs font-bold text-sky-600">Tổng mục</p>
+              <p className="text-xl font-black">{stats[activeTab]}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => openModal(activeTab, 'create')}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 px-5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition hover:from-sky-600 hover:to-cyan-600"
+            >
+              <FiPlus className="h-4 w-4" />
+              {activeTab === 'songs' ? 'Thêm bài hát' : activeTab === 'albums' ? 'Thêm album' : activeTab === 'artists' ? 'Thêm nghệ sĩ' : 'Thêm thể loại'}
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="rounded-[30px] border border-white/70 bg-white/85 p-4 shadow-[0_14px_40px_rgba(15,23,42,0.08)] backdrop-blur">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {hideTabs ? (
-            <div className="flex items-center gap-3 rounded-[22px] bg-slate-950 px-4 py-3 text-white shadow-lg">
-              <div className="rounded-2xl bg-white/10 p-2">
+            <div className="flex items-center gap-3 rounded-[22px] bg-sky-50 px-4 py-3 text-sky-700 shadow-sm ring-1 ring-sky-100">
+              <div className="rounded-2xl bg-white p-2">
                 {(() => {
                   const ActiveIcon = currentTabMeta?.icon || FiMusic;
                   return <ActiveIcon className="h-4 w-4" />;
@@ -1950,7 +1962,7 @@ export default function ManageMusic({
               </div>
               <div>
                 <p className="text-sm font-semibold">{currentTabMeta?.label}</p>
-                <p className="text-xs text-slate-300">{stats[activeTab]}</p>
+                <p className="text-xs text-sky-500">{stats[activeTab]}</p>
               </div>
             </div>
           ) : (
@@ -1965,16 +1977,16 @@ export default function ManageMusic({
                     onClick={() => handleTabChange(tab.key)}
                     className={`flex items-center gap-3 rounded-[22px] px-4 py-3 text-left transition ${
                       active
-                        ? 'bg-slate-950 text-white shadow-lg'
+                        ? 'bg-sky-50 text-sky-700 shadow-sm ring-1 ring-sky-100'
                         : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <div className={`rounded-2xl p-2 ${active ? 'bg-white/10' : 'bg-white'}`}>
+                    <div className={`rounded-2xl p-2 ${active ? 'bg-white' : 'bg-white'}`}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold">{tab.label}</p>
-                      <p className={`text-xs ${active ? 'text-slate-300' : 'text-slate-400'}`}>{stats[tab.key]}</p>
+                      <p className={`text-xs ${active ? 'text-sky-500' : 'text-slate-400'}`}>{stats[tab.key]}</p>
                     </div>
                   </button>
                 );

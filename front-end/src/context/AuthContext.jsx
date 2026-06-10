@@ -38,15 +38,6 @@ export const AuthProvider = ({ children }) => {
   // Vì ta đã tính toán user ngay từ đầu, loading có thể set là false luôn
   const loading = false;
 
-  const closeExternalWindow = (externalWindow) => {
-    if (!externalWindow || externalWindow.closed) return;
-    try {
-      externalWindow.close();
-    } catch {
-      // Ignore popup close errors from the browser.
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -135,9 +126,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const login = async (username, password, options = {}) => {
-    const { adminTab } = options;
-
+  const login = async (username, password) => {
     try {
       const data = await authService.login(username, password);
       
@@ -151,19 +140,11 @@ export const AuthProvider = ({ children }) => {
       toast.success('Đăng nhập thành công!');
 
       if (userRes.data.vai_tro === 'ADMIN') {
-        if (adminTab && !adminTab.closed) {
-          adminTab.location.href = `${window.location.origin}/admin`;
-          adminTab.focus?.();
-        } else {
-          window.open('/admin', '_blank');
-        }
-      } else {
-        closeExternalWindow(adminTab);
+        window.open('/admin', '_blank');
       }
 
       return true;
     } catch (error) {
-      closeExternalWindow(adminTab);
       toast.error(error.response?.data?.detail || 'Đăng nhập thất bại. Kiểm tra tài khoản/mật khẩu!');
       return false;
     }

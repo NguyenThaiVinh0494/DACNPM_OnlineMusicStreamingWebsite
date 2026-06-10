@@ -75,12 +75,13 @@ function getErrorMessage(error, fallback) {
 
 function StatCard({ icon: Icon, label, value, accent }) {
   return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className={`inline-flex rounded-2xl bg-gradient-to-br ${accent} p-3 text-white shadow-sm`}>
+    <div className="group relative overflow-hidden rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_14px_42px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_60px_rgba(15,23,42,0.12)]">
+      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
+      <div className={`inline-flex rounded-2xl bg-gradient-to-br ${accent} p-3 text-white shadow-sm transition group-hover:scale-105`}>
         <Icon className="h-5 w-5" />
       </div>
       <p className="mt-4 text-3xl font-black tracking-tight text-slate-900">{value}</p>
-      <p className="mt-1 text-sm text-slate-500">{label}</p>
+      <p className="mt-1 text-sm font-bold text-slate-500">{label}</p>
     </div>
   );
 }
@@ -531,23 +532,41 @@ export default function ManageUsers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-500">Admin Studio</p>
-          <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Người dùng</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Kết nối dữ liệu thật từ hệ thống, CRUD tài khoản và cấp quyền admin trực tiếp trong dashboard.
-          </p>
-        </div>
+      <div className="overflow-hidden rounded-[34px] border border-white/80 bg-[radial-gradient(circle_at_top_left,_rgba(45,170,237,0.24),transparent_34%),linear-gradient(135deg,#ffffff,#eef7ff_48%,#f8fbff)] p-6 text-slate-950 shadow-[0_22px_70px_rgba(45,170,237,0.14)]">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-sky-700">
+              <FiUsers className="h-3.5 w-3.5" />
+              Admin Studio
+            </div>
+            <h2 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">Người dùng</h2>
+          </div>
 
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          <FiPlus className="h-4 w-4" />
-          Tạo tài khoản
-        </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-2xl border border-white/80 bg-white/65 px-4 py-3 shadow-sm backdrop-blur">
+                <p className="text-xs font-bold text-sky-600">Tổng</p>
+                <p className="text-xl font-black">{users.length}</p>
+              </div>
+              <div className="rounded-2xl border border-white/80 bg-white/65 px-4 py-3 shadow-sm backdrop-blur">
+                <p className="text-xs font-bold text-sky-600">Admin</p>
+                <p className="text-xl font-black">{totalAdmins}</p>
+              </div>
+              <div className="rounded-2xl border border-white/80 bg-white/65 px-4 py-3 shadow-sm backdrop-blur">
+                <p className="text-xs font-bold text-sky-600">Khóa</p>
+                <p className="text-xl font-black">{totalLocked}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 px-5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition hover:from-sky-600 hover:to-cyan-600"
+            >
+              <FiPlus className="h-4 w-4" />
+              Tạo tài khoản
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -557,7 +576,7 @@ export default function ManageUsers() {
         <StatCard icon={FiCheckCircle} label="Đang hoạt động" value={users.length - totalLocked} accent="from-emerald-500 to-teal-500" />
       </div>
 
-      <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_14px_42px_rgba(15,23,42,0.08)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-md">
             <div className="relative">
@@ -567,11 +586,10 @@ export default function ManageUsers() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Tìm theo username, email, tên hoặc vai trò..."
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-50"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-11 pr-4 text-sm font-medium text-slate-700 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-50"
               />
             </div>
           </div>
-          <p className="text-sm text-slate-400">Admin có thể khóa/mở khóa, cấp quyền và chỉnh sửa hồ sơ từng tài khoản.</p>
         </div>
 
         <div className="mt-5 overflow-x-auto">

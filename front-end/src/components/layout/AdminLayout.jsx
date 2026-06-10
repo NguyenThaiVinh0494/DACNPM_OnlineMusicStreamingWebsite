@@ -40,76 +40,69 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md flex flex-col flex-shrink-0">
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-            <FiShield className="w-5 h-5 text-white" />
+    <div className="flex h-screen bg-[radial-gradient(circle_at_top_left,rgba(45,170,237,0.18),transparent_32%),linear-gradient(135deg,#f8fafc,#eef7ff_48%,#f7fbff)] font-sans text-slate-900">
+      <aside className="flex w-72 flex-shrink-0 flex-col border-r border-white/70 bg-white/85 text-slate-900 shadow-[18px_0_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="flex items-center gap-3 border-b border-slate-200/70 px-6 py-5">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 text-white shadow-lg shadow-cyan-500/20">
+            <FiShield className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-900">Admin Panel</p>
-            <p className="text-xs text-gray-400">NCT Music</p>
+            <p className="text-sm font-black tracking-tight">NCT Admin</p>
+            <p className="text-xs font-medium text-slate-500">Music control room</p>
           </div>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 space-y-1 px-3 py-4">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold outline-none transition ${
                   isActive
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-sky-50 text-sky-700 shadow-sm ring-1 ring-sky-100'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
-              <Icon className="w-4.5 h-4.5 w-5 h-5" />
+              <Icon className="h-5 w-5" />
               {label}
             </NavLink>
           ))}
         </nav>
 
-        {/* Bottom */}
-        <div className="px-3 py-4 border-t border-gray-100 space-y-1">
+        <div className="space-y-2 border-t border-slate-200/70 px-3 py-4">
           <button
             onClick={handleBackToUserApp}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
           >
-            <FiArrowLeft className="w-5 h-5" />
+            <FiArrowLeft className="h-5 w-5" />
             Về trang người dùng
           </button>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-rose-500 transition hover:bg-rose-50 hover:text-rose-700"
           >
-            <FiLogOut className="w-5 h-5" />
+            <FiLogOut className="h-5 w-5" />
             Đăng xuất
           </button>
         </div>
       </aside>
 
-      {/* Main area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
-        <header className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex items-center justify-between border-b border-white/70 bg-white/80 px-6 py-4 shadow-sm backdrop-blur-xl">
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Bảng điều khiển</h1>
-            <p className="text-xs text-gray-400">Xin chào, {user?.username}</p>
+            <h1 className="text-lg font-black tracking-tight text-slate-950">Bảng điều khiển</h1>
+            <p className="text-xs font-medium text-slate-400">Xin chào, {user?.username}</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm uppercase">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 text-sm font-black uppercase text-white shadow-sm">
               {user?.username?.[0] || 'A'}
             </div>
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
