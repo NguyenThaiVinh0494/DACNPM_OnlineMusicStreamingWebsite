@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+import { AUTH_CLEARED_EVENT } from '../../api/axios';
 import {
   FiGrid, FiUsers, FiMusic,
   FiBarChart2, FiLogOut, FiArrowLeft, FiShield, FiDisc, FiMic, FiTag
@@ -19,6 +20,38 @@ const navItems = [
 export default function AdminLayout() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = 'Dashboard Admin';
+
+    const closeAdminTab = () => {
+      window.close();
+      window.setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 150);
+    };
+
+    const handleAuthCleared = () => {
+      closeAdminTab();
+    };
+
+    const handleAuthStorageChange = (event) => {
+      const authStorageKeys = ['access_token', 'refresh_token', 'user_info'];
+      if (authStorageKeys.includes(event.key) && !localStorage.getItem('access_token')) {
+        closeAdminTab();
+      }
+    };
+
+    window.addEventListener(AUTH_CLEARED_EVENT, handleAuthCleared);
+    window.addEventListener('storage', handleAuthStorageChange);
+
+    return () => {
+      document.title = previousTitle;
+      window.removeEventListener(AUTH_CLEARED_EVENT, handleAuthCleared);
+      window.removeEventListener('storage', handleAuthStorageChange);
+    };
+  }, [navigate]);
 
   const handleLogout = () => {
     logout();

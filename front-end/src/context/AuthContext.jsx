@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_info');
+    window.dispatchEvent(new Event(AUTH_CLEARED_EVENT));
     setUser(null);
     toast.success('Đã đăng xuất!');
   };

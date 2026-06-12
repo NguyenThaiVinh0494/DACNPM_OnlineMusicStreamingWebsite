@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
@@ -11,14 +11,47 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+
+  const inputClass = (hasError, extra = '') => `w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none transition-all border ${
+    hasError
+      ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+      : 'border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400'
+  } ${extra}`;
+
+  const clearFieldError = (field) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const handleClose = () => {
+    setFieldErrors({});
+    onClose();
+  };
 
   if (!isOpen) return null;
 
   const handleLogin = async (e) => {
     e.preventDefault();
     const emailAddress = email.trim();
-    if (!emailAddress || !password) {
+    const errors = {};
+    if (!emailAddress) errors.email = true;
+    if (!password) errors.password = true;
+
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
       toast.error('Vui lòng nhập đầy đủ thông tin!');
+      if (errors.email) {
+        emailRef.current?.focus();
+      } else {
+        passwordRef.current?.focus();
+      }
       return;
     }
 
@@ -34,7 +67,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
     }
 
     if (loggedInUser) {
-      onClose();
+      handleClose();
     }
   };
 
@@ -42,7 +75,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="w-[450px] bg-white dark:bg-[#222222] rounded-xl p-8 shadow-2xl relative border border-gray-200 dark:border-white/10 transition-colors duration-300">
         <button 
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <FiX className="w-6 h-6" />
@@ -50,26 +83,34 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
 
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{t('login')}</h2>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form noValidate onSubmit={handleLogin} className="space-y-4">
           <div>
             <input 
+              ref={emailRef}
               type="email" 
               placeholder={t('enter_email')}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearFieldError('email');
+              }}
               autoComplete="email"
-              className="w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400 transition-all border border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400"
+              className={inputClass(fieldErrors.email)}
             />
           </div>
 
           <div className="relative">
             <input 
+              ref={passwordRef}
               type={showPassword ? "text" : "password"} 
               placeholder={t('enter_password')}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearFieldError('password');
+              }}
               autoComplete="current-password"
-              className="w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400 transition-all border border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400 pr-12"
+              className={inputClass(fieldErrors.password, 'pr-12')}
             />
             <button 
               type="button"
