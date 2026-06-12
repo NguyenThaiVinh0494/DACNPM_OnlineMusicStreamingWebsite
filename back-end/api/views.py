@@ -164,9 +164,11 @@ class UserProfileView(APIView):
 
         user_model = get_user_model()
 
-        new_username = request.data.get('username')
-        if new_username and new_username != user.username:
-            if user_model.objects.filter(username=new_username).exists():
+        if 'username' in request.data:
+            new_username = str(request.data.get('username') or '').strip()
+            if not new_username:
+                return Response({'error': 'Tên tài khoản không được để trống.'}, status=status.HTTP_400_BAD_REQUEST)
+            if new_username != user.username and user_model.objects.filter(username=new_username).exists():
                 return Response({'error': 'Tên người dùng này đã tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
             user.username = new_username
 

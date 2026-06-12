@@ -646,6 +646,32 @@ class EmailAuthenticationApiTests(APITestCase):
         other_user.refresh_from_db()
         self.assertEqual(other_user.email, 'other.new@example.com')
 
+    def test_profile_rejects_blank_account_name(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.put(
+            reverse('api_user_profile'),
+            {'username': '   '},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'account-owner')
+
+    def test_profile_trims_account_name(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.put(
+            reverse('api_user_profile'),
+            {'username': '  updated-owner  '},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'updated-owner')
+
     def test_profile_rejects_incomplete_password_change(self):
         self.client.force_authenticate(user=self.user)
 

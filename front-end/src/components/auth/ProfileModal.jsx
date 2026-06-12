@@ -31,8 +31,37 @@ export default function ProfileModal({ isOpen, onClose }) {
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   
   const fileInputRef = useRef(null);
+  const usernameRef = useRef(null);
+  const emailRef = useRef(null);
+  const oldPasswordRef = useRef(null);
+  const newPasswordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
+
+  const inputClass = (hasError) => `w-full bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white border rounded-xl px-4 py-3 outline-none transition-colors ${
+    hasError
+      ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+      : 'border-gray-200 dark:border-white/10 focus:border-nct-primary dark:focus:border-cyan-400'
+  }`;
+
+  const clearFieldError = (field) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const focusFirstInvalidField = (errors) => {
+    if (errors.username) usernameRef.current?.focus();
+    else if (errors.email) emailRef.current?.focus();
+    else if (errors.oldPassword) oldPasswordRef.current?.focus();
+    else if (errors.newPassword) newPasswordRef.current?.focus();
+    else if (errors.confirmPassword) confirmPasswordRef.current?.focus();
+  };
 
   useEffect(() => {
     if (isOpen && user) {
@@ -47,6 +76,7 @@ export default function ProfileModal({ isOpen, onClose }) {
         setNewPassword('');
         setConfirmPassword('');
         setConfirmAction(null);
+        setFieldErrors({});
       };
       syncData();
     }
@@ -57,24 +87,45 @@ export default function ProfileModal({ isOpen, onClose }) {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
 
+    const accountName = username.trim();
+    const errors = {};
+    if (!accountName) errors.username = true;
+    if (!email.trim()) errors.email = true;
+
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
+      toast.error('Vui lòng nhập đầy đủ thông tin!');
+      focusFirstInvalidField(errors);
+      return;
+    }
+
     const wantsPasswordChange = Boolean(oldPassword || newPassword || confirmPassword);
-    if (wantsPasswordChange && (!oldPassword || !newPassword || !confirmPassword)) {
+    const passwordErrors = {};
+    if (wantsPasswordChange && !oldPassword) passwordErrors.oldPassword = true;
+    if (wantsPasswordChange && !newPassword) passwordErrors.newPassword = true;
+    if (wantsPasswordChange && !confirmPassword) passwordErrors.confirmPassword = true;
+
+    if (Object.keys(passwordErrors).length) {
+      setFieldErrors(passwordErrors);
       toast.error('Vui lòng nhập đầy đủ mật khẩu cũ, mật khẩu mới và xác nhận mật khẩu.');
+      focusFirstInvalidField(passwordErrors);
       return;
     }
 
     if (wantsPasswordChange && newPassword !== confirmPassword) {
+      setFieldErrors({ confirmPassword: true });
       toast.error('Nhập lại mật khẩu mới không khớp!');
+      confirmPasswordRef.current?.focus();
       return;
     }
 
     setIsUpdating(true);
     try {
       const payload = {
-        first_name: firstName,
-        last_name: lastName,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         anh_dai_dien: avatarUrl,
-        username: username.trim(),
+        username: accountName,
         email: email.trim(),
       };
 
@@ -223,25 +274,53 @@ export default function ProfileModal({ isOpen, onClose }) {
             </div>
 
             {/* Form Info */}
-            <form onSubmit={handleUpdateProfile} className="space-y-4 mb-8">
+            <form noValidate onSubmit={handleUpdateProfile} className="space-y-4 mb-8">
               <div className="flex flex-col space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên đăng nhập</label>
-                  <input 
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên tài khoản</label>
+                    <input 
+                    ref={usernameRef}
                     type="text" 
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-nct-primary dark:focus:border-cyan-400 outline-none transition-colors"
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      clearFieldError('username');
+                    }}
+                    className={inputClass(fieldErrors.username)}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
                   <input 
+                    ref={emailRef}
                     type="email" 
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-nct-primary dark:focus:border-cyan-400 outline-none transition-colors"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      clearFieldError('email');
+                    }}
+                    className={inputClass(fieldErrors.email)}
                   />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Họ</label>
+                    <input 
+                      type="text" 
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className={inputClass(false)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên</label>
+                    <input 
+                      type="text" 
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className={inputClass(false)}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -251,32 +330,44 @@ export default function ProfileModal({ isOpen, onClose }) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mật khẩu cũ</label>
                     <input 
+                      ref={oldPasswordRef}
                       type="password" 
                       value={oldPassword}
-                      onChange={(e) => setOldPassword(e.target.value)}
+                      onChange={(e) => {
+                        setOldPassword(e.target.value);
+                        clearFieldError('oldPassword');
+                      }}
                       placeholder="Nhập mật khẩu hiện tại"
-                      className="w-full bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-nct-primary dark:focus:border-cyan-400 outline-none transition-colors"
+                      className={inputClass(fieldErrors.oldPassword)}
                     />
                   </div>
                   <div className="flex flex-col space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mật khẩu mới</label>
                       <input 
+                        ref={newPasswordRef}
                         type="password" 
                         value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          clearFieldError('newPassword');
+                        }}
                         placeholder="Mật khẩu mới"
-                        className="w-full bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-nct-primary dark:focus:border-cyan-400 outline-none transition-colors"
+                        className={inputClass(fieldErrors.newPassword)}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Xác nhận mật khẩu</label>
                       <input 
+                        ref={confirmPasswordRef}
                         type="password" 
                         value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          clearFieldError('confirmPassword');
+                        }}
                         placeholder="Nhập lại mật khẩu mới"
-                        className="w-full bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-nct-primary dark:focus:border-cyan-400 outline-none transition-colors"
+                        className={inputClass(fieldErrors.confirmPassword)}
                       />
                     </div>
                   </div>

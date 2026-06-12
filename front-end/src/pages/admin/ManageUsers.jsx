@@ -86,7 +86,7 @@ function StatCard({ icon: Icon, label, value, accent }) {
   );
 }
 
-function ModalTextField({ label, icon: Icon, required, className = '', ...props }) {
+function ModalTextField({ label, icon: Icon, required, error, className = '', ...props }) {
   return (
     <label className={`block space-y-2 ${className}`}>
       <span className="text-sm font-semibold text-slate-700">
@@ -99,9 +99,15 @@ function ModalTextField({ label, icon: Icon, required, className = '', ...props 
         ) : null}
         <input
           {...props}
-          className={`h-12 w-full rounded-2xl border border-slate-200 bg-white ${Icon ? 'pl-11' : 'pl-4'} pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
+          aria-invalid={error ? 'true' : undefined}
+          className={`h-12 w-full rounded-2xl border bg-white ${Icon ? 'pl-11' : 'pl-4'} pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 ${
+            error
+              ? 'border-rose-400 bg-rose-50/50 focus:border-rose-500 focus:ring-4 focus:ring-rose-100'
+              : 'border-slate-200 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50'
+          }`}
         />
       </div>
+      {error ? <p className="text-xs font-semibold text-rose-600">{error}</p> : null}
     </label>
   );
 }
@@ -137,7 +143,7 @@ function SegmentedField({ label, value, options, onChange, disabled }) {
   );
 }
 
-function UserModal({ state, values, saving, formError, onClose, onChange, onSubmit, isSelfEdit }) {
+function UserModal({ state, values, saving, formError, fieldErrors, onClose, onChange, onSubmit, isSelfEdit }) {
   if (!state.open) return null;
 
   const isCreate = state.mode === 'create';
@@ -187,22 +193,27 @@ function UserModal({ state, values, saving, formError, onClose, onChange, onSubm
             <div className="space-y-5">
               <div className="grid gap-5 md:grid-cols-2">
                 <ModalTextField
-                  label="Tên đăng nhập"
+                  label="Tên tài khoản"
                   icon={FiUser}
                   required
                   type="text"
                   value={values.username}
                   onChange={(event) => onChange('username', event.target.value)}
                   placeholder="ví dụ: admin.nct"
+                  error={fieldErrors.username}
+                  data-user-field="username"
                 />
 
                 <ModalTextField
                   label="Email"
                   icon={FiMail}
+                  required
                   type="email"
                   value={values.email}
                   onChange={(event) => onChange('email', event.target.value)}
                   placeholder="admin@example.com"
+                  error={fieldErrors.email}
+                  data-user-field="email"
                 />
               </div>
 
@@ -228,13 +239,15 @@ function UserModal({ state, values, saving, formError, onClose, onChange, onSubm
 
               <div className="grid gap-5 md:grid-cols-2">
                 <ModalTextField
-                  label={isCreate ? 'Mật khẩu' : 'Mật khẩu mới'}
+                  label={isCreate ? 'Mật khẩu' : 'Mật khẩu'}
                   icon={FiLock}
                   required={isCreate}
                   type="password"
                   value={values.password}
                   onChange={(event) => onChange('password', event.target.value)}
                   placeholder={isCreate ? 'Bắt buộc' : 'Bỏ trống nếu không đổi'}
+                  error={fieldErrors.password}
+                  data-user-field="password"
                 />
 
                 <ModalTextField
@@ -339,6 +352,7 @@ export default function ManageUsers() {
   const [modalState, setModalState] = useState({ open: false, mode: 'create', user: null });
   const [formValues, setFormValues] = useState(getEmptyForm());
   const [formError, setFormError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     let isMounted = true;
@@ -391,12 +405,14 @@ export default function ManageUsers() {
     setModalState({ open: false, mode: 'create', user: null });
     setFormValues(getEmptyForm());
     setFormError('');
+    setFieldErrors({});
   };
 
   const openCreateModal = () => {
     setModalState({ open: true, mode: 'create', user: null });
     setFormValues(getEmptyForm());
     setFormError('');
+    setFieldErrors({});
   };
 
   const openEditModal = (selectedUser) => {
@@ -412,24 +428,55 @@ export default function ManageUsers() {
       anh_dai_dien: selectedUser.anh_dai_dien || '',
     });
     setFormError('');
+    setFieldErrors({});
   };
 
   const onValueChange = (field, value) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
   const validateForm = () => {
-    if (!formValues.username.trim()) return 'Tên đăng nhập là bắt buộc.';
-    if (modalState.mode === 'create' && !formValues.password.trim()) return 'Mật khẩu là bắt buộc khi tạo tài khoản mới.';
-    return '';
+    const errors = {};
+    const email = formValues.email.trim();
+
+    if (!formValues.username.trim()) {
+      errors.username = 'Tên tài khoản là bắt buộc.';
+    }
+
+    if (!email) {
+      errors.email = 'Email là bắt buộc.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Email không hợp lệ.';
+    }
+
+    if (modalState.mode === 'create' && !formValues.password.trim()) {
+      errors.password = 'Mật khẩu là bắt buộc.';
+    }
+
+    return errors;
+  };
+
+  const focusFirstInvalidField = (errors) => {
+    const firstInvalidField = ['username', 'email', 'password'].find((field) => errors[field]);
+    if (firstInvalidField) {
+      document.querySelector(`[data-user-field="${firstInvalidField}"]`)?.focus();
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const validationMessage = validateForm();
-    if (validationMessage) {
-      setFormError(validationMessage);
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length) {
+      setFieldErrors(validationErrors);
+      setFormError('Vui lòng kiểm tra các trường bắt buộc.');
+      focusFirstInvalidField(validationErrors);
       return;
     }
 
@@ -449,6 +496,7 @@ export default function ManageUsers() {
 
     setSaving(true);
     setFormError('');
+    setFieldErrors({});
 
     try {
       const updatedUser = modalState.mode === 'create'
@@ -729,6 +777,7 @@ export default function ManageUsers() {
         values={formValues}
         saving={saving}
         formError={formError}
+        fieldErrors={fieldErrors}
         onClose={resetModal}
         onChange={onValueChange}
         onSubmit={handleSubmit}

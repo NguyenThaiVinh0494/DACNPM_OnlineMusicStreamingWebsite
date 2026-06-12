@@ -15,7 +15,39 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const submissionInProgress = useRef(false);
+  const usernameRef = useRef(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
+
+  const inputClass = (hasError, extra = '') => `w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none transition-all border ${
+    hasError
+      ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+      : 'border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400'
+  } ${extra}`;
+
+  const clearFieldError = (field) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const focusFirstInvalidField = (errors) => {
+    if (errors.username) usernameRef.current?.focus();
+    else if (errors.email) emailRef.current?.focus();
+    else if (errors.password) passwordRef.current?.focus();
+    else if (errors.confirmPassword) confirmPasswordRef.current?.focus();
+  };
+
+  const handleClose = () => {
+    setFieldErrors({});
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -24,21 +56,31 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
     if (submissionInProgress.current) {
       return;
     }
-    if (!username || !email || !password || !confirmPassword) {
+    const errors = {};
+    if (!username.trim()) errors.username = true;
+    if (!email.trim()) errors.email = true;
+    if (!password) errors.password = true;
+    if (!confirmPassword) errors.confirmPassword = true;
+
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
       toast.error('Vui lòng nhập đầy đủ thông tin!');
+      focusFirstInvalidField(errors);
       return;
     }
     if (password !== confirmPassword) {
+      setFieldErrors({ confirmPassword: true });
       toast.error('Mật khẩu xác nhận không khớp!');
+      confirmPasswordRef.current?.focus();
       return;
     }
 
     submissionInProgress.current = true;
     setIsSubmitting(true);
     try {
-      const success = await register({ username, email, password });
+      const success = await register({ username: username.trim(), email: email.trim(), password });
       if (success) {
-        onClose();
+        handleClose();
       }
     } finally {
       submissionInProgress.current = false;
@@ -50,7 +92,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="w-[450px] bg-white dark:bg-[#222222] rounded-xl p-8 shadow-2xl relative border border-gray-200 dark:border-white/10 transition-colors duration-300">
         <button 
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <FiX className="w-6 h-6" />
@@ -58,34 +100,46 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
 
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{t('register')}</h2>
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form noValidate onSubmit={handleRegister} className="space-y-4">
           <div>
             <input 
+              ref={usernameRef}
               type="text" 
               placeholder={t('enter_username')}
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400 transition-all border border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400"
+              onChange={(e) => {
+                setUsername(e.target.value);
+                clearFieldError('username');
+              }}
+              className={inputClass(fieldErrors.username)}
             />
           </div>
 
           <div>
             <input 
+              ref={emailRef}
               type="email" 
               placeholder={t('enter_email')}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400 transition-all border border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearFieldError('email');
+              }}
+              className={inputClass(fieldErrors.email)}
             />
           </div>
 
           <div className="relative">
             <input 
+              ref={passwordRef}
               type={showPassword ? "text" : "password"} 
               placeholder={t('enter_password')}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400 transition-all border border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400 pr-12"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearFieldError('password');
+              }}
+              className={inputClass(fieldErrors.password, 'pr-12')}
             />
             <button 
               type="button"
@@ -98,11 +152,15 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
 
           <div className="relative">
             <input 
+              ref={confirmPasswordRef}
               type={showConfirmPassword ? "text" : "password"} 
               placeholder={t('confirm_password')}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg px-4 py-3.5 outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-cyan-400 transition-all border border-gray-200 dark:border-transparent focus:border-green-500 dark:focus:border-cyan-400 pr-12"
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                clearFieldError('confirmPassword');
+              }}
+              className={inputClass(fieldErrors.confirmPassword, 'pr-12')}
             />
             <button 
               type="button"
