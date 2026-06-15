@@ -1,15 +1,14 @@
 import { useState, useRef, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSettings, FiGlobe, FiChevronRight, FiCheck, FiMoon, FiBarChart2 } from "react-icons/fi";
+import { FiSettings, FiMoon, FiBarChart2 } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { AuthContext } from '../../context/AuthContext';
 export default function SettingsDropdown() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [language, setLanguage] = useState(() => localStorage.getItem('appLanguage') || 'vi');
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedMode = localStorage.getItem('themeMode');
     const dark = savedMode !== null ? savedMode === 'dark' : true;
@@ -39,12 +38,6 @@ export default function SettingsDropdown() {
     });
   };
 
-  const handleLanguageChange = (lang) => {
-    setLanguage(lang);
-    localStorage.setItem('appLanguage', lang);
-    i18n.changeLanguage(lang);
-  };
-
   useClickOutside(settingsRef, () => setIsSettingsOpen(false));
 
   return (
@@ -60,35 +53,7 @@ export default function SettingsDropdown() {
       {/* Settings Dropdown */}
       {isSettingsOpen && (
         <div className="absolute right-0 top-full mt-4 w-60 bg-white dark:!bg-[#222222] rounded-xl shadow-xl dark:shadow-2xl py-2 border border-gray-200 dark:border-white/10 z-50">
-          
-          {/* Language Item (group) */}
-          <div className="relative group">
-            <button className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-sm text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white">
-              <div className="flex items-center gap-3">
-                <FiGlobe className="w-4 h-4" />
-                <span>{t('language')}</span>
-              </div>
-              <FiChevronRight className="w-4 h-4" />
-            </button>
 
-            {/* Sub Menu */}
-            <div className="absolute right-full top-0 mr-2 w-48 bg-white dark:!bg-[#222222] rounded-xl shadow-xl dark:shadow-2xl py-2 border border-gray-200 dark:border-white/10 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all z-50">
-              <button 
-                onClick={() => handleLanguageChange('en')}
-                className={`w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-sm ${language === 'en' ? 'text-black dark:text-white font-medium' : 'text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white'}`}
-              >
-                <span>English</span>
-                {language === 'en' && <FiCheck className="w-4 h-4 text-green-500 dark:text-cyan-400" />}
-              </button>
-              <button 
-                onClick={() => handleLanguageChange('vi')}
-                className={`w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-sm ${language === 'vi' ? 'text-black dark:text-white font-medium' : 'text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white'}`}
-              >
-                <span>Tiếng Việt</span>
-                {language === 'vi' && <FiCheck className="w-4 h-4 text-green-500 dark:text-cyan-400" />}
-              </button>
-            </div>
-          </div>
 
           {/* Dark Mode Toggle */}
           <button 
