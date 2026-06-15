@@ -123,13 +123,11 @@ const resources = {
   }
 };
 
-const savedLanguage = localStorage.getItem('appLanguage') || 'vi';
-
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: savedLanguage,
+    lng: "vi",
     fallbackLng: "vi",
     interpolation: {
       escapeValue: false
